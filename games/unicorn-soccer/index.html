@@ -339,7 +339,7 @@
     lemur = {x:0, y:0.52, ang:0, pose:'idle', mood:'ready'};
     plan = null;
     ball = {x:0, y:0.11, z:11, vx:0, vy:0, vz:0, spin:0, alpha:1};
-    uni = {x:600, y:535, hop:0};
+    uni = {x:UNI_X0, y:UNI_Y0, hop:0, a1:0, a2:0, trot:0, sad:0, walk:0};
     netShake = 0;
     setKickBtn();
     updateHud();
@@ -412,7 +412,9 @@
     setKickBtn();
   }
 
-  const FLIGHT = 0.55, RUNUP = 0.28;
+  const FLIGHT = 0.55, RUNUP = 0.5;
+  // where the unicorn stands: ready position, and kicking position next to the ball
+  const UNI_X0 = 625, UNI_Y0 = 582, UNI_XK = 534, UNI_YK = 576;
 
   function startAfter(){
     state = 'after'; phaseT = 0;
@@ -512,7 +514,13 @@
     } else if(state === 'runup'){
       phaseT += dt;
       const u = Math.min(1, phaseT/RUNUP);
-      uni.x = 600 - 125*ease(u); uni.y = 535 - 12*ease(u);
+      // trot up to the ball while pulling the kicking leg back...
+      const m = Math.min(1, u/0.62);
+      uni.x = UNI_X0 + (UNI_XK - UNI_X0)*ease(m); uni.y = UNI_Y0 + (UNI_YK - UNI_Y0)*ease(m);
+      uni.walk = m < 1 ? m : 0;
+      if(u < 0.62){ uni.a1 = -0.8*ease(m); uni.a2 = 1.0*ease(m); }
+      // ...then swing it forward - BOOT!
+      else { const k = (u - 0.62)/0.38; uni.a1 = -0.8 + 1.75*ease(k); uni.a2 = 1.0*(1 - ease(k)); }
       if(u >= 1){ state = 'flight'; phaseT = 0; sfx.kick(); }
     } else if(state === 'flight'){
       phaseT += dt;
@@ -542,9 +550,13 @@
         lemur.y = plan.y1 + (Math.max(0.3, Math.min(plan.y1, 0.45)) - plan.y1)*ease(g);
       } else if(plan.pose === 'stay'){ lemur.y = 0.52; }
       if(outcome === 'goal') uni.hop = reduced ? 0 : Math.abs(Math.sin(phaseT*9))*18;
+      else uni.sad = Math.min(1, phaseT*2);
       if(outcome === 'goal' && phaseT > 1.5) newShot();
       else if(outcome !== 'goal' && phaseT > 1.5) gameOver();
     }
+    // kicking leg slowly comes back down after the kick
+    if(state === 'flight' || state === 'after'){ uni.a1 *= Math.pow(0.02, dt); uni.a2 *= Math.pow(0.02, dt); }
+    if(state === 'aimX' || state === 'aimY' || state === 'intro'){ uni.a1 = reduced ? 0 : Math.max(0, Math.sin(clock*2.2))*0.12; uni.a2 = uni.a1*1.5; }
     if(msg) msg.t += dt;
     netShake = Math.max(0, netShake - dt*0.9);
     crowdJump = Math.max(0, crowdJump - dt*0.6);
@@ -746,13 +758,115 @@
     ctx.globalAlpha = 1;
   }
 
+  // ----- the unicorn, drawn from the side, facing the ball -----
+  const RAIN = ['#FF8FB8','#FFB86B','#FFE066','#8BE38F','#7CC7FF','#B79CFF'];
+  function limb(x, y, a1, a2, far, len1 = 32, len2 = 32){
+    // a leg in two parts (top and bottom) with a shiny hoof
+    const body = far ? '#ECE4F4' : '#FFFFFF', line = '#D8C8E8';
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a1);
+    ctx.fillStyle = body; ctx.strokeStyle = line; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-8, -6, 16, len1 + 10, 8) : ctx.rect(-8, -6, 16, len1 + 10); ctx.fill(); ctx.stroke();
+    ctx.translate(0, len1); ctx.rotate(-a2);
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-7, -4, 14, len2, 7) : ctx.rect(-7, -4, 14, len2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = far ? '#D9A93A' : '#FFC23D'; ctx.strokeStyle = '#E0A21C';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-8.5, len2 - 8, 17, 11, [3,3,6,6]) : ctx.rect(-8.5, len2 - 8, 17, 11); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawUnicorn(){
-    const size = 118;
+    const t = clock, S = 0.95;
+    const breathe = reduced ? 0 : Math.sin(t*2.5)*1.5;
+    const trot = uni.walk > 0 && !reduced ? Math.sin(uni.walk*Math.PI*4) : 0;
+    // shadow
     ctx.fillStyle = 'rgba(0,0,0,0.15)';
-    ctx.beginPath(); ctx.ellipse(uni.x, uni.y + size*0.42, size*0.38, 9, 0, 0, Math.PI*2); ctx.fill();
-    ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
-    ctx.fillText('🦄', uni.x, uni.y - uni.hop);
+    ctx.beginPath(); ctx.ellipse(uni.x - 5, uni.y + 2, 80*S, 10, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(uni.x, uni.y - uni.hop - Math.abs(trot)*5); ctx.scale(S, S);
+    // (0,0) is the ground under the middle of the body; the unicorn faces left
+
+    // far-side legs (a bit darker, behind the body)
+    limb(-30, -64, trot*0.4, 0, true);
+    limb(40, -64, -trot*0.4, 0, true);
+
+    // rainbow tail
+    const sway = reduced ? 0 : Math.sin(t*2)*8;
+    ctx.lineCap = 'round';
+    RAIN.forEach((c, i) => {
+      ctx.strokeStyle = c; ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(52, -96 + i*2);
+      ctx.bezierCurveTo(88 + i*2, -110 + i*6, 78 + sway, -40 + i*4, 96 + sway + i*3, -22 + i*5);
+      ctx.stroke();
+    });
+
+    // body
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(4, -86 + breathe*0.3, 60, 32 + breathe*0.2, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    // sparkly heart on the side
+    ctx.fillStyle = '#FF8FB8';
+    ctx.beginPath(); ctx.moveTo(16, -80); ctx.bezierCurveTo(4, -90, 8, -102, 16, -95); ctx.bezierCurveTo(24, -102, 28, -90, 16, -80); ctx.fill();
+
+    // near-side back leg
+    limb(42, -66, trot*0.45, trot > 0 ? trot*0.5 : 0, false);
+
+    // neck and head (tilts down a little when you miss)
+    ctx.save();
+    ctx.translate(-40, -104); ctx.rotate(-uni.sad*0.35 + breathe*0.01);
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 16); ctx.lineTo(18, 6); ctx.lineTo(-4, -52); ctx.lineTo(-30, -44); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // head
+    ctx.save(); ctx.translate(-26, -58); ctx.rotate(-0.35);
+    ctx.beginPath(); ctx.ellipse(0, 0, 25, 19, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFE3EE';
+    ctx.beginPath(); ctx.ellipse(-20, 6, 15, 13, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#E88AAE';
+    ctx.beginPath(); ctx.ellipse(-27, 4, 2.5, 3.5, 0.3, 0, Math.PI*2); ctx.fill();
+    // smile (or a little frown after a miss)
+    ctx.strokeStyle = '#C0668C'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if(uni.sad > 0.3) ctx.arc(-19, 17, 5, 1.15*Math.PI, 1.85*Math.PI); else ctx.arc(-19, 11, 5, 0.2*Math.PI, 0.8*Math.PI);
+    ctx.stroke();
+    // big sparkly eye
+    ctx.fillStyle = '#2B2340';
+    ctx.beginPath(); ctx.ellipse(-2, -4, 6, 7.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-4, -7, 2.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -1, 1.2, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2B2340'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6, -11); ctx.lineTo(-9, -15); ctx.moveTo(-2, -12); ctx.lineTo(-3, -17); ctx.moveTo(2, -11); ctx.lineTo(4, -15); ctx.stroke();
+    // rosy cheek
+    ctx.fillStyle = 'rgba(255,143,184,0.5)';
+    ctx.beginPath(); ctx.ellipse(-6, 8, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+    // ear
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(10, -12); ctx.lineTo(18, -34); ctx.lineTo(22, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFC6DA';
+    ctx.beginPath(); ctx.moveTo(14, -13); ctx.lineTo(18, -27); ctx.lineTo(19, -12); ctx.closePath(); ctx.fill();
+    // golden horn with stripes
+    ctx.fillStyle = '#FFD84D'; ctx.strokeStyle = '#E8B21C'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6, -16); ctx.lineTo(-10, -58); ctx.lineTo(6, -18); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    for(let i = 1; i < 4; i++){ const y = -18 - i*9, w = 6 - i*1.4; ctx.moveTo(-2 - w - i*0.9, y + 2); ctx.lineTo(-2 + w - i*0.9, y - 2); }
+    ctx.stroke();
+    // twinkle on the horn tip
+    if(!reduced){ ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.5*Math.sin(t*6)})`; ctx.beginPath(); ctx.arc(-10, -58, 3, 0, Math.PI*2); ctx.fill(); }
+    ctx.restore();
+    // rainbow mane down the back of the neck
+    const mane = [[-18,-74],[-8,-60],[0,-46],[6,-32],[10,-18],[14,-4],[12,8]];
+    mane.forEach((p, i) => {
+      ctx.fillStyle = RAIN[i % RAIN.length];
+      ctx.beginPath(); ctx.arc(p[0] + 4, p[1], 10 - i*0.4, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = RAIN[0];
+    ctx.beginPath(); ctx.arc(-30, -80, 8, 0, Math.PI*2); ctx.fill();   // fringe
+    ctx.restore();
+
+    // near-side front leg - the kicking leg!
+    limb(-38, -66, uni.a1, uni.a2, false);
+    ctx.restore();
   }
 
   function drawAim(t){
