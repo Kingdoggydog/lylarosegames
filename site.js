@@ -6,7 +6,7 @@
 
 // Google Analytics 4 "Measurement ID" - looks like G-ABC123XYZ.
 // Leave it as "" to switch analytics off.
-const GA_MEASUREMENT_ID = "";
+const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
 
 (function () {
   if (!GA_MEASUREMENT_ID) return;
