@@ -7,6 +7,7 @@ A little collection of games, grouped into sections. Hosted on GitHub Pages.
 | Section | Game | Folder |
 | --- | --- | --- |
 | Unicorns | Sparklehoof's Maze | `games/unicorn-maze/` |
+| Unicorns | Glitter Sky Unicorn | `games/glitter-sky/` |
 
 ## Adding a new game
 
