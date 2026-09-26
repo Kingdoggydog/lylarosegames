@@ -6,7 +6,7 @@
 <title>Glitter Sky Unicorn</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&family=Nunito:wght@800&display=swap" rel="stylesheet">
 <style>
   :root {
     --ink: #5b3f7a;
@@ -137,11 +137,24 @@
   }
   #audioBtns button:focus-visible { outline: 3px solid #7bc8ff; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .stars svg.won { animation: none; } }
-  .back { font-size: 15px; font-weight: 800; color: var(--plum); text-decoration: none; background: var(--chip); padding: 4px 14px 2px; border-radius: 999px; }
+  /* same "All games" button as Sparklehoof's Maze */
+  .back {
+    position: fixed; z-index: 5;
+    top: calc(12px + env(safe-area-inset-top, 0px));
+    left: calc(16px + env(safe-area-inset-left, 0px));
+    font-family: "Nunito", system-ui, sans-serif;
+    font-weight: 800; font-size: 14px; line-height: normal;
+    color: #2E6E61; text-decoration: none;
+    background: #FFFFFFD9;
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .back:hover { text-decoration: underline; }
   .back:focus-visible { outline: 3px solid #7bc8ff; outline-offset: 2px; }
 </style>
 </head>
 <body>
+
+<a class="back" href="../../">← All games</a>
 
 <canvas id="game" aria-label="Unicorn flying game"></canvas>
 
@@ -159,7 +172,6 @@
       <button class="btn" id="playBtn">Fly!</button>
       <button class="btn ghost" id="scoresBtn" type="button">Top scores</button>
     </div>
-    <a class="back" href="../../">&larr; All games</a>
   </div>
 </div>
 
@@ -213,7 +225,7 @@
     viewH = cv.height / scale;
     let padTop = 0;
     try { padTop = parseFloat(getComputedStyle(document.documentElement).paddingTop) || 0; } catch (e) {}
-    hudTop = 16 + padTop * dpr / scale;
+    hudTop = 16 + (padTop + 40) * dpr / scale; // leave room for the All games button
   }
   addEventListener('resize', resize);
   resize();
