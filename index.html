@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lyla Rose Games</title>
+<meta name="description" content="A little collection of unicorn games.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦄</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CDEBF5;
+    --sky2:#F7DDEB;
+    --hedge:#2E6E61;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFF;
+    --muted:#557A72;
+  }
+  *{box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%) fixed;
+    background-color:var(--sky);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    padding-inline:16px;
+    padding-block:max(24px, env(safe-area-inset-top)) 40px;
+  }
+  .wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
+  header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-top:12px}
+  .rainbow{display:flex;gap:4px}
+  .rainbow span{width:28px;height:8px;border-radius:4px}
+  h1{
+    font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;
+    font-size:clamp(44px,10vw,80px);line-height:1;margin:8px 0 0;
+    color:var(--pink);text-shadow:3px 3px 0 #fff;text-wrap:balance;
+  }
+  .tag{margin:0;font-size:clamp(16px,3.5vw,20px);font-weight:800;color:var(--muted)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
+  .game{
+    display:flex;flex-direction:column;background:var(--card);border-radius:22px;overflow:hidden;
+    text-decoration:none;color:inherit;box-shadow:0 8px 24px #2E6E6122;
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .game:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:0 14px 30px #2E6E6133}
+  .game:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+  .art{aspect-ratio:4/3;display:grid;place-items:center;font-size:clamp(72px,18vw,96px);position:relative}
+  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .game h2{font-family:"Chewy",cursive;font-weight:400;font-size:28px;margin:0;line-height:1.1}
+  .game p{margin:0;font-size:15px;color:var(--muted)}
+  .meta{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:#EAF7EC;color:var(--hedge)}
+  .play{
+    margin-top:auto;align-self:flex-start;background:var(--pink);color:#fff;font-weight:800;
+    font-size:18px;padding:10px 22px;border-radius:14px;
+  }
+  .soon{background:transparent;border:3px dashed #2E6E6155;box-shadow:none}
+  .soon:hover{transform:none;box-shadow:none}
+  .soon .art{filter:grayscale(.3);opacity:.7}
+  footer{text-align:center;font-size:13px;color:var(--muted)}
+  @media (prefers-reduced-motion: reduce){.game{transition:none}.game:hover{transform:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="rainbow" aria-hidden="true">
+      <span style="background:#FF6B6B"></span><span style="background:#FFA94D"></span><span style="background:#FFD43B"></span><span style="background:#69DB7C"></span><span style="background:#4DABF7"></span><span style="background:#9775FA"></span>
+    </div>
+    <h1>Lyla Rose Games</h1>
+    <p class="tag">Pick a unicorn game and press Play!</p>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>Made with love. More games galloping in soon.</footer>
+</div>
+
+<script>
+  // ===== ADD NEW GAMES HERE =====
+  // Put each game in its own folder inside "games", then add a line below.
+  const games = [
+    {
+      title: "Sparklehoof's Maze",
+      folder: "unicorn-maze",
+      emoji: "🦄",
+      colour: "#CFEFD8",
+      blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
+      tags: ["Maze", "Keyboard or touch"]
+    },
+    // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", blurb: "What it's about.", tags: ["Puzzle"] },
+  ];
+
+  const grid = document.getElementById('grid');
+  games.forEach(g => {
+    const a = document.createElement('a');
+    a.className = 'game';
+    a.href = 'games/' + g.folder + '/';
+    a.innerHTML = `
+      <div class="art" style="background:${g.colour}" aria-hidden="true">${g.emoji}</div>
+      <div class="body">
+        <h2></h2>
+        <p></p>
+        <div class="meta">${(g.tags||[]).map(t=>`<span class="chip"></span>`).join('')}</div>
+        <span class="play">Play ▶</span>
+      </div>`;
+    a.querySelector('h2').textContent = g.title;
+    a.querySelector('p').textContent = g.blurb;
+    a.querySelectorAll('.chip').forEach((c,i)=>c.textContent = g.tags[i]);
+    grid.appendChild(a);
+  });
+
+  const soon = document.createElement('div');
+  soon.className = 'game soon';
+  soon.innerHTML = `<div class="art" aria-hidden="true">✨</div>
+    <div class="body"><h2>Coming soon</h2><p>A new unicorn adventure is on its way.</p></div>`;
+  grid.appendChild(soon);
+</script>
+</body>
+</html>

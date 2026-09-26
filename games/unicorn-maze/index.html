@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sparklehoof's Maze</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CDEBF5;
+    --sky2:#F7DDEB;
+    --hedge:#2E6E61;
+    --hedge-dark:#1F4F45;
+    --path:#EAF7EC;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{margin:0}
+  body{
+    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%);
+    background-color:var(--sky);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    padding-inline:16px;
+    padding-block:16px 24px;
+    box-sizing:border-box;
+    min-height:100%;
+  }
+  .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .sub{margin:4px 0 0;font-size:14px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .board{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;border-radius:18px;overflow:hidden;background:var(--hedge-dark);box-shadow:0 10px 30px #2E6E6133;touch-action:none}
+  canvas{display:block;width:100%;height:100%}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45B3;padding:16px}
+  .panel{background:#fff;border-radius:18px;padding:20px 22px;text-align:center;max-width:320px;display:flex;flex-direction:column;gap:10px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink)}
+  .panel p{margin:0;font-size:15px}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  .controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+  .pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
+  .pad button{padding:0;font-size:22px;background:var(--hedge);border-radius:12px}
+  .pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+  .help{font-size:13px;max-width:30ch}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
+  .back:hover{text-decoration:underline}
+  @media (hover:hover) and (pointer:fine){.pad{display:none}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All games</a>
+  <header>
+    <div>
+      <h1>Sparklehoof's Maze</h1>
+      <p class="sub">Guide the unicorn through the hedge maze to the rainbow gate.</p>
+    </div>
+    <div class="stats">
+      <span class="pill" id="lvl">Level 1</span>
+      <span class="pill" id="stars">⭐ 0 / 0</span>
+      <span class="pill" id="time">0:00</span>
+    </div>
+  </header>
+
+  <div class="board" id="board">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 id="ovTitle">Ready to gallop?</h2>
+        <p id="ovText">Use the arrow keys, WASD, swipe, or the buttons. Grab the stars on the way for bonus points.</p>
+        <button id="ovBtn">Start</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="pad" aria-label="Direction buttons">
+      <button class="up" data-d="up" aria-label="Up">▲</button>
+      <button class="left" data-d="left" aria-label="Left">◀</button>
+      <button class="down" data-d="down" aria-label="Down">▼</button>
+      <button class="right" data-d="right" aria-label="Right">▶</button>
+    </div>
+    <p class="help">Every level the maze grows bigger. Your rainbow trail shows where you've been.</p>
+    <div class="btns">
+      <button class="ghost" id="newBtn">New maze</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  const cvs = document.getElementById('c');
+  const ctx = cvs.getContext('2d');
+  const board = document.getElementById('board');
+  const overlay = document.getElementById('overlay');
+  const ovTitle = document.getElementById('ovTitle');
+  const ovText = document.getElementById('ovText');
+  const ovBtn = document.getElementById('ovBtn');
+  const lvlEl = document.getElementById('lvl');
+  const starEl = document.getElementById('stars');
+  const timeEl = document.getElementById('time');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const RAINBOW = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA'];
+  let level = 1, N, grid, player, goal, starsList, got, trail, startTime, elapsed = 0, running = false, anim = {x:0,y:0}, sparkles = [], totalScore = 0;
+
+  function makeMaze(n){
+    // each cell: walls [top,right,bottom,left]
+    const g = Array.from({length:n},()=>Array.from({length:n},()=>({w:[1,1,1,1],v:false})));
+    const stack=[[0,0]]; g[0][0].v=true;
+    const dirs=[[0,-1,0,2],[1,0,1,3],[0,1,2,0],[-1,0,3,1]];
+    while(stack.length){
+      const [x,y]=stack[stack.length-1];
+      const opts=dirs.filter(([dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>=0&&ny>=0&&nx<n&&ny<n&&!g[ny][nx].v});
+      if(!opts.length){stack.pop();continue}
+      const [dx,dy,a,b]=opts[Math.floor(Math.random()*opts.length)];
+      g[y][x].w[a]=0; g[y+dy][x+dx].w[b]=0; g[y+dy][x+dx].v=true; stack.push([x+dx,y+dy]);
+    }
+    // knock out a few extra walls so there are some loops
+    for(let i=0;i<Math.floor(n*n*0.04);i++){
+      const x=1+Math.floor(Math.random()*(n-2)), y=1+Math.floor(Math.random()*(n-2));
+      const k=Math.floor(Math.random()*4), [dx,dy,a,b]=dirs[k];
+      g[y][x].w[a]=0; g[y+dy][x+dx].w[b]=0;
+    }
+    return g;
+  }
+
+  function newLevel(){
+    N = Math.min(6 + (level-1)*2, 24);
+    grid = makeMaze(N);
+    player = {x:0,y:0};
+    anim = {x:0,y:0};
+    goal = {x:N-1,y:N-1};
+    trail = [{x:0,y:0}];
+    starsList = [];
+    const count = Math.min(3 + level, 10);
+    const used = new Set(['0,0',`${N-1},${N-1}`]);
+    while(starsList.length<count){
+      const x=Math.floor(Math.random()*N), y=Math.floor(Math.random()*N), k=x+','+y;
+      if(!used.has(k)){used.add(k);starsList.push({x,y})}
+    }
+    got = 0;
+    elapsed = 0;
+    updateHud();
+    resize();
+  }
+
+  function updateHud(){
+    lvlEl.textContent = 'Level ' + level;
+    starEl.textContent = '⭐ ' + got + ' / ' + starsList.length;
+    const s = Math.floor(elapsed/1000);
+    timeEl.textContent = Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
+  }
+
+  let size = 600, cell = 25, dpr = 1;
+  function resize(){
+    const r = board.getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1;
+    size = r.width;
+    cvs.width = size*dpr; cvs.height = size*dpr;
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    cell = size / N;
+  }
+  addEventListener('resize', () => { if(grid) resize(); });
+
+  function move(d){
+    if(!running) return;
+    const m = {up:[0,-1,0],right:[1,0,1],down:[0,1,2],left:[-1,0,3]}[d];
+    if(!m) return;
+    const c = grid[player.y][player.x];
+    if(c.w[m[2]]) { bump = 6; return; }
+    player.x += m[0]; player.y += m[1];
+    const last = trail[trail.length-1];
+    if(last.x!==player.x || last.y!==player.y) trail.push({x:player.x,y:player.y});
+    const si = starsList.findIndex(s=>s.x===player.x&&s.y===player.y&&!s.got);
+    if(si>=0){ starsList[si].got=true; got++; burst(player.x,player.y,'#FFC23D'); updateHud(); }
+    if(player.x===goal.x && player.y===goal.y) win();
+  }
+  let bump = 0;
+
+  function burst(cx,cy,color){
+    if(reduced) return;
+    for(let i=0;i<14;i++){
+      const a=Math.random()*Math.PI*2, sp=1+Math.random()*2.5;
+      sparkles.push({x:(cx+.5)*cell,y:(cy+.5)*cell,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,color:color||RAINBOW[i%6]});
+    }
+  }
+
+  function win(){
+    running = false;
+    const secs = Math.floor(elapsed/1000);
+    const pts = Math.max(50, 500 - secs*5) + got*100;
+    totalScore += pts;
+    for(let i=0;i<4;i++) burst(goal.x,goal.y);
+    setTimeout(()=>{
+      ovTitle.textContent = 'Level ' + level + ' done!';
+      ovText.textContent = `${secs}s, ${got} of ${starsList.length} stars. +${pts} points (total ${totalScore}).`;
+      ovBtn.textContent = 'Next level';
+      overlay.hidden = false;
+      ovBtn.focus();
+    }, reduced?0:600);
+  }
+
+  function start(){
+    overlay.hidden = true;
+    startTime = performance.now() - elapsed;
+    running = true;
+  }
+
+  ovBtn.addEventListener('click', () => {
+    if(ovBtn.textContent === 'Next level'){ level++; newLevel(); }
+    start();
+  });
+  document.getElementById('newBtn').addEventListener('click', () => { newLevel(); start(); });
+
+  const keyMap = {ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+  addEventListener('keydown', e => {
+    const d = keyMap[e.key];
+    if(d){ e.preventDefault(); move(d); }
+    else if((e.key==='Enter'||e.key===' ') && !overlay.hidden){ e.preventDefault(); ovBtn.click(); }
+  });
+
+  // on-screen pad with hold-to-repeat
+  document.querySelectorAll('.pad button').forEach(b => {
+    let t;
+    const go = e => { e.preventDefault(); move(b.dataset.d); clearInterval(t); t=setInterval(()=>move(b.dataset.d),140); };
+    const stop = () => clearInterval(t);
+    b.addEventListener('pointerdown', go);
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev, stop));
+  });
+
+  // swipe
+  let sx=null, sy=null;
+  board.addEventListener('pointerdown', e => { sx=e.clientX; sy=e.clientY; });
+  board.addEventListener('pointermove', e => {
+    if(sx===null) return;
+    const dx=e.clientX-sx, dy=e.clientY-sy, th=Math.max(18, cell*0.6);
+    if(Math.abs(dx)>th || Math.abs(dy)>th){
+      move(Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up'));
+      sx=e.clientX; sy=e.clientY;
+    }
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>board.addEventListener(ev,()=>{sx=sy=null}));
+
+  function drawEmoji(ch, cx, cy, s){
+    ctx.font = `${s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.globalAlpha = 1; ctx.fillStyle = '#000';
+    ctx.fillText(ch, cx, cy);
+  }
+
+  function draw(t){
+    if(running){ elapsed = performance.now() - startTime; updateHud(); }
+    // ease unicorn position
+    const k = reduced ? 1 : 0.35;
+    anim.x += (player.x - anim.x)*k; anim.y += (player.y - anim.y)*k;
+
+    ctx.fillStyle = '#EAF7EC';
+    ctx.fillRect(0,0,size,size);
+
+    // subtle checker on path
+    ctx.fillStyle = '#DDF1E1';
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++) if((x+y)%2) ctx.fillRect(x*cell,y*cell,cell,cell);
+
+    // rainbow trail
+    if(trail.length>1){
+      ctx.lineCap='round'; ctx.lineJoin='round';
+      const bw = Math.max(1.5, cell*0.07);
+      RAINBOW.forEach((col,i)=>{
+        ctx.strokeStyle = col; ctx.lineWidth = bw; ctx.globalAlpha = 0.85;
+        const off = (i-2.5)*bw;
+        ctx.beginPath();
+        trail.forEach((p,j)=>{
+          const px=(p.x+.5)*cell+off, py=(p.y+.5)*cell+off;
+          j?ctx.lineTo(px,py):ctx.moveTo(px,py);
+        });
+        ctx.lineTo((anim.x+.5)*cell+off,(anim.y+.5)*cell+off);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    // goal gate glow
+    const pulse = reduced ? 0.5 : (Math.sin(t/300)+1)/2;
+    const gx=(goal.x+.5)*cell, gy=(goal.y+.5)*cell;
+    const grad = ctx.createRadialGradient(gx,gy,0,gx,gy,cell*0.8);
+    grad.addColorStop(0,`rgba(255,194,61,${0.5+pulse*0.4})`); grad.addColorStop(1,'rgba(255,194,61,0)');
+    ctx.fillStyle=grad; ctx.fillRect(goal.x*cell-cell/2,goal.y*cell-cell/2,cell*2,cell*2);
+    drawEmoji('🌈', gx, gy, cell*0.72);
+
+    // stars
+    starsList.forEach(s=>{
+      if(s.got) return;
+      const bob = reduced?0:Math.sin(t/250 + s.x + s.y)*cell*0.05;
+      drawEmoji('⭐',(s.x+.5)*cell,(s.y+.5)*cell+bob,cell*0.55);
+    });
+
+    // hedges
+    const wl = Math.max(3, cell*0.18);
+    ctx.strokeStyle = '#2E6E61'; ctx.lineWidth = wl; ctx.lineCap='round';
+    ctx.beginPath();
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const w=grid[y][x].w, X=x*cell, Y=y*cell;
+      if(w[0]){ctx.moveTo(X,Y);ctx.lineTo(X+cell,Y)}
+      if(w[3]){ctx.moveTo(X,Y);ctx.lineTo(X,Y+cell)}
+      if(y===N-1&&w[2]){ctx.moveTo(X,Y+cell);ctx.lineTo(X+cell,Y+cell)}
+      if(x===N-1&&w[1]){ctx.moveTo(X+cell,Y);ctx.lineTo(X+cell,Y+cell)}
+    }
+    ctx.stroke();
+    // hedge highlights
+    ctx.strokeStyle = '#4C9A7E'; ctx.lineWidth = wl*0.35;
+    ctx.stroke();
+
+    // unicorn
+    let shake = 0;
+    if(bump>0){ shake = reduced?0:Math.sin(bump*2)*cell*0.06; bump--; }
+    const ux=(anim.x+.5)*cell+shake, uy=(anim.y+.5)*cell;
+    ctx.fillStyle='rgba(31,79,69,0.18)';
+    ctx.beginPath(); ctx.ellipse(ux, uy+cell*0.3, cell*0.28, cell*0.08, 0, 0, Math.PI*2); ctx.fill();
+    const hop = reduced?0:Math.abs(Math.sin(t/180))*cell*0.04;
+    // solid badge behind the unicorn so it always stands out
+    ctx.fillStyle = '#FFFFFF';
+    ctx.strokeStyle = '#F2559B'; ctx.lineWidth = Math.max(2, cell*0.07);
+    ctx.beginPath(); ctx.arc(ux, uy - hop, cell*0.4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    drawEmoji('🦄', ux, uy - hop, cell*0.66);
+
+    // sparkles
+    sparkles = sparkles.filter(p=>p.life>0);
+    sparkles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.05; p.life-=0.025;
+      ctx.globalAlpha=Math.max(0,p.life); ctx.fillStyle=p.color;
+      ctx.beginPath(); ctx.arc(p.x,p.y,Math.max(1.5,cell*0.06),0,Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha=1;
+
+    requestAnimationFrame(draw);
+  }
+
+  newLevel();
+  requestAnimationFrame(draw);
+})();
+</script>
+
+</body>
+</html>
