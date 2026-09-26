@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The list of pages Google should know about. Add one <url> block per new game. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://kingdoggydog.github.io/lylarosegames/</loc></url>
+  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/unicorn-maze/</loc></url>
+  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/glitter-sky/</loc></url>
+  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/unicorn-soccer/</loc></url>
+</urlset>
