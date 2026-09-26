@@ -55,6 +55,7 @@ const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
    - no double-tap zoom, no pinch zoom, no page bounce or pull-to-refresh
    - no text selection or long-press pop-ups while playing
    - full screen (hides the browser bar) on the first tap, where the device allows it
+   - sound that wakes back up after the phone pauses it (switching apps, locking, going Back)
    - "turn your device sideways" message, if the game asks for it with
        <meta name="game-orientation" content="landscape">   (or "portrait")
    ===================================================================== */
@@ -117,7 +118,39 @@ const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
   }
   document.addEventListener("pointerup", goFull, { once: true, capture: true });
 
-  // 4. "Turn your device sideways" message - only on phones (tablets are big enough either way), only if the game asks
+  // 4. Sound that always comes back. Phones pause a page's sound when you switch apps, lock the
+  //    screen, get a notification or come "back" to the page - iPhones call this "interrupted",
+  //    which games often don't recognise, so the sound stays off until a refresh. Here we keep
+  //    track of every game's sound engine and wake it up on the next tap or key press.
+  const sounds = new Set();
+  try {
+    const Orig = window.AudioContext || window.webkitAudioContext;
+    if (Orig) {
+      const Tracked = class extends Orig { constructor(...a) { super(...a); sounds.add(this); } };
+      window.AudioContext = Tracked;
+      if (window.webkitAudioContext) window.webkitAudioContext = Tracked;
+    }
+  } catch (e) {}
+  function wakeSound() {
+    // treat game sound like music/video on iPhone: plays even when the silent switch is on
+    try { if (navigator.audioSession && navigator.audioSession.type !== "playback") navigator.audioSession.type = "playback"; } catch (e) {}
+    sounds.forEach(ac => {
+      if (ac.state === "running" || ac.state === "closed") return;
+      try {
+        const p = ac.resume(); if (p && p.catch) p.catch(() => {});
+        // a tiny silent blip - older iPhones need something to actually play before sound unlocks
+        const src = ac.createBufferSource(); src.buffer = ac.createBuffer(1, 1, 22050);
+        src.connect(ac.destination); src.start(0);
+      } catch (e) {}
+    });
+  }
+  // taps and key presses are what phones accept as "the player wants sound"
+  ["pointerup", "touchend", "click", "keydown"].forEach(t => addEventListener(t, wakeSound, { capture: true, passive: true }));
+  // coming back to the game (from another app, or the Back button): try straight away too
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) wakeSound(); });
+  addEventListener("pageshow", wakeSound);
+
+  // 5. "Turn your device sideways" message - only on phones (tablets are big enough either way), only if the game asks
   const isPhone = isTouch && Math.min(screen.width, screen.height) < 600;
   if (!want || !isPhone) return;
   let dismissed = false;

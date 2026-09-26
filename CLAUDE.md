@@ -61,6 +61,7 @@ games/<folder>/     one folder per game, fully self-contained
 - Work with touch AND keyboard/mouse. Touch buttons at least 48px.
 - Don't fight the mobile kit in `site.js` (it already stops double-tap/pinch zoom, page bounce and text selection, and goes full screen on the first tap where the device allows it). If a panel needs to scroll inside a game that blocks touch, give that panel `touch-action: pan-y`.
 - Any text box needs a font size of at least 16px (otherwise iPhones zoom in).
+- Make sounds with the browser's built-in synthesiser (`new (window.AudioContext || window.webkitAudioContext)()`), created on a tap. The mobile kit keeps track of it and wakes it back up after the phone pauses it (switching apps, locking, going Back) - so don't build a separate unlock system, and never use the AudioContext some other way that bypasses `window.AudioContext`.
 - Test at 390x664 (phone), 844x390 (phone sideways), 820x1180 and 1180x820 (iPad).
 
 ## Adding a NEW game - checklist (do all of these)
