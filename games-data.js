@@ -55,6 +55,16 @@ const games = [
     categories: ["unicorns", "sport"],
     controls: "Tap or Space"
   },
+  {
+    title: "Lenny's Banana Catch",
+    folder: "lenny-banana-catch",
+    emoji: "🍌",
+    colour: "#D8F2DC",
+    thumb: "thumb.jpg",
+    blurb: "Help Lenny the Lemur catch the bananas cheeky monkeys throw from the trees. Watch out for coconuts!",
+    categories: ["animals"],
+    controls: "Drag or arrow keys"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

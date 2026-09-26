@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lenny's Banana Catch - Free Animal Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CDEBF5;
+    --sky2:#F7DDEB;
+    --hedge:#2E6E61;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,#D8F2DC 0%,var(--sky2) 100%);
+    background-color:#D8F2DC;
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1000px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .snd{display:flex;gap:8px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(26px,5.5vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .stats{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .pill.hurry{background:#FFE3E3;color:#C92A2A}
+  /* the jungle fills whatever space is left over (any shape from tall to wide) */
+  .stage{flex:1;min-height:150px;container-type:size;display:grid;place-items:center}
+  .board{position:relative;width:min(100cqw,100cqh*1.6);height:min(100cqh,100cqw*2);border-radius:18px;overflow:hidden;background:#8FD19E;box-shadow:0 10px 30px #2E6E6133;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+  .board:active{cursor:grabbing}
+  canvas{display:block;width:100%;height:100%}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45A6;padding:14px;cursor:default}
+  .panel{background:#fff;border-radius:18px;padding:18px 20px;text-align:center;max-width:340px;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:9px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink);line-height:1.05}
+  .panel p{margin:0;font-size:15px}
+  .panel .big{font-size:20px;font-weight:800}
+  .panel .starrow{font-size:40px;line-height:1;letter-spacing:4px}
+  .panel .starrow .off{opacity:.22;filter:grayscale(1)}
+  .panel .key{font-size:14px;display:grid;grid-template-columns:auto auto;justify-content:center;gap:2px 10px;text-align:left}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--pink);color:#fff;font-size:17px;min-height:48px;min-width:48px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
+  #ovBtn{box-shadow:0 5px 0 #C23A78}
+  #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C23A78}
+  .back{font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  /* short screens: a smaller title */
+  @media (max-height:760px){ h1{font-size:28px} .pill{font-size:14px;padding:5px 10px} }
+  /* phone on its side: title, scores and buttons on the left, jungle on the right */
+  @media (orientation:landscape) and (max-height:620px){
+    .wrap{max-width:none;display:grid;grid-template-columns:minmax(160px,220px) 1fr;grid-template-rows:auto 1fr;gap:8px 14px}
+    .top{grid-column:1;grid-row:1;flex-wrap:wrap}
+    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:8px}
+    h1{font-size:24px}
+    .stats{flex-direction:column;align-items:flex-start}
+    .stage{grid-column:2;grid-row:1 / 3;min-height:0}
+  }
+</style>
+<meta name="description" content="Lenny's Banana Catch - a free animal game for kids. Help Lenny the Lemur catch the bananas cheeky monkeys throw from the jungle trees, and dodge the coconuts!">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/lenny-banana-catch/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Lenny's Banana Catch - Free Animal Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Lenny's Banana Catch - a free animal game for kids. Help Lenny the Lemur catch the bananas cheeky monkeys throw from the jungle trees, and dodge the coconuts!">
+<meta property="og:url" content="https://lylarosegames.com/games/lenny-banana-catch/">
+<meta property="og:image" content="https://lylarosegames.com/games/lenny-banana-catch/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lenny's Banana Catch - free animal game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: Drag, or arrow keys -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Lenny's Banana Catch",
+   "url": "https://lylarosegames.com/games/lenny-banana-catch/",
+   "description": "Lenny's Banana Catch - a free animal game for kids. Help Lenny the Lemur catch the bananas cheeky monkeys throw from the jungle trees, and dodge the coconuts!",
+   "image": "https://lylarosegames.com/games/lenny-banana-catch/share.jpg",
+   "genre": [
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Lenny's Banana Catch",
+     "item": "https://lylarosegames.com/games/lenny-banana-catch/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../">← All games</a>
+    <div class="snd">
+      <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+      <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+  <header>
+    <h1>Lenny's Banana Catch</h1>
+    <div class="stats">
+      <span class="pill" id="score">🍌 0</span>
+      <span class="pill" id="time">⏱ 60</span>
+      <span class="pill" id="stars" aria-label="Stars: 0 of 3">☆☆☆</span>
+      <span class="pill" id="best">🏆 Best: 0</span>
+    </div>
+  </header>
+
+  <div class="stage">
+  <div class="board" id="board">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 id="ovTitle">Banana time!</h2>
+        <p id="ovStars" class="starrow" hidden></p>
+        <p id="ovBig" class="big" hidden></p>
+        <p id="ovText">The cheeky monkeys are throwing bananas! Drag Lenny, or use the arrow keys, to catch as many as you can in 60 seconds.</p>
+        <div class="key" id="ovKey">
+          <span>🍌 Banana</span><span>1 point</span>
+          <span>🍌🍌 Bunch</span><span>3 points</span>
+          <span>✨ Golden banana</span><span>10 points</span>
+          <span>🥥 Coconut</span><span>Bonk! Dodge it</span>
+          <span>⭐ Stars at</span><span>20, 45 and 75</span>
+        </div>
+        <button id="ovBtn">Play</button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const cvs = document.getElementById('c');
+  const ctx = cvs.getContext('2d');
+  const bgCvs = document.createElement('canvas');   // the jungle picture, drawn once per size change
+  const bgCtx = bgCvs.getContext('2d');
+  const board = document.getElementById('board');
+  const overlay = document.getElementById('overlay');
+  const ovTitle = document.getElementById('ovTitle');
+  const ovStars = document.getElementById('ovStars');
+  const ovBig = document.getElementById('ovBig');
+  const ovText = document.getElementById('ovText');
+  const ovKey = document.getElementById('ovKey');
+  const ovBtn = document.getElementById('ovBtn');
+  const soundBtn = document.getElementById('sound');
+  const musicBtn = document.getElementById('music');
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const starsEl = document.getElementById('stars');
+  const bestEl = document.getElementById('best');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // The game world is always 800 tall. Its width changes with the shape of the screen.
+  const H = 800;
+  let W = 600;
+  const GROUND = H - 64;             // the jungle floor
+  const LK = 1.4;                    // how big Lenny is drawn
+  const MS = 1.2;                    // how big the monkeys are drawn
+  const FEET = GROUND - 6;
+  const LENNY_Y = FEET - 39*LK;      // Lenny's middle
+  const CATCH_Y = LENNY_Y - 42*LK - 4;   // where his gloves are
+  const ROUND = 60;
+  const STARS = [20, 45, 75];
+  const VALUE = {banana: 1, bunch: 3, gold: 10};
+  const RAINBOW = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA'];
+  const SLOTS = [0.3, 0.7, 0.5, 0.11, 0.89];   // where each monkey sits, in the order they arrive
+
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  let best = load('lrg-lenny-banana-catch-best', 0);
+  let muted = load('lrg-lenny-banana-catch-muted', false);
+  let musicOn = load('lrg-lenny-banana-catch-music', true);
+
+  let state = 'intro';     // intro, play, ending, over
+  let clock = 0, elapsed = 0, endT = 0, spawnT = 1, score = 0, starsWon = 0, lastTick = 99, newBest = false;
+  let items = [], pops = [], confetti = [], monkeys = [], msg = null;
+  const lenny = {x: 300, vx: 0, dizzy: 0, mood: 'ready', moodT: 0, run: 0, pose: 'idle'};
+  const keys = {left: false, right: false};
+  let dragX = null;
+
+  const brY = x => 180 + 12*Math.sin(x/W*Math.PI*3 + 0.6);   // the long branch the monkeys sit on
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const progress = () => Math.min(1, elapsed/ROUND);
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.45 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  // a burst of filtered hiss (used for shakers, whooshes and thuds)
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  // a wobbly "boi-oi-oing"
+  function boing(){
+    if(!audio()) return;
+    const t = actx.currentTime;
+    const o = actx.createOscillator(), g = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain();
+    o.type = 'triangle'; o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(520, t + 0.7);
+    lfo.frequency.setValueAtTime(14, t); lfo.frequency.linearRampToValueAtTime(5, t + 0.7);
+    lg.gain.setValueAtTime(70, t); lg.gain.linearRampToValueAtTime(15, t + 0.7);
+    lfo.connect(lg).connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.03); g.gain.exponentialRampToValueAtTime(0.001, t + 0.75);
+    o.connect(g).connect(sfxBus); o.start(t); lfo.start(t); o.stop(t + 0.8); lfo.stop(t + 0.8);
+  }
+
+  const sfx = {
+    catch1(){ tone(700, 0.09, 'triangle', 0.16, 1100); tone(1400, 0.1, 'sine', 0.08, null, 0.05); },
+    catch3(){ [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.14, 'triangle', 0.14, null, i*0.055)); },
+    gold(){
+      [1047, 1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.25, 'triangle', 0.12, null, i*0.06));
+      for(let i = 0; i < 8; i++) tone(2400 + Math.random()*1800, 0.2, 'sine', 0.04, null, 0.1 + i*0.05);
+    },
+    bonk(){
+      tone(170, 0.22, 'sine', 0.45, 70);
+      if(audio()) noise(actx.currentTime, 0.12, 'lowpass', 900, 0.8, 0.3, 0.004);
+      boing();
+    },
+    throw(){ if(audio()) noise(actx.currentTime, 0.22, 'bandpass', 600, 1.5, 0.05, 0.03, null, 2200); },
+    plop(){ tone(150, 0.12, 'sine', 0.12, 90); },
+    thud(){ tone(110, 0.2, 'sine', 0.3, 55); if(audio()) noise(actx.currentTime, 0.1, 'lowpass', 500, 0.8, 0.15, 0.004); },
+    hehe(){ for(let i = 0; i < 3; i++){ tone(1000 + i*60, 0.08, 'triangle', 0.07, 1300 + i*60, i*0.12); } },
+    ooh(){ tone(420, 0.18, 'triangle', 0.08, 640); tone(440, 0.18, 'triangle', 0.08, 680, 0.2); tone(800, 0.1, 'triangle', 0.07, 600, 0.42); tone(800, 0.1, 'triangle', 0.07, 600, 0.55); },
+    star(){ [659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.3, 'triangle', 0.15, null, i*0.09)); tone(1568, 0.6, 'sine', 0.08, null, 0.36); },
+    tick(){ tone(1150, 0.05, 'square', 0.05); },
+    go(){ tone(523, 0.12, 'triangle', 0.15); tone(784, 0.25, 'triangle', 0.16, null, 0.12); },
+    end(){ [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? 0.5 : 0.16, 'triangle', 0.15, null, i*0.12)); }
+  };
+
+  // ----- background music: a bouncy jungle tune (marimba, bongos and shaker) that loops -----
+  const BPM = 116, STEP = 60/BPM/2;   // each step is half a beat
+  const CHORDS = [41, 38, 46, 48, 41, 38, 43, 48];   // F, Dm, Bb, C, F, Dm, Gm, C (bass notes)
+  const MINOR = [38, 43];
+  const MELODY = [
+    72,0,77,0,76,72,69,0,   74,0,77,0,81,0,77,74,
+    70,0,74,77,0,74,70,0,   72,0,76,0,79,0,0,0,
+    81,0,79,77,76,0,77,0,   74,0,77,0,74,72,69,0,
+    70,0,74,0,79,77,74,0,   76,0,72,0,77,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+
+  function marimba(f, t, vol){
+    const d = t - actx.currentTime;
+    tone(f, 0.35, 'sine', vol, null, d, musicBus);
+    tone(f*4, 0.06, 'sine', vol*0.35, null, d, musicBus);   // the woody "tock" at the start
+  }
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    // bass: bouncy plucks
+    if(beat === 0 || beat === 3 || beat === 4 || beat === 6) tone(hz(root + (beat === 3 || beat === 6 ? 7 : 0)), STEP*1.4, 'triangle', 0.2, null, d, musicBus);
+    // soft chord on the first beat of every bar
+    if(beat === 0) [12, 16, 19].forEach(n => {
+      const nn = MINOR.includes(root) && n === 16 ? 15 : n;
+      tone(hz(root + nn), STEP*7, 'sine', 0.035, null, d, musicBus);
+    });
+    // tune on the marimba
+    const m = MELODY[i];
+    if(m) marimba(hz(m), t, 0.12);
+    // bongos and shaker
+    if(beat === 0 || beat === 5) tone(210, 0.14, 'sine', 0.22, 150, d, musicBus);
+    if(beat === 2 || beat === 3 || beat === 6) tone(360, 0.09, 'sine', 0.14, 290, d, musicBus);
+    noise(t, 0.05, 'highpass', 6500, 0.7, beat % 2 ? 0.05 : 0.025, 0.004, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){
+      playStep(mStep, mNext);
+      mNext += STEP; mStep = (mStep + 1) % 64;
+    }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  function duckMusic(secs){
+    if(!actx || !musicOn) return;
+    const g = musicBus.gain, t = actx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.15, t + 0.1); g.setValueAtTime(0.15, t + secs); g.linearRampToValueAtTime(0.45, t + secs + 0.8);
+  }
+
+  // pause the sound when the page is hidden
+  document.addEventListener('visibilitychange', () => {
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.cancelScheduledValues(actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.45 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save('lrg-lenny-banana-catch-muted', muted); wake(); startMusic(); setSoundBtn(); soundBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save('lrg-lenny-banana-catch-music', musicOn); wake(); startMusic(); setSoundBtn(); musicBtn.blur(); });
+  setSoundBtn();
+
+  // ===== GAME FLOW =====
+  function starText(n){ return '⭐'.repeat(n) + '☆'.repeat(3 - n); }
+  function updateHud(){
+    scoreEl.textContent = '🍌 ' + score;
+    const left = Math.max(0, Math.ceil(ROUND - elapsed));
+    timeEl.textContent = '⏱ ' + left;
+    timeEl.classList.toggle('hurry', state === 'play' && left <= 10);
+    starsEl.textContent = starText(starsWon);
+    starsEl.setAttribute('aria-label', 'Stars: ' + starsWon + ' of 3');
+    bestEl.textContent = '🏆 Best: ' + best;
+  }
+
+  function makeMonkey(i){
+    return {slot: i, enter: 0, wind: -1, windDur: 0.4, item: null, arm: 1, target: 0, laugh: 0, ph: Math.random()*6, throwAnim: 0};
+  }
+
+  function startRound(){
+    state = 'play';
+    elapsed = 0; endT = 0; score = 0; starsWon = 0; lastTick = 99; newBest = false;
+    spawnT = 1.1;
+    items = []; pops = []; confetti = [];
+    monkeys = [makeMonkey(0), makeMonkey(1)];
+    lenny.x = W/2; lenny.vx = 0; lenny.dizzy = 0; lenny.mood = 'ready'; lenny.pose = 'stay';
+    dragX = null;
+    msg = {text: 'Go!', t: 0, col: '#F2559B'};
+    sfx.go();
+    updateHud();
+  }
+
+  function pickType(){
+    const p = progress(), r = Math.random();
+    if(r < 0.035) return 'gold';
+    if(r < 0.035 + lerp(0.07, 0.15, p)) return 'coconut';
+    if(r < 0.035 + lerp(0.07, 0.15, p) + 0.18) return 'bunch';
+    return 'banana';
+  }
+
+  function monkeyPos(m){
+    const x = SLOTS[m.slot]*W;
+    const drop = (1 - ease(m.enter))*190;
+    const bob = reduced ? 0 : Math.sin(clock*3 + m.ph)*1.5;
+    return {x, y: brY(x) - drop + bob};
+  }
+  function handPos(m){
+    const p = monkeyPos(m);
+    if(m.wind >= 0){
+      const u = Math.min(1, m.wind/m.windDur);
+      return {x: p.x + m.arm*(14 + 4*u)*MS, y: p.y - (58 + 14*ease(u))*MS};
+    }
+    return {x: p.x + m.arm*18*MS, y: p.y - 30*MS};
+  }
+
+  function startThrow(){
+    const ready = monkeys.filter(m => m.enter >= 1 && m.wind < 0);
+    if(!ready.length) return;
+    const m = ready[Math.floor(Math.random()*ready.length)];
+    const p = progress();
+    m.item = pickType();
+    m.wind = 0;
+    m.windDur = lerp(0.45, 0.28, p);
+    m.target = 50 + Math.random()*(W - 100);
+    m.arm = m.target >= SLOTS[m.slot]*W ? 1 : -1;
+  }
+
+  function release(m){
+    const h = handPos(m), p = progress();
+    const g = 1000*lerp(1, 1.6, p);
+    const vy = -(90 + Math.random()*170);
+    const d = CATCH_Y - h.y;
+    const t = (-vy + Math.sqrt(vy*vy + 2*g*d))/g;
+    let vx = (m.target - h.x)/t;
+    vx = Math.max(-460, Math.min(460, vx));
+    items.push({type: m.item, x: h.x, y: h.y, vx, vy, g, rot: 0, spin: (Math.random() < 0.5 ? -1 : 1)*(4 + Math.random()*5), state: 'air', t: 0, alpha: 1, from: m});
+    m.item = null; m.wind = -1; m.throwAnim = 1;
+    sfx.throw();
+  }
+
+  function addScore(n, x, y, type){
+    score += n;
+    const cols = {banana: '#E8A317', bunch: '#E8590C', gold: '#F2559B'};
+    pops.push({x, y, text: '+' + n, t: 0, col: cols[type]});
+    if(type === 'gold'){ burst(x, y, 40); sfx.gold(); msg = {text: 'Golden banana!', t: 0, col: '#E8A317'}; }
+    else if(type === 'bunch'){ burst(x, y, 12); sfx.catch3(); }
+    else sfx.catch1();
+    lenny.mood = 'happy'; lenny.moodT = 0.5;
+    const s = STARS.filter(v => score >= v).length;
+    if(s > starsWon){
+      starsWon = s;
+      msg = {text: s === 3 ? '⭐⭐⭐ Superstar!' : s === 2 ? '⭐⭐ Two stars!' : '⭐ A star!', t: 0, col: '#F2559B'};
+      burst(W/2, H*0.45, 60);
+      sfx.star();
+    }
+    updateHud();
+  }
+
+  function bonk(it){
+    it.state = 'bounce';
+    it.vy = -380; it.vx = (it.x < lenny.x ? -1 : 1)*(180 + Math.random()*80);
+    lenny.dizzy = 1; lenny.vx = 0; lenny.mood = 'sad';
+    msg = {text: 'Bonk!', t: 0, col: '#8B5A2B'};
+    monkeys.forEach(m => m.laugh = 1.3);
+    sfx.bonk();
+    setTimeout(() => sfx.hehe(), 350);
+  }
+
+  function endRound(){
+    state = 'ending'; endT = 0;
+    msg = {text: "Time's up!", t: 0, col: '#F2559B'};
+    sfx.end(); duckMusic(2.5);
+    monkeys.forEach(m => { m.wind = -1; m.item = null; });
+  }
+
+  function gameOver(){
+    state = 'over';
+    if(score > best){ best = score; newBest = true; save('lrg-lenny-banana-catch-best', best); }
+    ovTitle.textContent = starsWon === 3 ? 'Banana superstar!' : starsWon === 2 ? 'Brilliant catching!' : starsWon === 1 ? 'Well done!' : 'Good try!';
+    ovStars.hidden = false;
+    ovStars.innerHTML = [0, 1, 2].map(i => '<span class="' + (i < starsWon ? '' : 'off') + '">⭐</span>').join('');
+    ovStars.setAttribute('aria-label', starsWon + ' stars out of 3');
+    ovBig.hidden = false;
+    ovBig.textContent = 'You scored ' + score + (score === 1 ? ' point' : ' points');
+    const nextStar = STARS.find(v => v > score);
+    ovText.textContent = newBest && score > 0 ? '🏆 That is a new best! Can you beat it?'
+      : nextStar ? 'Get ' + nextStar + ' for the next star. Your best is ' + best + '.'
+      : 'Your best is ' + best + '. Have another go!';
+    ovKey.hidden = true;
+    ovBtn.textContent = 'Play again';
+    overlay.hidden = false;
+    updateHud();
+    ovBtn.focus();
+  }
+
+  ovBtn.addEventListener('click', () => {
+    wake(); startMusic();
+    overlay.hidden = true;
+    startRound();
+    ovBtn.blur();
+  });
+
+  // ----- controls: drag (touch or mouse), or arrow keys / A and D -----
+  function toWorldX(clientX){
+    const r = board.getBoundingClientRect();
+    return (clientX - r.left)/r.width*W;
+  }
+  let dragging = false;
+  board.addEventListener('pointerdown', e => {
+    if(!overlay.hidden) return;
+    e.preventDefault();
+    dragging = true;
+    try { board.setPointerCapture(e.pointerId); } catch(err){}
+    dragX = toWorldX(e.clientX);
+  });
+  board.addEventListener('pointermove', e => {
+    if(!overlay.hidden) return;
+    if(dragging || e.pointerType === 'mouse') dragX = toWorldX(e.clientX);
+  });
+  const stopDrag = () => { dragging = false; };
+  board.addEventListener('pointerup', stopDrag);
+  board.addEventListener('pointercancel', stopDrag);
+
+  const LEFT = ['ArrowLeft', 'a', 'A'], RIGHT = ['ArrowRight', 'd', 'D'];
+  addEventListener('keydown', e => {
+    if(LEFT.includes(e.key)){ keys.left = true; dragX = null; e.preventDefault(); return; }
+    if(RIGHT.includes(e.key)){ keys.right = true; dragX = null; e.preventDefault(); return; }
+    if(e.key === ' ' || e.key === 'Enter'){
+      if(e.target && e.target.tagName === 'BUTTON') return;   // the button handles it
+      e.preventDefault();
+      if(!overlay.hidden) ovBtn.click();
+    }
+  });
+  addEventListener('keyup', e => {
+    if(LEFT.includes(e.key)) keys.left = false;
+    if(RIGHT.includes(e.key)) keys.right = false;
+  });
+  addEventListener('blur', () => { keys.left = keys.right = false; });
+
+  // ===== CONFETTI =====
+  function burst(x, y, n){
+    if(reduced) n = Math.min(n, 12);
+    for(let i = 0; i < n; i++){
+      const a = -Math.PI/2 + (Math.random()-.5)*2.6, sp = 4 + Math.random()*7;
+      confetti.push({x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 1, c: RAINBOW[i%6], r: Math.random()*6, s: 5 + Math.random()*5});
+    }
+  }
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt;
+    const playing = state === 'play' || state === 'ending';
+
+    if(state === 'play'){
+      elapsed += dt;
+      const left = ROUND - elapsed;
+      const sec = Math.ceil(left);
+      if(sec !== lastTick){
+        lastTick = sec;
+        if(sec <= 5 && sec > 0) sfx.tick();
+        updateHud();
+      }
+      // more monkeys as time goes on
+      const want = elapsed < 8 ? 2 : elapsed < 20 ? 3 : elapsed < 35 ? 4 : 5;
+      if(monkeys.length < want){ monkeys.push(makeMonkey(monkeys.length)); sfx.ooh(); }
+      // ...and faster throws
+      spawnT -= dt;
+      if(spawnT <= 0){
+        startThrow();
+        spawnT = lerp(1.15, 0.45, progress())*(0.8 + Math.random()*0.4);
+      }
+      if(left <= 0){ elapsed = ROUND; updateHud(); endRound(); }
+    } else if(state === 'ending'){
+      endT += dt;
+      if(endT > 1.8) gameOver();
+    }
+
+    // monkeys
+    monkeys.forEach(m => {
+      m.enter = Math.min(1, m.enter + dt/0.8);
+      m.laugh = Math.max(0, m.laugh - dt);
+      m.throwAnim = Math.max(0, m.throwAnim - dt*3);
+      if(m.wind >= 0){
+        m.wind += dt;
+        if(m.wind >= m.windDur) release(m);
+      }
+    });
+
+    // Lenny
+    const speed = Math.max(640, W*0.65);
+    if(lenny.dizzy > 0){
+      lenny.dizzy = Math.max(0, lenny.dizzy - dt);
+      lenny.vx *= Math.pow(0.001, dt);
+      if(lenny.dizzy === 0) lenny.mood = 'ready';
+    } else if(playing){
+      if(keys.left || keys.right){
+        const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+        lenny.vx += (dir*speed - lenny.vx)*Math.min(1, dt*14);
+      } else if(dragX !== null){
+        const want = Math.max(-1600, Math.min(1600, (dragX - lenny.x)*14));
+        lenny.vx += (want - lenny.vx)*Math.min(1, dt*20);
+        if(!dragging && Math.abs(dragX - lenny.x) < 2){ lenny.vx = 0; }
+      } else {
+        lenny.vx *= Math.pow(0.0005, dt);
+      }
+    }
+    lenny.x += lenny.vx*dt;
+    const lim = 70;
+    if(lenny.x < lim){ lenny.x = lim; lenny.vx = Math.max(0, lenny.vx); }
+    if(lenny.x > W - lim){ lenny.x = W - lim; lenny.vx = Math.min(0, lenny.vx); }
+    if(Math.abs(lenny.vx) > 40) lenny.run += dt*Math.min(16, 6 + Math.abs(lenny.vx)/80);
+    if(lenny.moodT > 0){ lenny.moodT -= dt; if(lenny.moodT <= 0 && lenny.dizzy === 0) lenny.mood = 'ready'; }
+    if(state === 'intro') lenny.x = W/2 + Math.sin(clock*0.9)*W*0.22;
+
+    // falling things
+    items.forEach(it => {
+      it.t += dt;
+      const py = it.y;
+      if(it.state === 'air' || it.state === 'bounce'){
+        it.vy += it.g*dt;
+        it.x += it.vx*dt; it.y += it.vy*dt;
+        it.rot += it.spin*dt;
+        if(it.x < 16){ it.x = 16; it.vx = Math.abs(it.vx)*0.6; }
+        if(it.x > W - 16){ it.x = W - 16; it.vx = -Math.abs(it.vx)*0.6; }
+        if(it.state === 'air' && py < CATCH_Y && it.y >= CATCH_Y && playing){
+          const dx = Math.abs(it.x - lenny.x);
+          if(it.type === 'coconut'){
+            if(dx < 50 && lenny.dizzy === 0) bonk(it);
+          } else if(dx < 64){
+            it.state = 'caught';
+            addScore(VALUE[it.type], it.x, it.y - 20, it.type);
+          }
+        }
+        if(it.state !== 'caught' && it.y >= GROUND - 10){
+          it.y = GROUND - 10;
+          if(it.type === 'coconut'){
+            if(Math.abs(it.vy) > 250){ it.vy = -it.vy*0.3; it.vx *= 0.7; sfx.thud(); }
+            else { it.vy = 0; it.state = 'ground'; }
+          } else { it.state = 'ground'; it.vy = 0; if(playing) sfx.plop(); }
+        }
+      } else if(it.state === 'ground'){
+        it.x += it.vx*dt; it.vx *= Math.pow(it.type === 'coconut' ? 0.3 : 0.001, dt);
+        if(it.type === 'coconut') it.rot += it.vx*dt/18;
+        it.alpha -= dt*(it.type === 'coconut' ? 0.8 : 1.2);
+      }
+    });
+    items = items.filter(it => it.state !== 'caught' && it.alpha > 0 && it.y < H + 60);
+
+    pops.forEach(p => { p.t += dt; p.y -= dt*70; });
+    pops = pops.filter(p => p.t < 0.9);
+    if(msg){ msg.t += dt; if(msg.t > 1.4 && state !== 'ending' && state !== 'over') msg = null; }
+    confetti = confetti.filter(p => p.life > 0);
+    confetti.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.vx *= 0.99; p.life -= dt*0.7; p.r += 0.15; });
+  }
+
+  // ===== DRAWING =====
+  function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0)/4294967296; }; }
+
+  function leafClump(c, x, y, r, col){
+    c.fillStyle = col;
+    c.beginPath();
+    for(let i = 0; i < 5; i++){ const a = i/5*Math.PI*2; c.moveTo(x + Math.cos(a)*r*0.55 + r*0.6, y + Math.sin(a)*r*0.4); c.arc(x + Math.cos(a)*r*0.55, y + Math.sin(a)*r*0.4, r*0.6, 0, Math.PI*2); }
+    c.fill();
+  }
+  function leaf(c, x, y, len, ang, col){
+    c.save(); c.translate(x, y); c.rotate(ang);
+    c.fillStyle = col;
+    c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(len*0.5, -len*0.35, len, 0); c.quadraticCurveTo(len*0.5, len*0.35, 0, 0); c.fill();
+    c.restore();
+  }
+
+  // the jungle picture behind everything (drawn once whenever the size changes)
+  function drawJungle(c){
+    const R = rng(7);
+    // soft green light
+    const g = c.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, '#C9F0D2'); g.addColorStop(0.55, '#A5DDB0'); g.addColorStop(1, '#7DC48C');
+    c.fillStyle = g; c.fillRect(0, 0, W, H);
+    // sunbeams
+    c.fillStyle = 'rgba(255,255,230,0.18)';
+    for(let i = 0; i < 4; i++){
+      const x = W*(0.15 + i*0.25);
+      c.beginPath(); c.moveTo(x - 20, 0); c.lineTo(x + 30, 0); c.lineTo(x + 160, GROUND); c.lineTo(x + 60, GROUND); c.closePath(); c.fill();
+    }
+    // far away trees
+    for(let i = 0; i < Math.ceil(W/70); i++){
+      const x = i*70 + R()*40, w = 16 + R()*16;
+      c.fillStyle = R() < 0.5 ? '#9CCFA4' : '#93C79C';
+      c.fillRect(x, 60, w, GROUND - 60);
+    }
+    // bushes and ferns along the back of the floor
+    for(let x = -30; x < W + 40; x += 46){
+      leafClump(c, x + R()*20, GROUND - 26 - R()*22, 34 + R()*18, R() < 0.5 ? '#4E9E5B' : '#57A964');
+    }
+    for(let x = 0; x < W; x += 60){
+      const bx = x + R()*30;
+      for(let k = 0; k < 5; k++) leaf(c, bx, GROUND - 4, 40 + R()*20, -Math.PI/2 + (k - 2)*0.45, '#3F8B4C');
+    }
+    // the jungle floor
+    const fg = c.createLinearGradient(0, GROUND, 0, H);
+    fg.addColorStop(0, '#9C7B4A'); fg.addColorStop(1, '#7E5F36');
+    c.fillStyle = fg; c.fillRect(0, GROUND, W, H - GROUND);
+    c.fillStyle = '#5FA052'; c.fillRect(0, GROUND - 4, W, 10);
+    c.fillStyle = '#8A6B3E';
+    for(let i = 0; i < W/30; i++){ c.beginPath(); c.ellipse(R()*W, GROUND + 18 + R()*(H - GROUND - 26), 6 + R()*8, 3 + R()*2, 0, 0, Math.PI*2); c.fill(); }
+    c.strokeStyle = '#4E9E5B'; c.lineWidth = 3; c.lineCap = 'round';
+    for(let x = 4; x < W; x += 14 + R()*16){ c.beginPath(); c.moveTo(x, GROUND + 2); c.lineTo(x - 4 + R()*8, GROUND - 8 - R()*8); c.stroke(); }
+    // big tree trunks at each side
+    [[-26, 1], [W + 26, -1]].forEach(([x, s]) => {
+      c.fillStyle = '#7A5230';
+      c.beginPath(); c.moveTo(x - 38, H); c.lineTo(x - 30, 0); c.lineTo(x + 30, 0); c.lineTo(x + 40, H); c.closePath(); c.fill();
+      c.strokeStyle = '#654325'; c.lineWidth = 3;
+      for(let y = 60; y < H; y += 70){ c.beginPath(); c.moveTo(x - 20*s + 5, y); c.quadraticCurveTo(x + 8*s, y + 20, x - 10*s + 5, y + 44); c.stroke(); }
+    });
+    // the long branch the monkeys sit on
+    c.strokeStyle = '#7A5230'; c.lineWidth = 16; c.lineCap = 'round';
+    c.beginPath();
+    for(let x = -10; x <= W + 10; x += 10){ const y = brY(x); if(x === -10) c.moveTo(x, y); else c.lineTo(x, y); }
+    c.stroke();
+    c.strokeStyle = '#95693F'; c.lineWidth = 4;
+    c.beginPath();
+    for(let x = -10; x <= W + 10; x += 10){ const y = brY(x) - 4; if(x === -10) c.moveTo(x, y); else c.lineTo(x, y); }
+    c.stroke();
+    for(let x = 30; x < W; x += 90 + R()*40){ leaf(c, x, brY(x) + 4, 26, 0.9, '#4E9E5B'); leaf(c, x + 8, brY(x + 8) + 4, 22, 2.2, '#57A964'); }
+    // hanging vines
+    for(let i = 0; i < Math.ceil(W/140); i++){
+      const x = 40 + i*140 + R()*60, len = 220 + R()*200;
+      c.strokeStyle = '#3F8B4C'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(x, 90); c.quadraticCurveTo(x + 18, 90 + len*0.5, x - 4, 90 + len); c.stroke();
+      for(let y = 130; y < 90 + len; y += 34) leaf(c, x + 6*Math.sin(y), y, 16, (y % 68 < 34) ? 0.5 : 2.6, '#4E9E5B');
+    }
+    // leafy roof of the jungle
+    const cols = ['#2F7D46', '#3A8E50', '#46A05C', '#358649'];
+    for(let row = 0; row < 3; row++){
+      for(let x = -40; x < W + 60; x += 52){
+        leafClump(c, x + R()*30, 30 + row*34 + R()*20, 50 + R()*22, cols[(row + Math.floor(R()*2)) % 4]);
+      }
+    }
+    for(let x = -20; x < W + 20; x += 36) leaf(c, x + R()*20, 120 + R()*16, 34 + R()*14, Math.PI/2 + (R() - 0.5)*1.2, '#2F7D46');
+  }
+
+  // ----- Lenny the Lemur (drawn like he is in Unicorn Penalty Shoot-out, minus his goalie kit) -----
+  function drawLemur(t){
+    const lookAt = nearestItem();
+    const hop = Math.abs(lenny.vx) > 40 && !reduced ? Math.abs(Math.sin(lenny.run))*8 : 0;
+    const sx = lenny.x, sy = LENNY_Y - hop;
+    const k = LK;
+    let ang = Math.max(-0.22, Math.min(0.22, lenny.vx/2600));
+    if(lenny.dizzy > 0 && !reduced) ang = Math.sin(t*9)*0.18;
+    // shadow on the ground
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(sx, FEET + 3, 30*k, 6*k, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(sx, sy); ctx.rotate(ang); ctx.scale(k, k);
+    const grey = '#9A9AA8', dark = '#55556A';
+
+    // stripy tail
+    const sway = reduced ? 0 : Math.sin(t*2.2)*14;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      const bx = (1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway);
+      const by = (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66);
+      pts.push([bx, by]);
+    }
+    ctx.lineCap = 'round';
+    for(let i = 0; i < 14; i++){
+      ctx.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6';
+      ctx.lineWidth = 10 - i*0.25;
+      ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[i+1][0], pts[i+1][1]); ctx.stroke();
+    }
+    // legs
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.ellipse(-9, 26, 7, 11, 0.15, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, 26, 7, 11, -0.15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-11, 35, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(11, 35, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+    // arms
+    let hands;
+    const pose = lenny.dizzy > 0 ? 'idle' : lenny.pose;
+    if(pose === 'dive') hands = [[-10, -60], [10, -60]];
+    else if(pose === 'stay') hands = [[-40, -42], [40, -42]];
+    else { const b = reduced ? 0 : Math.sin(t*6)*3; hands = [[-34, 2 + b], [34, 2 - b]]; }
+    ctx.strokeStyle = grey; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(-13, -14); ctx.lineTo(hands[0][0], hands[0][1]); ctx.moveTo(13, -14); ctx.lineTo(hands[1][0], hands[1][1]); ctx.stroke();
+
+    // furry body with a pale tummy (no goalie kit today - it's a day off in the jungle!)
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.ellipse(0, 2, 18, 24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4F4F6';
+    ctx.beginPath(); ctx.ellipse(0, 6, 11, 16, 0, 0, Math.PI*2); ctx.fill();
+
+    // little dark paws
+    hands.forEach(h => {
+      ctx.fillStyle = dark;
+      ctx.beginPath(); ctx.arc(h[0], h[1], 5.5, 0, Math.PI*2); ctx.fill();
+    });
+
+    // head
+    ctx.fillStyle = dark;
+    ctx.beginPath(); ctx.arc(-14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.arc(0, -36, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4F4F6';
+    ctx.beginPath(); ctx.ellipse(0, -31, 14, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-7, -36, 6, 6.5, -0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7, -36, 6, 6.5, 0.3, 0, Math.PI*2); ctx.fill();
+    // big orange eyes that follow the nearest banana (and go round and round when he's dizzy)
+    let ex, ey;
+    if(lenny.dizzy > 0){ ex = Math.cos(t*14)*1.8; ey = Math.sin(t*14)*1.8; }
+    else {
+      ex = lookAt.x - sx; ey = lookAt.y - (sy - 36*k);
+      const c = Math.cos(-ang), s = Math.sin(-ang);
+      [ex, ey] = [ex*c - ey*s, ex*s + ey*c];
+      const el = Math.hypot(ex, ey) || 1; ex = ex/el*1.8; ey = ey/el*1.8;
+    }
+    ctx.fillStyle = '#FF9F1C';
+    ctx.beginPath(); ctx.arc(-7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    // nose and mouth
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(0, -26, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2B2B35'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if(lenny.mood === 'happy') ctx.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI);
+    else if(lenny.mood === 'sad') ctx.arc(0, -17, 4, 1.2*Math.PI, 1.8*Math.PI);
+    else { ctx.moveTo(-3, -21); ctx.lineTo(3, -21); }
+    ctx.stroke();
+
+    // dizzy stars spinning round his head
+    if(lenny.dizzy > 0){
+      for(let i = 0; i < 3; i++){
+        const a = t*5 + i*Math.PI*2/3;
+        drawStar(ctx, Math.cos(a)*24, -66 + Math.sin(a)*6, 6, '#FFC23D');
+      }
+    }
+    ctx.restore();
+  }
+
+  function nearestItem(){
+    let bestIt = null, bd = 1e9;
+    items.forEach(it => {
+      if(it.state !== 'air' || it.y > CATCH_Y) return;
+      const d = CATCH_Y - it.y;
+      if(d < bd){ bd = d; bestIt = it; }
+    });
+    return bestIt ? {x: bestIt.x, y: bestIt.y} : {x: lenny.x + Math.sin(clock*0.7)*120, y: LENNY_Y - 200};
+  }
+
+  function drawStar(c, x, y, r, col){
+    c.fillStyle = col;
+    c.beginPath();
+    for(let i = 0; i < 10; i++){
+      const a = -Math.PI/2 + i*Math.PI/5, rr = i % 2 ? r*0.45 : r;
+      c.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr);
+    }
+    c.closePath(); c.fill();
+  }
+
+  // ----- bananas and coconuts -----
+  function drawBanana(c, x, y, rot, s, gold){
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s);
+    let body = '#FFD43B', edge = '#E8A317';
+    if(gold){
+      const gr = c.createLinearGradient(-20, -10, 20, 10);
+      gr.addColorStop(0, '#FFF3B0'); gr.addColorStop(0.5, '#FFC23D'); gr.addColorStop(1, '#F59F00');
+      body = gr; edge = '#D08700';
+    }
+    c.fillStyle = body; c.strokeStyle = edge; c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(-20, -6);
+    c.quadraticCurveTo(0, 18, 20, -6);
+    c.quadraticCurveTo(0, 6, -20, -6);
+    c.closePath(); c.fill(); c.stroke();
+    // tips
+    c.fillStyle = '#6B4F2A';
+    c.beginPath(); c.arc(-20, -6, 2.6, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(20, -6, 2.2, 0, Math.PI*2); c.fill();
+    // shine
+    c.strokeStyle = 'rgba(255,255,255,0.6)'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(-10, 2); c.quadraticCurveTo(0, 8, 10, 2); c.stroke();
+    c.restore();
+  }
+  function drawItem(c, type, x, y, rot, alpha){
+    c.globalAlpha = alpha;
+    if(type === 'banana') drawBanana(c, x, y, rot, 1, false);
+    else if(type === 'gold'){
+      // golden glow and sparkles
+      const pulse = reduced ? 1 : 1 + Math.sin(clock*10)*0.12;
+      const gl = c.createRadialGradient(x, y, 2, x, y, 34*pulse);
+      gl.addColorStop(0, 'rgba(255,236,150,0.9)'); gl.addColorStop(1, 'rgba(255,236,150,0)');
+      c.fillStyle = gl; c.beginPath(); c.arc(x, y, 34*pulse, 0, Math.PI*2); c.fill();
+      drawBanana(c, x, y, rot, 1.15, true);
+      for(let i = 0; i < 3; i++){
+        const a = clock*3 + i*2.1;
+        drawStar(c, x + Math.cos(a)*26, y + Math.sin(a)*20, 5, '#FFFFFF');
+      }
+    } else if(type === 'bunch'){
+      c.save(); c.translate(x, y); c.rotate(rot);
+      [-0.45, 0, 0.45].forEach(a => { c.save(); c.rotate(a); drawBanana(c, 0, 14, 0, 0.9, false); c.restore(); });
+      c.fillStyle = '#6B8E23'; c.fillRect(-4, -12, 8, 10);
+      c.restore();
+    } else if(type === 'coconut'){
+      c.save(); c.translate(x, y); c.rotate(rot);
+      c.fillStyle = '#7A4E2A'; c.beginPath(); c.arc(0, 0, 17, 0, Math.PI*2); c.fill();
+      c.strokeStyle = '#5C3A1E'; c.lineWidth = 2;
+      for(let i = 0; i < 6; i++){ const a = i*1.05; c.beginPath(); c.moveTo(Math.cos(a)*6, Math.sin(a)*6); c.lineTo(Math.cos(a)*15, Math.sin(a)*15); c.stroke(); }
+      c.fillStyle = '#3E2612';
+      [[-5, -5], [5, -5], [0, 3]].forEach(([dx, dy]) => { c.beginPath(); c.arc(dx, dy, 2.6, 0, Math.PI*2); c.fill(); });
+      c.fillStyle = 'rgba(255,255,255,0.18)'; c.beginPath(); c.arc(-6, -8, 6, 0, Math.PI*2); c.fill();
+      c.restore();
+    }
+    c.globalAlpha = 1;
+  }
+
+  // ----- the cheeky monkeys -----
+  function drawMonkey(m){
+    const p = monkeyPos(m);
+    const x = p.x, y = p.y;
+    const brown = '#8B5A2B', tan = '#E8C39E', darkB = '#6E4520';
+    const laugh = m.laugh > 0;
+    const shake = laugh && !reduced ? Math.sin(clock*30)*1.5 : 0;
+    // vine they swing down on when they first arrive
+    if(m.enter < 1){
+      c2(() => { ctx.strokeStyle = '#3F8B4C'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(x - 20, 0); ctx.lineTo(x - 18, y - 60*MS); ctx.stroke(); });
+    }
+    ctx.save(); ctx.translate(x + shake, y); ctx.scale(MS, MS);
+    // curly tail hanging below the branch
+    ctx.strokeStyle = brown; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    const tw = reduced ? 0 : Math.sin(clock*2 + m.ph)*6;
+    ctx.beginPath(); ctx.moveTo(10, -10); ctx.bezierCurveTo(26, 6, 18 + tw, 40, 8 + tw, 46);
+    ctx.arc(14 + tw, 46, 6, Math.PI, Math.PI*2.6); ctx.stroke();
+    // dangly legs
+    ctx.fillStyle = brown;
+    ctx.beginPath(); ctx.ellipse(-8, 4, 5, 10, 0.1, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(8, 4, 5, 10, -0.1, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = tan;
+    ctx.beginPath(); ctx.ellipse(-9, 14, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, 14, 6, 4, 0, 0, Math.PI*2); ctx.fill();
+    // body
+    ctx.fillStyle = brown; ctx.beginPath(); ctx.ellipse(0, -18, 16, 19, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = tan; ctx.beginPath(); ctx.ellipse(0, -15, 10, 12, 0, 0, Math.PI*2); ctx.fill();
+    // arms: one holds on, the other throws
+    const hp = handPos(m);
+    const hx = (hp.x - x)/MS, hy = (hp.y - y)/MS;
+    ctx.strokeStyle = brown; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(-m.arm*12, -26); ctx.lineTo(-m.arm*20, -2); ctx.stroke();   // holding the branch
+    if(m.wind >= 0){
+      ctx.beginPath(); ctx.moveTo(m.arm*12, -28); ctx.lineTo(hx, hy); ctx.stroke();
+    } else {
+      const fling = m.throwAnim;
+      const ax = m.arm*(18 + fling*10), ay = -30 - fling*16 + (1 - fling)*16;
+      ctx.beginPath(); ctx.moveTo(m.arm*12, -28); ctx.lineTo(ax, laugh ? -20 : ay); ctx.stroke();
+    }
+    // head
+    const hbob = laugh && !reduced ? Math.abs(Math.sin(clock*16))*3 : 0;
+    ctx.translate(0, -hbob);
+    ctx.fillStyle = brown;
+    ctx.beginPath(); ctx.arc(-17, -50, 7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(17, -50, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = tan;
+    ctx.beginPath(); ctx.arc(-17, -50, 4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(17, -50, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = brown; ctx.beginPath(); ctx.arc(0, -50, 16, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = darkB; ctx.beginPath(); ctx.arc(0, -64, 4, Math.PI, 0); ctx.fill();   // tuft of hair
+    ctx.fillStyle = tan;
+    ctx.beginPath(); ctx.arc(-6, -53, 6.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(6, -53, 6.5, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, -44, 10, 7.5, 0, 0, Math.PI*2); ctx.fill();
+    // eyes (squeezed shut when laughing)
+    ctx.fillStyle = '#2B2B35'; ctx.strokeStyle = '#2B2B35'; ctx.lineWidth = 2;
+    if(laugh){
+      ctx.beginPath(); ctx.arc(-6, -52, 3, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+      ctx.beginPath(); ctx.arc(6, -52, 3, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.arc(-6, -53, 2.8, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(6, -53, 2.8, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(-5, -54, 1, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(7, -54, 1, 0, Math.PI*2); ctx.fill();
+    }
+    // nostrils and a cheeky grin
+    ctx.fillStyle = '#6E4520';
+    ctx.beginPath(); ctx.arc(-2, -46, 1.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(2, -46, 1.2, 0, Math.PI*2); ctx.fill();
+    if(laugh || m.wind >= 0){
+      ctx.fillStyle = '#5A2E1A'; ctx.beginPath(); ctx.ellipse(0, -40, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#FF8FA3'; ctx.beginPath(); ctx.ellipse(0, -38.5, 3, 1.6, 0, 0, Math.PI*2); ctx.fill();
+    } else {
+      ctx.strokeStyle = '#5A2E1A'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(1, -43, 5, 0.15*Math.PI, 0.85*Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+    // the thing it's about to throw
+    if(m.wind >= 0 && m.item) drawItem(ctx, m.item, hp.x, hp.y - 8, m.arm*0.4, 1);
+    // "hee hee!"
+    if(laugh && m.laugh > 0.6){
+      ctx.font = '20px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineWidth = 4; ctx.strokeStyle = '#fff'; ctx.fillStyle = '#8B5A2B';
+      ctx.strokeText('hee hee!', x, y - 100*MS); ctx.fillText('hee hee!', x, y - 100*MS);
+    }
+  }
+  function c2(fn){ ctx.save(); fn(); ctx.restore(); }
+
+  function drawPops(){
+    ctx.font = '34px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    pops.forEach(p => {
+      ctx.globalAlpha = Math.max(0, 1 - p.t/0.9);
+      ctx.lineWidth = 6; ctx.strokeStyle = '#fff'; ctx.strokeText(p.text, p.x, p.y);
+      ctx.fillStyle = p.col; ctx.fillText(p.text, p.x, p.y);
+    });
+    ctx.globalAlpha = 1;
+  }
+
+  function drawMsg(){
+    if(!msg) return;
+    const s = reduced ? 1 : Math.min(1, msg.t*5)*(1 + 0.15*Math.max(0, 1 - msg.t*3));
+    const fade = state === 'ending' || state === 'over' ? 1 : Math.max(0, Math.min(1, (1.4 - msg.t)*4));
+    const size = Math.min(72, W/10);
+    ctx.save(); ctx.globalAlpha = fade; ctx.translate(W/2, H*0.45); ctx.scale(s, s); ctx.rotate(-0.05);
+    ctx.font = size + 'px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = '#fff'; ctx.strokeText(msg.text, 0, 0);
+    ctx.fillStyle = msg.col; ctx.fillText(msg.text, 0, 0);
+    ctx.restore();
+  }
+
+  // a thin bar along the bottom showing how close the next star is
+  function drawStarBar(){
+    if(state === 'intro') return;
+    const x0 = 24, x1 = W - 24, y = H - 26, max = STARS[2];
+    const u = Math.min(1, score/max);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, y - 7, x1 - x0, 14, 7) : ctx.rect(x0, y - 7, x1 - x0, 14); ctx.fill();
+    if(u > 0){
+      ctx.fillStyle = '#FFC23D';
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x0, y - 7, (x1 - x0)*u, 14, 7) : ctx.rect(x0, y - 7, (x1 - x0)*u, 14); ctx.fill();
+    }
+    STARS.forEach(v => {
+      const sx = x0 + (x1 - x0)*v/max - (v === max ? 4 : 0);
+      drawStar(ctx, sx, y, 14, score >= v ? '#F2559B' : 'rgba(255,255,255,0.9)');
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgCvs, 0, 0, W, H);
+    monkeys.forEach(drawMonkey);
+    // things lying on the floor go behind Lenny
+    items.forEach(it => { if(it.state === 'ground') drawItem(ctx, it.type, it.x, it.y, it.rot, Math.max(0, it.alpha)); });
+    drawLemur(clock);
+    items.forEach(it => { if(it.state !== 'ground') drawItem(ctx, it.type, it.x, it.y, it.rot, 1); });
+    drawPops();
+    drawStarBar();
+    confetti.forEach(p => {
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+    drawMsg();
+  }
+
+  // ===== SIZE AND LOOP =====
+  function resize(){
+    const r = board.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    if(r.width < 2 || r.height < 2) return;
+    const oldW = W;
+    W = Math.round(H*r.width/r.height);
+    cvs.width = Math.round(r.width*dpr); cvs.height = Math.round(r.height*dpr);
+    ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+    bgCvs.width = cvs.width; bgCvs.height = cvs.height;
+    bgCtx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+    drawJungle(bgCtx);
+    // keep Lenny and anything falling in the same place on the new shape
+    if(oldW !== W){
+      const f = W/oldW;
+      lenny.x *= f; if(dragX !== null) dragX *= f;
+      items.forEach(it => { it.x *= f; });
+    }
+  }
+  addEventListener('resize', resize);
+  // also redraw at the right size whenever the jungle itself changes size (turning the device, etc.)
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(board);
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  monkeys = [makeMonkey(0), makeMonkey(1)];
+  monkeys.forEach(m => m.enter = 1);
+  resize();
+  lenny.x = W/2;
+  updateHud();
+  // redraw the jungle once the fonts arrive, so the words look right
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(resize);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
