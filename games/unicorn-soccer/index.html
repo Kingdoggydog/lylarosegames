@@ -83,6 +83,7 @@
 
   <div class="controls">
     <button id="kick" disabled>Tap to aim ↔</button>
+    <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
     <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
   </div>
   <p class="help">You can also tap the pitch, or press Space. Aim for the corners - but not too close to the posts! Lenny gets better the more you score.</p>
@@ -101,6 +102,7 @@
   const ovBtn = document.getElementById('ovBtn');
   const kickBtn = document.getElementById('kick');
   const soundBtn = document.getElementById('sound');
+  const musicBtn = document.getElementById('music');
   const streakEl = document.getElementById('streak');
   const bestEl = document.getElementById('best');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -139,30 +141,180 @@
     }
   }
 
-  // ===== SOUND (tiny beeps made in the browser, no files needed) =====
-  let actx = null;
-  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0){
-    if(muted) return;
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let musicOn = load('lrg-unicorn-soccer-music', true);
+  let actx = null, master, sfxBus, musicBus, noiseBuf, ambience = null;
+
+  function audio(){
+    if(actx) return actx;
     try {
-      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      const t0 = actx.currentTime + delay;
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = type; o.frequency.setValueAtTime(f, t0);
-      if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
-      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
-      o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
-    } catch(e){}
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.5 : 0; musicBus.connect(master);
+      // two seconds of "hiss" used to make crowd noise, claps and drums
+      noiseBuf = actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+      startAmbience();
+    } catch(e){ actx = null; }
+    return actx;
   }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + delay;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+
+  // a burst of filtered hiss (used for crowd roar, claps and hi-hats)
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus){
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.value = freq; fl.Q.value = q;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*1.5); src.stop(t0 + dur + 0.05);
+    return fl;
+  }
+
+  // quiet stadium chatter that is always there
+  function startAmbience(){
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = 500; fl.Q.value = 0.6;
+    const g = actx.createGain(); g.gain.value = 0.035;
+    src.connect(fl).connect(g).connect(sfxBus); src.start();
+    ambience = g;
+  }
+
+  // the crowd goes wild!
+  function cheer(){
+    if(!audio()) return;
+    const t = actx.currentTime;
+    noise(t, 3.2, 'bandpass', 1100, 0.5, 0.55, 0.15);        // big roar
+    noise(t, 2.6, 'lowpass', 500, 0.7, 0.35, 0.2);           // rumble
+    // lots of people shouting "woooo!"
+    for(let i = 0; i < 14; i++){
+      const t0 = t + Math.random()*0.35, dur = 1 + Math.random()*1.3, f = 280 + Math.random()*380;
+      const o = actx.createOscillator(), fl = actx.createBiquadFilter(), g = actx.createGain();
+      const vib = actx.createOscillator(), vg = actx.createGain();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f*0.8, t0); o.frequency.linearRampToValueAtTime(f*1.25, t0 + 0.3); o.frequency.linearRampToValueAtTime(f, t0 + dur);
+      vib.frequency.value = 5 + Math.random()*3; vg.gain.value = f*0.03; vib.connect(vg).connect(o.frequency);
+      fl.type = 'lowpass'; fl.frequency.value = 1400;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.025, t0 + 0.12); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(fl).connect(g).connect(sfxBus);
+      o.start(t0); vib.start(t0); o.stop(t0 + dur + 0.05); vib.stop(t0 + dur + 0.05);
+    }
+    // clapping
+    for(let i = 0; i < 60; i++) noise(t + 0.2 + Math.random()*2.4, 0.06, 'highpass', 1500, 0.7, 0.12 + Math.random()*0.1, 0.004);
+    duckMusic(3);
+  }
+
+  // the crowd says "boooo"
+  function boo(){
+    if(!audio()) return;
+    const t = actx.currentTime + 0.25;
+    for(let i = 0; i < 12; i++){
+      const t0 = t + Math.random()*0.25, dur = 1.4 + Math.random()*0.6, f = 95 + Math.random()*90;
+      const o = actx.createOscillator(), g = actx.createGain();
+      const f1 = actx.createBiquadFilter(), f2 = actx.createBiquadFilter();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f*1.08, t0); o.frequency.linearRampToValueAtTime(f*0.85, t0 + dur);
+      // shape it into an "oo" sound
+      f1.type = 'bandpass'; f1.frequency.value = 320; f1.Q.value = 3;
+      f2.type = 'lowpass'; f2.frequency.value = 800;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.09, t0 + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(f1).connect(f2).connect(g).connect(sfxBus);
+      o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+    noise(t, 1.9, 'lowpass', 350, 0.7, 0.25, 0.25);           // grumbling
+    duckMusic(2.2);
+  }
+
   const sfx = {
     tap(){ tone(660, 0.08, 'triangle', 0.12); },
     kick(){ tone(180, 0.18, 'sine', 0.35, 60); },
-    goal(){ [523,659,784,1047].forEach((f,i)=>tone(f, 0.22, 'triangle', 0.16, null, i*0.1)); },
-    save(){ tone(420, 0.35, 'triangle', 0.2, 140); },
-    post(){ tone(1400, 0.4, 'square', 0.06, 1300); tone(900, 0.4, 'sine', 0.1); },
-    wide(){ tone(300, 0.45, 'sine', 0.15, 180); }
+    goal(){ [523,659,784,1047].forEach((f,i)=>tone(f, 0.22, 'triangle', 0.16, null, i*0.1)); cheer(); },
+    save(){ tone(420, 0.35, 'triangle', 0.2, 140); boo(); },
+    post(){ tone(1400, 0.4, 'square', 0.06, 1300); tone(900, 0.4, 'sine', 0.1); boo(); },
+    wide(){ tone(300, 0.45, 'sine', 0.15, 180); boo(); }
   };
-  function setSoundBtn(){ soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on'); }
-  soundBtn.addEventListener('click', () => { muted = !muted; save('lrg-unicorn-soccer-muted', muted); setSoundBtn(); });
+
+  // ----- background music: a happy little tune that loops -----
+  const BPM = 124, STEP = 60/BPM/2;   // each step is half a beat
+  const CHORDS = [48, 45, 41, 43, 48, 45, 50, 43];   // C, Am, F, G, C, Am, Dm, G (bass notes)
+  const MELODY = [
+    76,0,79,0,81,79,76,0,   72,0,76,0,74,72,69,0,
+    69,0,72,0,77,0,76,74,   74,0,71,0,67,0,0,0,
+    76,79,84,0,83,79,76,0,  81,0,79,76,72,0,76,0,
+    77,0,76,0,74,0,69,0,    71,0,74,0,79,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar];
+    // bass: root and fifth bouncing on each beat
+    if(beat % 2 === 0) tone(hz(root + (beat === 2 || beat === 6 ? 7 : 0)), STEP*1.6, 'triangle', 0.22, null, t - actx.currentTime, musicBus);
+    // soft chord on the first beat of every bar
+    if(beat === 0) [12, 16, 19].forEach(n => {
+      const minor = [45, 50].includes(root) ? (n === 16 ? 15 : n) : n;
+      tone(hz(root + minor), STEP*7, 'sine', 0.04, null, t - actx.currentTime, musicBus);
+    });
+    // tune
+    const m = MELODY[i];
+    if(m) tone(hz(m), STEP*1.5, 'square', 0.035, null, t - actx.currentTime, musicBus);
+    if(m) tone(hz(m), STEP*1.8, 'triangle', 0.07, null, t - actx.currentTime, musicBus);
+    // drums: thump on beats 1 and 3, tick on the off-beats
+    if(beat === 0 || beat === 4) tone(130, 0.15, 'sine', 0.3, 45, t - actx.currentTime, musicBus);
+    if(beat % 2 === 1) noise(t, 0.05, 'highpass', 7000, 0.7, 0.05, 0.003, musicBus);
+    if(beat === 2 || beat === 6) noise(t, 0.12, 'bandpass', 1800, 0.8, 0.12, 0.004, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){
+      playStep(mStep, mNext);
+      mNext += STEP; mStep = (mStep + 1) % 64;
+    }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  function duckMusic(secs){
+    if(!actx || !musicOn) return;
+    const g = musicBus.gain, t = actx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.18, t + 0.1); g.setValueAtTime(0.18, t + secs); g.linearRampToValueAtTime(0.5, t + secs + 0.8);
+  }
+
+  // pause everything when the page is hidden
+  document.addEventListener('visibilitychange', () => {
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.cancelScheduledValues(actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.5 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save('lrg-unicorn-soccer-muted', muted); wake(); startMusic(); setSoundBtn(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save('lrg-unicorn-soccer-music', musicOn); wake(); startMusic(); setSoundBtn(); });
   setSoundBtn();
 
   // ===== GAME FLOW =====
@@ -310,12 +462,13 @@
   }
 
   ovBtn.addEventListener('click', () => {
+    wake(); startMusic();
     overlay.hidden = true;
     streak = 0; newBest = false;
     newShot();
     kickBtn.focus();
   });
-  kickBtn.addEventListener('click', action);
+  kickBtn.addEventListener('click', () => { wake(); action(); });
   board.addEventListener('pointerdown', e => {
     if(!overlay.hidden) return;
     e.preventDefault();
