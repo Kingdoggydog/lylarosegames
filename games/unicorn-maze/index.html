@@ -59,9 +59,6 @@
   @media (hover:hover) and (pointer:fine){.pad{display:none}}
 </style>
 
-<meta name="description" content="Sparklehoof&#39;s Maze - a free unicorn maze game for kids. Gallop through the hedge maze, grab the stars and find the rainbow gate.">
-<link rel="canonical" href="https://kingdoggydog.github.io/lylarosegames/games/unicorn-maze/">
-<script src="../../site.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -150,13 +147,22 @@
     anim = {x:0,y:0};
     goal = {x:N-1,y:N-1};
     trail = [{x:0,y:0}];
-    starsList = [];
-    const count = Math.min(3 + level, 10);
-    const used = new Set(['0,0',`${N-1},${N-1}`]);
-    while(starsList.length<count){
-      const x=Math.floor(Math.random()*N), y=Math.floor(Math.random()*N), k=x+','+y;
-      if(!used.has(k)){used.add(k);starsList.push({x,y})}
+    // Only put stars in squares the unicorn can reach WITHOUT walking through the rainbow,
+    // because touching the rainbow ends the level.
+    const reachable = [];
+    const seen = new Set(['0,0', `${goal.x},${goal.y}`]);
+    const queue = [[0,0]];
+    const steps = [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]];
+    while(queue.length){
+      const [x,y] = queue.shift();
+      if(x || y) reachable.push({x,y});
+      for(const [dx,dy,w] of steps){
+        const nx=x+dx, ny=y+dy, k=nx+','+ny;
+        if(!grid[y][x].w[w] && !seen.has(k)){ seen.add(k); queue.push([nx,ny]); }
+      }
     }
+    for(let i=reachable.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [reachable[i],reachable[j]]=[reachable[j],reachable[i]]; }
+    starsList = reachable.slice(0, Math.min(3 + level, 10));
     got = 0;
     elapsed = 0;
     updateHud();
