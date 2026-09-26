@@ -10,6 +10,8 @@ const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
 
 (function () {
   if (!GA_MEASUREMENT_ID) return;
+  // Already loaded directly on this page (the home page has the tag for Search Console)
+  if (window.gtag) return;
   // Don't count visits while testing on your own computer
   if (location.protocol === "file:" || location.hostname === "localhost" || location.hostname === "127.0.0.1") return;
 

@@ -45,6 +45,7 @@ games/<folder>/     one folder per game, fully self-contained
 
 Analytics, Search Console, the home page design, `site.js` and new sections are "hub" jobs. Only change them when that is what was asked for.
 
-- Google Analytics: set `GA_MEASUREMENT_ID` in `site.js`. Never paste a separate Google tag into individual pages.
+- Google Analytics ID is `G-EM2WKCXBEL`, set in `site.js`, which switches it on for every game. Never paste Google's tag into game pages.
+- The ONE exception: the home page `index.html` has Google's tag written directly in its `<head>` - Search Console uses it to verify ownership. Do not remove it. `site.js` notices it and skips, so visits aren't counted twice. If the ID ever changes, change it in both places.
 - Search Console: verification tag goes in the home page `<head>` where the comment says.
 - `robots.txt` is not used: this is a project site under kingdoggydog.github.io, so Google ignores robots.txt here. Submit `sitemap.xml` in Search Console instead.
