@@ -9,7 +9,7 @@
 // in a folder named after its "slug" (e.g. unicorn-games/index.html).
 // A category's button only shows once at least one game uses it.
 //   id          short name used in the games list below (lowercase, no spaces)
-//   slug        the web address of its page: .../lylarosegames/<slug>/
+//   slug        the web address of its page: https://lylarosegames.com/<slug>/
 //   title       button text
 //   heading     big heading on its page
 //   about       one line shown under the heading

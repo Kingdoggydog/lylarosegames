@@ -1,0 +1,5 @@
+# Everyone is welcome to look around
+User-agent: *
+Allow: /
+
+Sitemap: https://lylarosegames.com/sitemap.xml

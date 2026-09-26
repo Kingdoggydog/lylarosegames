@@ -1,6 +1,6 @@
 # Lyla Rose Games
 
-Free, simple browser games for kids. Hosted on GitHub Pages at https://kingdoggydog.github.io/lylarosegames/
+Free, simple browser games for kids. Hosted on GitHub Pages at https://lylarosegames.com/
 
 House rules for editing are in `CLAUDE.md` - any AI chat working on this folder should read that first.
 
@@ -23,8 +23,8 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 
 ## Adding a new game
 
-1. Make a new folder inside `games/`, for example `games/rainbow-catch/`, with the game as `index.html` and a picture called `thumb.jpg` (4:3 shape, e.g. 800 x 600).
-2. In the game's `<head>`, include the description, canonical link and `<script src="../../site.js"></script>` line (see `CLAUDE.md`).
+1. Make a new folder inside `games/`, for example `games/rainbow-catch/`, with the game as `index.html`, a card picture called `thumb.jpg` (4:3 shape, e.g. 800 x 600) and a share picture called `share.jpg` (1200 x 630).
+2. In the game's `<head>`, include the description, the SEO block and the `<script src="../../site.js"></script>` line - copy them from an existing game (see `CLAUDE.md`).
 3. Open `games-data.js` and add the game to the `games` list (copy the example line). Put every category it fits in `categories`, e.g. `["unicorns", "sport"]`.
 4. Add a row to the table above, and a line to `sitemap.xml`.
 5. Commit and push in GitHub Desktop. The site updates in a minute or two.

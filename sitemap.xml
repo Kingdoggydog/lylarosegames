@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- The list of pages Google should know about. Add one <url> line per new game or category page. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/unicorn-games/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/sport-games/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/puzzle-games/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/flying-games/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/unicorn-maze/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/glitter-sky/</loc></url>
-  <url><loc>https://kingdoggydog.github.io/lylarosegames/games/unicorn-soccer/</loc></url>
+  <url><loc>https://lylarosegames.com/</loc></url>
+  <url><loc>https://lylarosegames.com/unicorn-games/</loc></url>
+  <url><loc>https://lylarosegames.com/sport-games/</loc></url>
+  <url><loc>https://lylarosegames.com/puzzle-games/</loc></url>
+  <url><loc>https://lylarosegames.com/flying-games/</loc></url>
+  <url><loc>https://lylarosegames.com/games/unicorn-maze/</loc></url>
+  <url><loc>https://lylarosegames.com/games/glitter-sky/</loc></url>
+  <url><loc>https://lylarosegames.com/games/unicorn-soccer/</loc></url>
 </urlset>
