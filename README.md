@@ -9,9 +9,9 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Game | Categories | Folder |
 | --- | --- | --- |
 | Sparklehoof's Maze | Unicorns, Puzzles & Mazes | `games/unicorn-maze/` |
-| Glitter Sky Unicorn | Unicorns, Flying | `games/glitter-sky/` |
+| Glitter Sky Unicorn | Unicorns, Flying, Action | `games/glitter-sky/` |
 | Unicorn Penalty Shoot-out | Unicorns, Sport | `games/unicorn-soccer/` |
-| Lenny's Banana Catch | Animals | `games/lenny-banana-catch/` |
+| Lenny's Banana Catch | Animals, Action | `games/lenny-banana-catch/` |
 
 ## Category pages (for Google)
 
@@ -22,6 +22,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Puzzles & Mazes | `puzzle-games/` |
 | Flying | `flying-games/` |
 | Animals | `animal-games/` |
+| Action | `action-games/` |
 
 ## Adding a new game
 

@@ -19,6 +19,7 @@ const categories = [
   { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles & Mazes", heading: "Puzzle & maze games", emoji: "🧩", colour: "#FFF1C9", about: "Think it through and find the way." },
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
+  { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
   // { id: "cars", slug: "car-games", title: "Cars", heading: "Car games", emoji: "🚗", colour: "#FFE0CC", about: "Zoom zoom." },
 ];
 
@@ -43,7 +44,7 @@ const games = [
     colour: "#FDE2EC",
     thumb: "thumb.jpg",
     blurb: "Fly across the sky catching glitter, eat cotton candy sandwiches and giggle at the tooting clouds.",
-    categories: ["unicorns", "flying"],
+    categories: ["unicorns", "flying", "action"],
     controls: "Touch or keyboard"
   },
   {
@@ -63,7 +64,7 @@ const games = [
     colour: "#D8F2DC",
     thumb: "thumb.jpg",
     blurb: "Help Lenny the Lemur catch the bananas cheeky monkeys throw from the trees. Watch out for coconuts!",
-    categories: ["animals"],
+    categories: ["animals", "action"],
     controls: "Drag or arrow keys"
   },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
