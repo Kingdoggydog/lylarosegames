@@ -50,7 +50,7 @@
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
   .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  #kick{flex:1 1 220px;font-size:22px;padding:16px 20px;border-radius:16px;box-shadow:0 6px 0 #C23A78;transition:transform .05s}
+  #kick{flex:1 1 150px;font-size:22px;padding:16px 20px;border-radius:16px;box-shadow:0 6px 0 #C23A78;transition:transform .05s}
   #kick:active{transform:translateY(3px);box-shadow:0 3px 0 #C23A78}
   #kick:disabled{opacity:.6;cursor:default}
   .help{font-size:13px;margin:0;flex:1 1 220px}
@@ -304,8 +304,8 @@
       src.connect(fl).connect(g).connect(sfxBus);
       src.start(t, Math.random()*1.5); src.stop(t + rise + hold + fade + 0.1);
     };
-    roar(1000, 0.6, 0.45, 0.3, 1.0, 2.2);   // the main "yaaay"
-    roar(450, 0.8, 0.3, 0.4, 0.9, 2.0);     // deeper rumble underneath
+    roar(1000, 0.6, 0.2, 0.3, 1.0, 2.2);    // the main "yaaay"
+    roar(450, 0.8, 0.13, 0.4, 0.9, 2.0);    // deeper rumble underneath
     // people cheering "woooo!" (soft, no buzz)
     for(let i = 0; i < 10; i++){
       const t0 = t + Math.random()*0.4, dur = 1.2 + Math.random()*1.2, f = 300 + Math.random()*350;
@@ -315,11 +315,11 @@
       o.frequency.setValueAtTime(f*0.85, t0); o.frequency.linearRampToValueAtTime(f*1.2, t0 + 0.35); o.frequency.linearRampToValueAtTime(f*1.05, t0 + dur);
       vib.frequency.value = 5 + Math.random()*2; vg.gain.value = f*0.025; vib.connect(vg).connect(o.frequency);
       fl.type = 'lowpass'; fl.frequency.value = 1100;
-      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.03, t0 + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.015, t0 + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
       o.connect(fl).connect(g).connect(sfxBus);
       o.start(t0); vib.start(t0); o.stop(t0 + dur + 0.05); vib.stop(t0 + dur + 0.05);
     }
-    duckMusic(3);
+    // (the music keeps playing at full volume under the cheer)
   }
 
   // the crowd says "boooo"
