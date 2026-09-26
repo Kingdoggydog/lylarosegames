@@ -27,18 +27,21 @@
     background-color:var(--sky);
     color:var(--ink);
     font-family:"Nunito",system-ui,sans-serif;
-    padding-inline:16px;
-    padding-block:16px 24px;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
     box-sizing:border-box;
-    min-height:100%;
+    overflow:hidden;
   }
-  .wrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  .wrap{max-width:900px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  /* the board grows to the biggest square that fits the space left over */
+  .stage{flex:1;min-height:160px;container-type:size;display:grid;place-items:center}
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
   h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
   .sub{margin:4px 0 0;font-size:14px}
   .stats{display:flex;gap:8px;flex-wrap:wrap}
   .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .board{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;border-radius:18px;overflow:hidden;background:var(--hedge-dark);box-shadow:0 10px 30px #2E6E6133;touch-action:none}
+  .board{position:relative;width:min(100cqw,100cqh);aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:var(--hedge-dark);box-shadow:0 10px 30px #2E6E6133;touch-action:none}
   canvas{display:block;width:100%;height:100%}
   .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45B3;padding:16px}
   .panel{background:#fff;border-radius:18px;padding:20px 22px;text-align:center;max-width:320px;display:flex;flex-direction:column;gap:10px}
@@ -57,8 +60,26 @@
   .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
   .back:hover{text-decoration:underline}
   @media (hover:hover) and (pointer:fine){.pad{display:none}}
+  /* phones: tuck away the extra words to make room for the maze */
+  @media (pointer:coarse){ .help{display:none} .sub{display:none} .controls{flex-wrap:nowrap} .btns{flex-direction:column;align-items:stretch} }
+  @media (max-height:760px){ .sub,.help{display:none} h1{font-size:28px} }
+  @media (pointer:coarse) and (min-width:700px) and (min-height:700px){ .pad{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(2,68px)} .pad button{font-size:28px} }
+  /* phone on its side: controls on the left, maze on the right */
+  @media (orientation:landscape) and (max-height:620px){
+    .wrap{max-width:none;display:grid;grid-template-columns:minmax(190px,1fr) auto;grid-template-rows:auto auto 1fr;column-gap:18px;row-gap:8px}
+    .back{grid-column:1;grid-row:1;justify-self:start}
+    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;gap:8px}
+    h1{font-size:24px}
+    .controls{grid-column:1;grid-row:3;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:10px;flex-wrap:nowrap}
+    .btns{flex-direction:row;flex-wrap:wrap}
+    .btns button{font-size:13px;padding:8px 10px}
+    .stage{grid-column:2;grid-row:1 / 4;height:100%;aspect-ratio:1/1;min-height:0}
+  }
 </style>
 
+<meta name="description" content="Sparklehoof&#39;s Maze - a free unicorn maze game for kids. Gallop through the hedge maze, grab the stars and find the rainbow gate.">
+<link rel="canonical" href="https://kingdoggydog.github.io/lylarosegames/games/unicorn-maze/">
+<script src="../../site.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -75,6 +96,7 @@
     </div>
   </header>
 
+  <div class="stage">
   <div class="board" id="board">
     <canvas id="c"></canvas>
     <div class="overlay" id="overlay">
@@ -84,6 +106,7 @@
         <button id="ovBtn">Start</button>
       </div>
     </div>
+  </div>
   </div>
 
   <div class="controls">
@@ -186,6 +209,8 @@
     cell = size / N;
   }
   addEventListener('resize', () => { if(grid) resize(); });
+  // also redraw at the right size whenever the board itself changes size (turning the device, etc.)
+  if (window.ResizeObserver) new ResizeObserver(() => { if(grid) resize(); }).observe(board);
 
   function move(d){
     if(!running) return;

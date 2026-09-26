@@ -36,7 +36,13 @@
     position: fixed; inset: 0;
     display: flex;
     overflow-y: auto;
-    padding: 16px;
+    /* let fingers scroll the panel if it doesn't fit (the rest of the game blocks scrolling) */
+    touch-action: pan-y;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    /* room at the top for "All games" and at the bottom for the sound buttons */
+    padding: calc(52px + env(safe-area-inset-top, 0px)) calc(16px + env(safe-area-inset-right, 0px)) calc(60px + env(safe-area-inset-bottom, 0px)) calc(16px + env(safe-area-inset-left, 0px));
+    box-sizing: border-box;
     background: rgba(255, 236, 248, 0.3);
   }
   .card {
@@ -137,6 +143,29 @@
   }
   #audioBtns button:focus-visible { outline: 3px solid #7bc8ff; outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) { .stars svg.won { animation: none; } }
+  /* narrow phones standing up: tighter panel so the Fly button isn't hidden */
+  @media (max-width: 500px) {
+    .card { padding: 18px 16px; gap: 8px; }
+    h1 { font-size: 36px; }
+    .sub { font-size: 16px; }
+    .how div { font-size: 13px; padding: 6px 8px; }
+    .how b { font-size: 15px; }
+    .btn { font-size: 26px; }
+  }
+  /* short screens (phone on its side): a wider, flatter panel so everything fits */
+  @media (max-height: 600px) {
+    .overlay { padding-top: calc(46px + env(safe-area-inset-top, 0px)); padding-bottom: calc(44px + env(safe-area-inset-bottom, 0px)); }
+    .card { max-width: 720px; padding: 14px 20px; gap: 6px; border-radius: 24px; }
+    h1 { font-size: 34px; }
+    .sub { font-size: 16px; max-width: none; }
+    .how { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+    .how div { font-size: 13px; padding: 6px 8px; }
+    .how b { font-size: 15px; }
+    .btn { font-size: 24px; padding: 6px 36px 4px; }
+    .btn.ghost { font-size: 18px; padding: 5px 22px 3px; }
+    .stars svg { width: 48px; height: 48px; }
+    .scoreWrap { max-height: 150px; }
+  }
   /* same "All games" button as Sparklehoof's Maze */
   .back {
     position: fixed; z-index: 5;
@@ -151,6 +180,8 @@
   .back:hover { text-decoration: underline; }
   .back:focus-visible { outline: 3px solid #7bc8ff; outline-offset: 2px; }
 </style>
+<!-- asks phones to turn sideways (see site.js) -->
+<meta name="game-orientation" content="landscape">
 <meta name="description" content="Glitter Sky Unicorn - a free unicorn flying game for kids. Catch glitter, eat cotton candy sandwiches and giggle at the tooting clouds.">
 <link rel="canonical" href="https://kingdoggydog.github.io/lylarosegames/games/glitter-sky/">
 <script src="../../site.js"></script>

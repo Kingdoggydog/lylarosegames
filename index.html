@@ -1,19 +1,33 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-AU">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lyla Rose Games</title>
-<meta name="description" content="Free, simple browser games for kids - unicorn mazes, flying, penalty shoot-outs and more. No downloads, no sign-up, works on tablets and computers.">
+<title>Lyla Rose Games - Free Games for Kids</title>
+<meta name="description" content="Free, simple browser games for kids - unicorn mazes, flying, penalty shoot-outs and more. No downloads, no sign-up. Works on tablets, phones and computers.">
 <link rel="canonical" href="https://kingdoggydog.github.io/lylarosegames/">
+<meta name="theme-color" content="#F2559B">
+<!-- Share preview (Facebook, Messages, WhatsApp etc.) -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="Lyla Rose Games">
-<meta property="og:description" content="Free, simple browser games for kids. No downloads, no sign-up.">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Lyla Rose Games - Free Games for Kids">
+<meta property="og:description" content="Free, simple browser games for kids - unicorn mazes, flying, penalty shoot-outs and more. No downloads, no sign-up. Works on tablets, phones and computers.">
 <meta property="og:url" content="https://kingdoggydog.github.io/lylarosegames/">
-<meta property="og:image" content="https://kingdoggydog.github.io/lylarosegames/games/glitter-sky/thumb.jpg">
-<!-- Google Search Console: paste the verification tag Google gives you on the line below -->
-
-<!-- Google tag (gtag.js) - kept here in the home page so Search Console can find it. Game pages get it from site.js -->
+<meta property="og:image" content="https://kingdoggydog.github.io/lylarosegames/brand/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lyla Rose Games - free fun games for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Logo for browser tabs, Google results and phone home screens -->
+<link rel="icon" href="brand/icon.svg" type="image/svg+xml">
+<link rel="icon" href="brand/icon-48.png" sizes="48x48" type="image/png">
+<link rel="apple-touch-icon" href="brand/icon-180.png">
+<link rel="manifest" href="site.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;700;800&display=swap">
+<link rel="stylesheet" href="styles.css">
+<!-- Google tag (gtag.js) - kept here in the home page so Search Console can find it. Other pages get it from site.js -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-EM2WKCXBEL"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -21,91 +35,8 @@
   gtag('js', new Date());
   gtag('config', 'G-EM2WKCXBEL', { allow_google_signals: false, allow_ad_personalization_signals: false });
 </script>
+<!-- Google Search Console: paste a verification tag here if ever needed -->
 <script src="site.js"></script>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
-<style>
-  :root{
-    color-scheme: light;
-    --sky:#CDEBF5;
-    --sky2:#F7DDEB;
-    --hedge:#2E6E61;
-    --pink:#F2559B;
-    --gold:#FFC23D;
-    --ink:#23413B;
-    --card:#FFFFFF;
-    --muted:#557A72;
-  }
-  *{box-sizing:border-box}
-  [hidden]{display:none!important}
-  html,body{min-height:100%}
-  body{
-    margin:0;
-    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%) fixed;
-    background-color:var(--sky);
-    color:var(--ink);
-    font-family:"Nunito",system-ui,sans-serif;
-    padding-inline:16px;
-    padding-block:max(24px, env(safe-area-inset-top)) 40px;
-  }
-  .wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:28px}
-  header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding-top:12px}
-  .rainbow{display:flex;gap:4px}
-  .rainbow span{width:28px;height:8px;border-radius:4px}
-  h1{
-    font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;
-    font-size:clamp(44px,10vw,80px);line-height:1;margin:8px 0 0;
-    color:var(--pink);text-shadow:3px 3px 0 #fff;text-wrap:balance;
-  }
-  .tag{margin:0;font-size:clamp(16px,3.5vw,20px);font-weight:800;color:var(--muted)}
-  main{display:flex;flex-direction:column;gap:18px}
-  .filters{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:10px}
-  .filters button{
-    font:inherit;font-weight:800;font-size:17px;cursor:pointer;
-    background:var(--card);color:var(--ink);border:3px solid transparent;
-    padding:10px 18px;border-radius:999px;box-shadow:0 4px 12px #2E6E6118;
-    display:inline-flex;align-items:center;gap:8px;min-height:48px;
-    transition:transform .12s ease;
-  }
-  .filters button:hover{transform:translateY(-2px)}
-  .filters button[aria-pressed="true"]{background:var(--pink);color:#fff;box-shadow:0 6px 16px #F2559B55}
-  .filters button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-  .filters .count{font-size:13px;background:#0000000F;border-radius:999px;padding:1px 8px}
-  .filters button[aria-pressed="true"] .count{background:#FFFFFF33}
-  .filters button.clear{background:transparent;box-shadow:none;border:3px dashed #2E6E6155;color:var(--muted)}
-  .filters button.clear:hover{background:#FFFFFF99}
-  .section-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .badge{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:32px;flex:none}
-  .section-head h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(30px,6vw,40px);margin:0;line-height:1;color:var(--ink)}
-  .section-head p{margin:2px 0 0;font-size:15px;color:var(--muted)}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
-  .game{
-    display:flex;flex-direction:column;background:var(--card);border-radius:22px;overflow:hidden;
-    text-decoration:none;color:inherit;box-shadow:0 8px 24px #2E6E6122;
-    transition:transform .15s ease, box-shadow .15s ease;
-  }
-  .game:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:0 14px 30px #2E6E6133}
-  .game:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
-  .art{aspect-ratio:4/3;display:grid;place-items:center;font-size:clamp(72px,18vw,96px);position:relative}
-  .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
-  .game:hover .art img{transform:scale(1.05)}
-  .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
-  .game h3{font-family:"Chewy",cursive;font-weight:400;font-size:28px;margin:0;line-height:1.1}
-  .game p{margin:0;font-size:15px;color:var(--muted)}
-  .meta{display:flex;gap:6px;flex-wrap:wrap}
-  .chip{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:#EAF7EC;color:var(--ink)}
-  .controls{font-size:13px!important;font-weight:700}
-  .play{
-    margin-top:auto;align-self:flex-start;background:var(--pink);color:#fff;font-weight:800;
-    font-size:18px;padding:10px 22px;border-radius:14px;
-  }
-  .soon{background:transparent;border:3px dashed #2E6E6155;box-shadow:none}
-  .soon:hover{transform:none;box-shadow:none}
-  .soon .art{filter:grayscale(.3);opacity:.7}
-  footer{text-align:center;font-size:13px;color:var(--muted)}
-  @media (prefers-reduced-motion: reduce){.game,.art img,.filters button{transition:none}.filters button:hover{transform:none}.game:hover,.game:hover .art img{transform:none}}
-</style>
 </head>
 <body>
 <div class="wrap">
@@ -113,155 +44,21 @@
     <div class="rainbow" aria-hidden="true">
       <span style="background:#FF6B6B"></span><span style="background:#FFA94D"></span><span style="background:#FFD43B"></span><span style="background:#69DB7C"></span><span style="background:#4DABF7"></span><span style="background:#9775FA"></span>
     </div>
-    <h1>Lyla Rose Games</h1>
+    <h1 class="brand">Lyla Rose Games</h1>
     <p class="tag">Pick a game and press Play!</p>
     <nav class="filters" id="filters" aria-label="Show games by type"></nav>
   </header>
 
   <main>
-    <div class="section-head" id="heading" aria-live="polite"></div>
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb" hidden></nav>
+    <div class="section-head" id="heading" aria-live="polite"><div class="badge" aria-hidden="true" style="background:#FFF1C9">⭐</div><div><h2>All games</h2><p>Every game on the site.</p></div></div>
     <div class="grid" id="grid"></div>
   </main>
 
   <footer>Made with love. More games on the way.</footer>
 </div>
 
-<script>
-  // ===== CATEGORIES =====
-  // The buttons along the top. A category only shows once at least one game uses it.
-  // To add a category: copy a line and give it a new id (lowercase, no spaces).
-  const categories = [
-    { id: "unicorns", title: "Unicorns",        emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
-    { id: "sport",    title: "Sport",           emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
-    { id: "puzzles",  title: "Puzzles & Mazes", emoji: "🧩", colour: "#FFF1C9", about: "Think it through and find the way." },
-    { id: "flying",   title: "Flying",          emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
-    // { id: "cars", title: "Cars", emoji: "🚗", colour: "#FFE0CC", about: "Zoom zoom." },
-  ];
-
-  // ===== GAMES =====
-  // To add a game: put it in its own folder inside "games", then add it here (copy the example line).
-  // "categories" can list as many category ids as you like - the game shows under each one.
-  const games = [
-    {
-      title: "Sparklehoof's Maze",
-      folder: "unicorn-maze",
-      emoji: "🦄",
-      colour: "#CFEFD8",
-      thumb: "thumb.svg",   // picture file inside the game's folder (optional)
-      blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
-      categories: ["unicorns", "puzzles"],
-      controls: "Keyboard or touch"
-    },
-    {
-      title: "Glitter Sky Unicorn",
-      folder: "glitter-sky",
-      emoji: "🌈",
-      colour: "#FDE2EC",
-      thumb: "thumb.jpg",
-      blurb: "Fly across the sky catching glitter, eat cotton candy sandwiches and giggle at the tooting clouds.",
-      categories: ["unicorns", "flying"],
-      controls: "Touch or keyboard"
-    },
-    {
-      title: "Unicorn Penalty Shoot-out",
-      folder: "unicorn-soccer",
-      emoji: "⚽",
-      colour: "#D6F0C8",
-      thumb: "thumb.jpg",
-      blurb: "Aim, kick and score past Lenny the Lemur. How many goals can you get in a row?",
-      categories: ["unicorns", "sport"],
-      controls: "Tap or Space"
-    },
-    // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
-  ];
-
-  // Show a "Coming soon" card at the end of the list
-  const showComingSoon = true;
-
-  // ===== Nothing below here needs changing =====
-  const ALL = { id: "all", title: "All games", emoji: "⭐", colour: "#FFF1C9", about: "Every game on the site." };
-  const catById = Object.fromEntries(categories.map(c => [c.id, c]));
-  games.forEach(g => (g.categories||[]).forEach(id => { if(!catById[id]) console.warn('Game "' + g.title + '" uses unknown category "' + id + '"'); }));
-  const used = categories.filter(c => games.some(g => (g.categories||[]).includes(c.id)));
-
-  const filtersEl = document.getElementById('filters');
-  const gridEl = document.getElementById('grid');
-  const headEl = document.getElementById('heading');
-
-  function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
-
-  function gameCard(g){
-    const a = el('a','game');
-    a.href = 'games/' + g.folder + '/';
-    const art = el('div','art'); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
-    if(g.thumb){
-      const img = el('img'); img.src = 'games/' + g.folder + '/' + g.thumb; img.alt = ''; img.loading = 'lazy';
-      art.append(img);
-    } else {
-      art.textContent = g.emoji;
-    }
-    const body = el('div','body');
-    body.append(el('h3',null,g.title), el('p',null,g.blurb));
-    const meta = el('div','meta');
-    (g.categories||[]).forEach(id => { const c = catById[id]; if(!c) return; const chip = el('span','chip', c.emoji + ' ' + c.title); chip.style.background = c.colour; meta.append(chip); });
-    body.append(meta);
-    if(g.controls) body.append(el('p','controls','🎮 ' + g.controls));
-    body.append(el('span','play','Play ▶'));
-    a.append(art, body);
-    return a;
-  }
-
-  function soonCard(){
-    const d = el('div','game soon');
-    const art = el('div','art','✨'); art.setAttribute('aria-hidden','true');
-    const body = el('div','body');
-    body.append(el('h3',null,'Coming soon'), el('p',null,'A new game is on its way.'));
-    d.append(art, body);
-    return d;
-  }
-
-  const buttons = {};
-  [ALL, ...used].forEach(c => {
-    const b = el('button');
-    b.type = 'button';
-    const n = c.id === 'all' ? games.length : games.filter(g => (g.categories||[]).includes(c.id)).length;
-    b.append(el('span',null,c.emoji), el('span',null,c.title), el('span','count',String(n)));
-    // Tap a category to filter; tap it again (or tap Clear / All games) to see everything
-    b.addEventListener('click', () => pick(c.id !== 'all' && current === c.id ? 'all' : c.id));
-    buttons[c.id] = b;
-    filtersEl.append(b);
-  });
-  const clearBtn = el('button','clear','✕ Clear');
-  clearBtn.type = 'button';
-  clearBtn.setAttribute('aria-label','Clear filter and show all games');
-  clearBtn.addEventListener('click', () => pick('all'));
-  filtersEl.append(clearBtn);
-
-  let current = 'all';
-  function pick(id){
-    show(id);
-    history.replaceState(null, '', id === 'all' ? location.pathname : '#' + id);
-    if(window.gtag && id !== 'all') gtag('event', 'select_category', { category: id });
-  }
-
-  function show(id){
-    const c = id === 'all' ? ALL : (catById[id] || ALL);
-    current = c.id;
-    clearBtn.hidden = c.id === 'all';
-    Object.entries(buttons).forEach(([k,b]) => b.setAttribute('aria-pressed', String(k === c.id)));
-    headEl.replaceChildren();
-    const badge = el('div','badge',c.emoji); badge.style.background = c.colour; badge.setAttribute('aria-hidden','true');
-    const txt = el('div'); txt.append(el('h2',null,c.title), el('p',null,c.about));
-    headEl.append(badge, txt);
-    gridEl.replaceChildren();
-    games.filter(g => c.id === 'all' || (g.categories||[]).includes(c.id)).forEach(g => gridEl.append(gameCard(g)));
-    if(showComingSoon) gridEl.append(soonCard());
-  }
-
-  // Open on the category in the address (e.g. .../#sport), otherwise All games
-  const start = location.hash.slice(1);
-  show(buttons[start] ? start : 'all');
-  window.addEventListener('hashchange', () => { const h = location.hash.slice(1); show(buttons[h] ? h : 'all'); });
-</script>
+<script src="games-data.js"></script>
+<script src="home.js"></script>
 </body>
 </html>
