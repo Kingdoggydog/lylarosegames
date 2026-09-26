@@ -1,0 +1,697 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Unicorn Penalty Shoot-out</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CDEBF5;
+    --sky2:#F7DDEB;
+    --hedge:#2E6E61;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%);
+    background-color:var(--sky);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    padding-inline:16px;
+    padding-block:16px 24px;
+    box-sizing:border-box;
+    min-height:100%;
+  }
+  .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .sub{margin:4px 0 0;font-size:14px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .board{position:relative;width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#6FBF73;box-shadow:0 10px 30px #2E6E6133;touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer}
+  canvas{display:block;width:100%;height:100%}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45A6;padding:16px;cursor:default}
+  .panel{background:#fff;border-radius:18px;padding:20px 22px;text-align:center;max-width:340px;display:flex;flex-direction:column;gap:10px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink)}
+  .panel p{margin:0;font-size:15px}
+  .panel .big{font-size:20px;font-weight:800}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  #kick{flex:1 1 220px;font-size:22px;padding:16px 20px;border-radius:16px;box-shadow:0 6px 0 #C23A78;transition:transform .05s}
+  #kick:active{transform:translateY(3px);box-shadow:0 3px 0 #C23A78}
+  #kick:disabled{opacity:.6;cursor:default}
+  .help{font-size:13px;margin:0;flex:1 1 220px}
+  .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
+  .back:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All games</a>
+  <header>
+    <div>
+      <h1>Unicorn Penalty Shoot-out</h1>
+      <p class="sub">Kick the ball past Lenny the Lemur. How many can you score in a row?</p>
+    </div>
+    <div class="stats">
+      <span class="pill" id="streak">⚽ In a row: 0</span>
+      <span class="pill" id="best">🏆 Best: 0</span>
+    </div>
+  </header>
+
+  <div class="board" id="board">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 id="ovTitle">Penalty time!</h2>
+        <p id="ovBig" class="big" hidden></p>
+        <p id="ovText">Tap once to stop the target going side to side. Tap again to stop it going up and down, and kick! Miss once and you start again.</p>
+        <button id="ovBtn">Play</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="kick" disabled>Tap to aim ↔</button>
+    <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+  </div>
+  <p class="help">You can also tap the pitch, or press Space. Aim for the corners - but not too close to the posts! Lenny gets better the more you score.</p>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const cvs = document.getElementById('c');
+  const ctx = cvs.getContext('2d');
+  const board = document.getElementById('board');
+  const overlay = document.getElementById('overlay');
+  const ovTitle = document.getElementById('ovTitle');
+  const ovBig = document.getElementById('ovBig');
+  const ovText = document.getElementById('ovText');
+  const ovBtn = document.getElementById('ovBtn');
+  const kickBtn = document.getElementById('kick');
+  const soundBtn = document.getElementById('sound');
+  const streakEl = document.getElementById('streak');
+  const bestEl = document.getElementById('best');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const W = 800, H = 600;
+  // Simple 3D camera behind the penalty spot. x = left/right, y = height, z = distance out from the goal line (metres)
+  const HOR = 190, F = 1400, CAMZ = 17, CAMH = 1.5;
+  function P(x, y, z){ const D = CAMZ - z; return [400 + F*x/D, HOR + F*(CAMH - y)/D, F/D]; }
+  const HALF = 3.66, BAR = 2.44;          // real goal: 7.32m wide, 2.44m high
+  const AIMX = 4.4, AIMY0 = 0.12, AIMY1 = 3.0;
+  const RAINBOW = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA'];
+
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  let best = load('lrg-unicorn-soccer-best', 0);
+  let muted = load('lrg-unicorn-soccer-muted', false);
+  let streak = 0;
+  let state = 'intro';      // intro, aimX, aimY, runup, flight, after, over
+  let phaseT = 0, aimT = 0, clock = 0;
+  let aim = {x:0, y:1.2}, shot = null, outcome = null;
+  let lemur, plan, ball, uni;
+  let confetti = [], netShake = 0, crowdJump = 0, msg = null, lastOutcome = null, newBest = false;
+
+  // crowd in the stands
+  const crowd = [];
+  for(let row = 0; row < 7; row++){
+    for(let i = 0; i < 44; i++){
+      crowd.push({
+        x: i*18.6 + (row%2)*9 + Math.random()*4,
+        y: 50 + row*17 + Math.random()*3,
+        r: 6 + Math.random()*1.5,
+        c: ['#FFB3C7','#FFD6A5','#FDFFB6','#CAFFBF','#9BF6FF','#A0C4FF','#BDB2FF','#FFC6FF'][Math.floor(Math.random()*8)],
+        ph: Math.random()*6
+      });
+    }
+  }
+
+  // ===== SOUND (tiny beeps made in the browser, no files needed) =====
+  let actx = null;
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0){
+    if(muted) return;
+    try {
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = actx.currentTime + delay;
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t0);
+      if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+      g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+      o.connect(g).connect(actx.destination); o.start(t0); o.stop(t0 + dur + 0.02);
+    } catch(e){}
+  }
+  const sfx = {
+    tap(){ tone(660, 0.08, 'triangle', 0.12); },
+    kick(){ tone(180, 0.18, 'sine', 0.35, 60); },
+    goal(){ [523,659,784,1047].forEach((f,i)=>tone(f, 0.22, 'triangle', 0.16, null, i*0.1)); },
+    save(){ tone(420, 0.35, 'triangle', 0.2, 140); },
+    post(){ tone(1400, 0.4, 'square', 0.06, 1300); tone(900, 0.4, 'sine', 0.1); },
+    wide(){ tone(300, 0.45, 'sine', 0.15, 180); }
+  };
+  function setSoundBtn(){ soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on'); }
+  soundBtn.addEventListener('click', () => { muted = !muted; save('lrg-unicorn-soccer-muted', muted); setSoundBtn(); });
+  setSoundBtn();
+
+  // ===== GAME FLOW =====
+  function difficulty(){
+    return {
+      speed: Math.max(0.65, 1.5 - streak*0.06),      // seconds for the target to cross the goal
+      guess: Math.min(0.6, 0.15 + streak*0.04),      // chance Lenny guesses the right way
+      reach: Math.min(3.0, 2.3 + streak*0.05)        // how far Lenny can dive (metres)
+    };
+  }
+
+  function updateHud(){
+    streakEl.textContent = '⚽ In a row: ' + streak;
+    bestEl.textContent = '🏆 Best: ' + best;
+  }
+
+  function newShot(){
+    state = 'aimX';
+    aimT = Math.random()*2;
+    aim = {x:0, y:1.2};
+    shot = null; outcome = null; msg = null;
+    lemur = {x:0, y:0.52, ang:0, pose:'idle', mood:'ready'};
+    plan = null;
+    ball = {x:0, y:0.11, z:11, vx:0, vy:0, vz:0, spin:0, alpha:1};
+    uni = {x:600, y:535, hop:0};
+    netShake = 0;
+    setKickBtn();
+    updateHud();
+  }
+
+  function setKickBtn(){
+    if(state === 'aimX'){ kickBtn.disabled = false; kickBtn.textContent = 'Tap to aim ↔'; }
+    else if(state === 'aimY'){ kickBtn.disabled = false; kickBtn.textContent = 'Tap to KICK! ⚽'; }
+    else { kickBtn.disabled = true; kickBtn.textContent = state === 'intro' || state === 'over' ? 'Tap to aim ↔' : 'Wheee!'; }
+  }
+
+  function action(){
+    if(state === 'aimX'){ state = 'aimY'; aimT = 0; sfx.tap(); setKickBtn(); }
+    else if(state === 'aimY'){ kick(); }
+  }
+
+  function segDist(p, a, b){
+    const abx = b.x - a.x, aby = b.y - a.y;
+    const t = Math.max(0, Math.min(1, ((p.x-a.x)*abx + (p.y-a.y)*aby) / (abx*abx + aby*aby || 1)));
+    return Math.hypot(p.x - (a.x + abx*t), p.y - (a.y + aby*t));
+  }
+
+  function planDive(){
+    const d = difficulty();
+    const chest = {x: lemur.x, y: 0.9};
+    const r = Math.random();
+    let tgt = null;
+    if(r < d.guess) tgt = {x: shot.x + (Math.random()-.5)*1.2, y: shot.y + (Math.random()-.5)*0.8};
+    else if(r > 0.88) tgt = null; // stays in the middle
+    else tgt = {x: (Math.random()*2-1)*3.3, y: 0.3 + Math.random()*1.9};
+
+    const p = {x0: lemur.x, y0: lemur.y, ang0: 0};
+    if(tgt){
+      tgt.x = Math.max(-3.5, Math.min(3.5, tgt.x));
+      tgt.y = Math.max(0.15, Math.min(2.35, tgt.y));
+    }
+    const dx = tgt ? tgt.x - chest.x : 0, dy = tgt ? tgt.y - chest.y : 0, dist = Math.hypot(dx, dy);
+    if(!tgt || dist < 0.6){
+      // jump up on the spot with arms out wide
+      p.x1 = lemur.x; p.y1 = 0.62; p.ang1 = 0; p.pose = 'stay';
+      p.caps = [
+        {a:{x:lemur.x, y:0.1}, b:{x:lemur.x, y:1.55}, r:0.4},
+        {a:{x:lemur.x-0.8, y:1.25}, b:{x:lemur.x+0.8, y:1.25}, r:0.28}
+      ];
+    } else {
+      const ux = dx/dist, uy = dy/dist, go = Math.min(dist, d.reach);
+      let glove = {x: chest.x + ux*go, y: Math.max(0.12, chest.y + uy*go)};
+      let c = {x: glove.x - ux*0.88, y: glove.y - uy*0.88};
+      if(c.y < 0.3){ const lift = 0.3 - c.y; c.y += lift; glove.y += lift; }
+      p.x1 = c.x; p.y1 = c.y; p.pose = 'dive';
+      p.ang1 = Math.max(-1.45, Math.min(1.45, Math.atan2(ux, uy)));
+      p.caps = [{a:{x: c.x - ux*0.5, y: c.y - uy*0.5}, b: glove, r: 0.36}];
+    }
+    return p;
+  }
+
+  function kick(){
+    shot = {x: aim.x, y: aim.y};
+    plan = planDive();
+    const inGoal = Math.abs(shot.x) < HALF - 0.11 && shot.y < BAR - 0.11;
+    if(!inGoal){
+      const post = Math.abs(Math.abs(shot.x) - HALF) < 0.18 && shot.y < BAR + 0.1;
+      const bar = Math.abs(shot.y - BAR) < 0.18 && Math.abs(shot.x) < HALF + 0.1;
+      outcome = post ? 'post' : bar ? 'bar' : shot.y > BAR ? 'over' : 'wide';
+    } else {
+      const saved = plan.caps.some(c => segDist(shot, c.a, c.b) < c.r + 0.11);
+      outcome = saved ? 'saved' : 'goal';
+    }
+    state = 'runup'; phaseT = 0;
+    setKickBtn();
+  }
+
+  const FLIGHT = 0.55, RUNUP = 0.28;
+
+  function startAfter(){
+    state = 'after'; phaseT = 0;
+    const s = Math.sign(shot.x) || 1;
+    if(outcome === 'goal'){
+      ball.vx = shot.x/FLIGHT*0.5; ball.vy = 0; ball.vz = -18;
+      netShake = 1; crowdJump = 1;
+      streak++;
+      newBest = false;
+      if(streak > best){ best = streak; newBest = true; save('lrg-unicorn-soccer-best', best); }
+      const words = ['GOAL!','GOAL!','Super kick!','Amazing!','Wow!','Magical!','Sparkly goal!'];
+      msg = {text: streak % 5 === 0 ? streak + ' in a row!' : words[Math.floor(Math.random()*words.length)], t:0, col:'#F2559B'};
+      lemur.mood = 'sad';
+      burst(400, 260, 90);
+      sfx.goal();
+      updateHud();
+    } else if(outcome === 'saved'){
+      ball.vx = s*(1.5 + Math.random()*2.5)*(Math.random() < 0.3 ? -1 : 1); ball.vy = 3; ball.vz = 7;
+      msg = {text:'Saved!', t:0, col:'#2E6E61'};
+      lemur.mood = 'happy';
+      sfx.save();
+    } else if(outcome === 'post' || outcome === 'bar'){
+      ball.vx = outcome === 'post' ? -s*2.5 : s*0.8; ball.vy = outcome === 'bar' ? 4 : 1.5; ball.vz = 6;
+      msg = {text: outcome === 'post' ? 'Hit the post!' : 'Hit the bar!', t:0, col:'#E8590C'};
+      lemur.mood = 'happy';
+      sfx.post();
+    } else {
+      ball.vx = shot.x/FLIGHT; ball.vy = (shot.y - 0.11)/FLIGHT; ball.vz = -20;
+      msg = {text: outcome === 'over' ? 'Over the bar!' : 'Wide!', t:0, col:'#E8590C'};
+      lemur.mood = 'happy';
+      sfx.wide();
+    }
+  }
+
+  function gameOver(){
+    state = 'over';
+    lastOutcome = outcome;
+    const titles = {saved:'Saved by Lenny!', post:'Boing! The post!', bar:'Boing! The crossbar!', over:'Over the bar!', wide:'Just wide!'};
+    ovTitle.textContent = titles[outcome] || 'Oh no!';
+    ovBig.hidden = false;
+    ovBig.textContent = streak === 0 ? 'No goals this time' : streak === 1 ? 'You scored 1 goal' : 'You scored ' + streak + ' in a row!';
+    ovText.textContent = newBest && streak > 0 ? '🏆 That is a new best! Can you beat it?' : 'Your best is ' + best + '. Have another go!';
+    ovBtn.textContent = 'Try again';
+    overlay.hidden = false;
+    setKickBtn();
+    ovBtn.focus();
+  }
+
+  ovBtn.addEventListener('click', () => {
+    overlay.hidden = true;
+    streak = 0; newBest = false;
+    newShot();
+    kickBtn.focus();
+  });
+  kickBtn.addEventListener('click', action);
+  board.addEventListener('pointerdown', e => {
+    if(!overlay.hidden) return;
+    e.preventDefault();
+    action();
+  });
+  addEventListener('keydown', e => {
+    if(e.key !== ' ' && e.key !== 'Enter') return;
+    if(e.target && e.target.tagName === 'BUTTON') return; // the button handles it
+    e.preventDefault();
+    if(!overlay.hidden) ovBtn.click(); else action();
+  });
+
+  // ===== CONFETTI =====
+  function burst(x, y, n){
+    if(reduced) n = Math.min(n, 20);
+    for(let i = 0; i < n; i++){
+      const a = -Math.PI/2 + (Math.random()-.5)*2.4, sp = 4 + Math.random()*7;
+      confetti.push({x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 1, c: RAINBOW[i%6], r: Math.random()*6, s: 4 + Math.random()*4});
+    }
+  }
+
+  // ===== UPDATE =====
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  function update(dt){
+    clock += dt;
+    const d = difficulty();
+    if(state === 'aimX' || state === 'aimY' || state === 'intro' || state === 'over'){
+      // Lenny sways and hops while waiting
+      if(state !== 'over'){
+        lemur.x = 0.5*Math.sin(clock*(1.4 + streak*0.05));
+        lemur.y = 0.52 + (reduced ? 0 : Math.abs(Math.sin(clock*4))*0.05);
+      }
+    }
+    if(state === 'aimX'){
+      aimT += dt/d.speed;
+      aim.x = -AIMX + 2*AIMX*tri(aimT);
+      aim.y = 1.25;
+    } else if(state === 'aimY'){
+      aimT += dt/(d.speed*0.75);
+      aim.y = AIMY0 + (AIMY1 - AIMY0)*tri(aimT);
+    } else if(state === 'runup'){
+      phaseT += dt;
+      const u = Math.min(1, phaseT/RUNUP);
+      uni.x = 600 - 125*ease(u); uni.y = 535 - 12*ease(u);
+      if(u >= 1){ state = 'flight'; phaseT = 0; sfx.kick(); }
+    } else if(state === 'flight'){
+      phaseT += dt;
+      const u = Math.min(1, phaseT/FLIGHT);
+      ball.x = shot.x*u;
+      ball.z = 11*(1 - u);
+      ball.y = 0.11 + (shot.y - 0.11)*u + Math.sin(Math.PI*u)*(shot.y < 1.5 ? 0.35 : 0.15);
+      ball.spin += dt*14;
+      const p = Math.max(0, Math.min(1, (u - 0.08)/0.75)), e = ease(p);
+      lemur.x = plan.x0 + (plan.x1 - plan.x0)*e;
+      lemur.y = plan.pose === 'stay' ? 0.52 + Math.sin(Math.PI*p)*0.12 : plan.y0 + (plan.y1 - plan.y0)*e;
+      lemur.ang = plan.ang1*e;
+      if(p > 0) lemur.pose = plan.pose;
+      if(u >= 1) startAfter();
+    } else if(state === 'after'){
+      phaseT += dt;
+      ball.x += ball.vx*dt; ball.y += ball.vy*dt; ball.z += ball.vz*dt;
+      ball.vy -= 9.8*dt;
+      if(ball.y < 0.11){ ball.y = 0.11; ball.vy = Math.abs(ball.vy) > 1 ? -ball.vy*0.45 : 0; ball.vx *= 0.8; ball.vz *= 0.8; }
+      if(outcome === 'goal' && ball.z < -1.7){ ball.z = -1.7; ball.vz = 0; ball.vx *= 0.3; }
+      if(outcome === 'goal' && ball.y > BAR - 0.15){ ball.y = BAR - 0.15; ball.vy = Math.min(ball.vy, 0); }
+      if(outcome === 'over' || outcome === 'wide'){ ball.alpha = Math.max(0, 1 - phaseT*1.3); }
+      if(outcome !== 'goal') ball.spin += dt*8;
+      // Lenny: settles on the ground after a dive
+      if(plan.pose === 'dive'){
+        const g = Math.min(1, phaseT/0.4);
+        lemur.y = plan.y1 + (Math.max(0.3, Math.min(plan.y1, 0.45)) - plan.y1)*ease(g);
+      } else if(plan.pose === 'stay'){ lemur.y = 0.52; }
+      if(outcome === 'goal') uni.hop = reduced ? 0 : Math.abs(Math.sin(phaseT*9))*18;
+      if(outcome === 'goal' && phaseT > 1.5) newShot();
+      else if(outcome !== 'goal' && phaseT > 1.5) gameOver();
+    }
+    if(msg) msg.t += dt;
+    netShake = Math.max(0, netShake - dt*0.9);
+    crowdJump = Math.max(0, crowdJump - dt*0.6);
+    confetti = confetti.filter(p => p.life > 0);
+    confetti.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.25; p.vx *= 0.99; p.life -= dt*0.6; p.r += 0.15; });
+  }
+  function tri(u){ u = ((u % 2) + 2) % 2; return u < 1 ? u : 2 - u; }
+
+  // ===== DRAWING =====
+  function line(a, b){ ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); }
+
+  function drawBackground(){
+    // sky
+    const sky = ctx.createLinearGradient(0, 0, 0, 60);
+    sky.addColorStop(0, '#BFE6F5'); sky.addColorStop(1, '#E8F6FB');
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 60);
+    // stands
+    ctx.fillStyle = '#7C6FC4'; ctx.fillRect(0, 36, W, 150);
+    ctx.fillStyle = '#6A5DB3';
+    for(let r = 0; r < 8; r++) ctx.fillRect(0, 40 + r*17, W, 3);
+    crowd.forEach(p => {
+      const j = crowdJump > 0 && !reduced ? Math.abs(Math.sin(clock*12 + p.ph))*8*crowdJump : Math.sin(clock*2 + p.ph)*0.8;
+      ctx.fillStyle = p.c;
+      ctx.beginPath(); ctx.arc(p.x, p.y - j, p.r, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(p.x - p.r, p.y - j + p.r*0.6, p.r*2, 8);
+    });
+    // advertising board
+    ctx.fillStyle = '#F2559B'; ctx.fillRect(0, 176, W, 22);
+    ctx.fillStyle = '#fff'; ctx.font = '15px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for(let i = 0; i < 4; i++) ctx.fillText('★ LYLA ROSE CUP ★', 100 + i*200, 188);
+    // grass with mowing stripes
+    ctx.fillStyle = '#5DB45F'; ctx.fillRect(0, 198, W, H - 198);
+    for(let z = -60; z < 17; z += 3){
+      if(Math.round(z/3) % 2 === 0) continue;
+      const y1 = Math.max(198, P(0, 0, z)[1]), y2 = Math.min(H, P(0, 0, Math.min(z + 3, 16.9))[1]);
+      if(y2 > y1){ ctx.fillStyle = '#69C06B'; ctx.fillRect(0, y1, W, y2 - y1); }
+    }
+    // pitch lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 3; ctx.beginPath(); line(P(-40, 0, 0), P(40, 0, 0)); ctx.stroke();
+    ctx.lineWidth = 3.5; ctx.beginPath(); line(P(-9.16, 0, 5.5), P(9.16, 0, 5.5)); line(P(-9.16, 0, 0), P(-9.16, 0, 5.5)); line(P(9.16, 0, 0), P(9.16, 0, 5.5)); ctx.stroke();
+    const spot = P(0, 0, 11);
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.ellipse(spot[0], spot[1], 10, 4, 0, 0, Math.PI*2); ctx.fill();
+  }
+
+  function netZ(x, y){
+    if(netShake <= 0 || !shot) return -2;
+    const d2 = (x - shot.x)**2 + (y - shot.y)**2;
+    return -2 - netShake*0.9*Math.exp(-d2/0.9)*(0.6 + 0.4*Math.cos(clock*25));
+  }
+
+  function drawNet(){
+    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    // back of the net (it bulges when you score)
+    for(let x = -HALF; x <= HALF + 0.01; x += 0.366){
+      for(let y = 0; y < BAR; y += 0.2){
+        const y2 = Math.min(BAR, y + 0.2);
+        line(P(x, y, netZ(x, y)), P(x, y2, netZ(x, y2)));
+      }
+    }
+    for(let y = 0; y <= BAR + 0.01; y += 0.244){
+      for(let x = -HALF; x < HALF - 0.01; x += 0.366){
+        const x2 = x + 0.366;
+        line(P(x, y, netZ(x, y)), P(x2, y, netZ(x2, y)));
+      }
+    }
+    // sides and roof
+    for(let z = 0; z >= -2; z -= 0.4){
+      line(P(-HALF, 0, z), P(-HALF, BAR, z)); line(P(HALF, 0, z), P(HALF, BAR, z));
+      line(P(-HALF, BAR, z), P(HALF, BAR, z));
+    }
+    for(let y = 0; y <= BAR + 0.01; y += 0.244){ line(P(-HALF, y, 0), P(-HALF, y, -2)); line(P(HALF, y, 0), P(HALF, y, -2)); }
+    for(let x = -HALF; x <= HALF + 0.01; x += 0.366) line(P(x, BAR, 0), P(x, BAR, -2));
+    ctx.stroke();
+    // back frame
+    ctx.strokeStyle = '#C9D3D6'; ctx.lineWidth = 3;
+    ctx.beginPath(); line(P(-HALF, 0, -2), P(HALF, 0, -2)); line(P(-HALF, 0, 0), P(-HALF, 0, -2)); line(P(HALF, 0, 0), P(HALF, 0, -2)); ctx.stroke();
+  }
+
+  function drawPosts(){
+    const w = 0.12*P(0, 0, 0)[2];
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)'; ctx.lineWidth = w + 3;
+    ctx.beginPath(); line(P(-HALF, 0, 0), P(-HALF, BAR, 0)); line(P(-HALF, BAR, 0), P(HALF, BAR, 0)); line(P(HALF, BAR, 0), P(HALF, 0, 0)); ctx.stroke();
+    ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = w;
+    ctx.stroke();
+    ctx.lineCap = 'butt';
+  }
+
+  function drawLemur(t){
+    const [sx, sy, sc] = P(lemur.x, lemur.y, 0.4);
+    const k = sc/68;
+    // shadow on the ground
+    const g = P(lemur.x, 0, 0.4);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(g[0], g[1], 30*k, 6*k, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(sx, sy); ctx.rotate(lemur.ang); ctx.scale(k, k);
+    const grey = '#9A9AA8', dark = '#55556A';
+
+    // stripy tail
+    const sway = reduced ? 0 : Math.sin(t*2.2)*14;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      const bx = (1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway);
+      const by = (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66);
+      pts.push([bx, by]);
+    }
+    ctx.lineCap = 'round';
+    for(let i = 0; i < 14; i++){
+      ctx.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6';
+      ctx.lineWidth = 10 - i*0.25;
+      ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[i+1][0], pts[i+1][1]); ctx.stroke();
+    }
+    // legs
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.ellipse(-9, 26, 7, 11, 0.15, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, 26, 7, 11, -0.15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-11, 35, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(11, 35, 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+    // arms (goalie gloves!)
+    let hands;
+    if(lemur.pose === 'dive') hands = [[-10, -60], [10, -60]];
+    else if(lemur.pose === 'stay') hands = [[-40, -42], [40, -42]];
+    else { const b = reduced ? 0 : Math.sin(t*6)*3; hands = [[-34, 2 + b], [34, 2 - b]]; }
+    ctx.strokeStyle = grey; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(-13, -14); ctx.lineTo(hands[0][0], hands[0][1]); ctx.moveTo(13, -14); ctx.lineTo(hands[1][0], hands[1][1]); ctx.stroke();
+
+    // body in a goalie jersey
+    ctx.fillStyle = '#7BD389';
+    ctx.beginPath(); ctx.ellipse(0, 2, 18, 24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#5DBB6E'; ctx.fillRect(-18, 10, 36, 4);
+    ctx.fillStyle = '#fff'; ctx.font = '18px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('1', 0, 0);
+
+    // gloves
+    hands.forEach(h => {
+      ctx.fillStyle = '#FFC23D'; ctx.strokeStyle = '#E8A317'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(h[0], h[1], 8, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+
+    // head
+    ctx.fillStyle = dark;
+    ctx.beginPath(); ctx.arc(-14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.arc(0, -36, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4F4F6';
+    ctx.beginPath(); ctx.ellipse(0, -31, 14, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-7, -36, 6, 6.5, -0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7, -36, 6, 6.5, 0.3, 0, Math.PI*2); ctx.fill();
+    // big orange eyes that follow the ball
+    const [bx, by] = P(ball.x, ball.y, ball.z);
+    let ex = bx - sx, ey = by - (sy - 36*k);
+    const c = Math.cos(-lemur.ang), s = Math.sin(-lemur.ang);
+    [ex, ey] = [ex*c - ey*s, ex*s + ey*c];
+    const el = Math.hypot(ex, ey) || 1; ex = ex/el*1.8; ey = ey/el*1.8;
+    ctx.fillStyle = '#FF9F1C';
+    ctx.beginPath(); ctx.arc(-7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    // nose and mouth
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(0, -26, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2B2B35'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if(lemur.mood === 'happy') ctx.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI);
+    else if(lemur.mood === 'sad') ctx.arc(0, -17, 4, 1.2*Math.PI, 1.8*Math.PI);
+    else { ctx.moveTo(-3, -21); ctx.lineTo(3, -21); }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawBall(){
+    if(ball.alpha <= 0) return;
+    const [sx, sy, sc] = P(ball.x, ball.y, ball.z);
+    const r = Math.max(5, sc*0.11*1.3);
+    const g = P(ball.x, 0, ball.z);
+    ctx.globalAlpha = ball.alpha;
+    ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.ellipse(g[0], g[1] + 1, r*0.9, r*0.3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.save(); ctx.translate(sx, sy); ctx.rotate(ball.spin);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#333'; ctx.lineWidth = Math.max(1, r*0.08);
+    ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    // simple football patches
+    ctx.fillStyle = '#2B2B35';
+    const pent = (cx, cy, rr) => { ctx.beginPath(); for(let i = 0; i < 5; i++){ const a = -Math.PI/2 + i*Math.PI*2/5; ctx.lineTo(cx + Math.cos(a)*rr, cy + Math.sin(a)*rr); } ctx.closePath(); ctx.fill(); };
+    pent(0, 0, r*0.34);
+    for(let i = 0; i < 5; i++){ const a = -Math.PI/2 + i*Math.PI*2/5; pent(Math.cos(a)*r*0.82, Math.sin(a)*r*0.82, r*0.22); }
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
+  function drawUnicorn(){
+    const size = 118;
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(uni.x, uni.y + size*0.42, size*0.38, 9, 0, 0, Math.PI*2); ctx.fill();
+    ctx.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#000';
+    ctx.fillText('🦄', uni.x, uni.y - uni.hop);
+  }
+
+  function drawAim(t){
+    if(state !== 'aimX' && state !== 'aimY') return;
+    const [ax, ay] = P(aim.x, aim.y, 0);
+    ctx.save();
+    ctx.setLineDash([8, 8]); ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(242,85,155,0.8)';
+    ctx.beginPath();
+    if(state === 'aimX'){ line(P(aim.x, 0, 0), P(aim.x, AIMY1, 0)); }
+    else { line(P(-AIMX, aim.y, 0), P(AIMX, aim.y, 0)); }
+    ctx.stroke();
+    if(state === 'aimY'){
+      ctx.setLineDash([]); ctx.strokeStyle = 'rgba(242,85,155,0.45)'; ctx.lineWidth = 6;
+      ctx.beginPath(); line(P(aim.x, AIMY0, 0), P(aim.x, AIMY1, 0)); ctx.stroke();
+    }
+    ctx.restore();
+    const pulse = reduced ? 0 : Math.sin(t*10)*2;
+    ctx.lineWidth = 4;
+    ctx.fillStyle = 'rgba(255,255,255,0.9)'; ctx.strokeStyle = '#F2559B';
+    ctx.beginPath(); ctx.arc(ax, ay, 17 + pulse, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(ax, ay, 9, 0, Math.PI*2); ctx.stroke();
+    ctx.fillStyle = '#F2559B'; ctx.beginPath(); ctx.arc(ax, ay, 3.5, 0, Math.PI*2); ctx.fill();
+    // arrow hint
+    ctx.font = '28px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.fillStyle = '#F2559B';
+    const hint = state === 'aimX' ? 'Tap to stop ↔' : 'Tap to KICK!';
+    ctx.strokeText(hint, 400, 425); ctx.fillText(hint, 400, 425);
+  }
+
+  function drawMsg(){
+    if(!msg) return;
+    const s = reduced ? 1 : Math.min(1, msg.t*5)*(1 + 0.15*Math.max(0, 1 - msg.t*3));
+    ctx.save(); ctx.translate(400, 415); ctx.scale(s, s); ctx.rotate(-0.05);
+    ctx.font = '76px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 12; ctx.strokeStyle = '#fff'; ctx.strokeText(msg.text, 0, 0);
+    ctx.fillStyle = msg.col; ctx.fillText(msg.text, 0, 0);
+    ctx.restore();
+  }
+
+  function drawStreakBadge(){
+    if(streak < 1) return;
+    ctx.font = '24px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    const text = '⚽ × ' + streak;
+    const w = ctx.measureText(text).width + 24;
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(14, 214, w, 38, 19) : ctx.rect(14, 214, w, 38); ctx.fill();
+    ctx.fillStyle = '#F2559B'; ctx.fillText(text, 26, 234);
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    drawBackground();
+    drawNet();
+    const ballBehind = ball.z < 0.2;
+    if(ballBehind) drawBall();
+    drawPosts();
+    drawLemur(clock);
+    if(!ballBehind) drawBall();
+    drawUnicorn();
+    drawAim(clock);
+    drawStreakBadge();
+    confetti.forEach(p => {
+      ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+    drawMsg();
+  }
+
+  // ===== SIZE AND LOOP =====
+  function resize(){
+    const r = board.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    cvs.width = Math.round(r.width*dpr); cvs.height = Math.round(r.height*dpr);
+    ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+  }
+  addEventListener('resize', resize);
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  newShot();
+  state = 'intro';
+  setKickBtn();
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

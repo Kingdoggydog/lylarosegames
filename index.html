@@ -115,15 +115,14 @@
           tags: ["Maze", "Keyboard or touch"]
         },
         {
-          title: "Glitter Sky Unicorn",
-          folder: "glitter-sky",
-          emoji: "🌈",
-          image: "games/glitter-sky/thumb.jpg",
-          colour: "#FDE2EC",
-          blurb: "Fly across the sky catching glitter, eat cotton candy sandwiches and giggle at the tooting clouds.",
-          tags: ["Flying", "Touch or keyboard"]
+          title: "Unicorn Penalty Shoot-out",
+          folder: "unicorn-soccer",
+          emoji: "⚽",
+          colour: "#D6F0C8",
+          blurb: "Aim, kick and score past Lenny the Lemur. How many goals can you get in a row?",
+          tags: ["Soccer", "Tap or Space"]
         },
-        // { title: "Next unicorn game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", image: "games/next-game/thumb.jpg", blurb: "What it's about.", tags: ["Puzzle"] },  // "image" is optional: leave it out to show the emoji instead
+        // { title: "Next unicorn game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", blurb: "What it's about.", tags: ["Puzzle"] },
       ]
     },
     // {
@@ -141,8 +140,7 @@
   function gameCard(g){
     const a = el('a','game');
     a.href = 'games/' + g.folder + '/';
-    const art = el('div','art', g.image ? null : g.emoji); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
-    if (g.image) { art.style.backgroundImage = "url('" + g.image + "')"; art.style.backgroundSize = 'cover'; art.style.backgroundPosition = 'center'; }
+    const art = el('div','art', g.emoji); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
     const body = el('div','body');
     body.append(el('h3',null,g.title), el('p',null,g.blurb));
     const meta = el('div','meta'); (g.tags||[]).forEach(t=>meta.append(el('span','chip',t)));

@@ -47,6 +47,7 @@
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
+  button.ghost.off{opacity:.6;text-decoration:line-through}
   .controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
   .pad{display:grid;grid-template-columns:repeat(3,52px);grid-template-rows:repeat(2,52px);gap:6px}
   .pad button{padding:0;font-size:22px;background:var(--hedge);border-radius:12px}
@@ -79,7 +80,7 @@
     <div class="overlay" id="overlay">
       <div class="panel">
         <h2 id="ovTitle">Ready to gallop?</h2>
-        <p id="ovText">Use the arrow keys, WASD, swipe, or the buttons. Grab the stars on the way for bonus points.</p>
+        <p id="ovText">Use the arrow keys, WASD, swipe, or the buttons. Grab the stars on the way for bonus points. Turn your sound up!</p>
         <button id="ovBtn">Start</button>
       </div>
     </div>
@@ -94,6 +95,8 @@
     </div>
     <p class="help">Every level the maze grows bigger. Your rainbow trail shows where you've been.</p>
     <div class="btns">
+      <button class="ghost" id="musicBtn" aria-pressed="true">🎵 Music on</button>
+      <button class="ghost" id="sfxBtn" aria-pressed="true">🔊 Sounds on</button>
       <button class="ghost" id="newBtn">New maze</button>
     </div>
   </div>
@@ -180,12 +183,13 @@
     const m = {up:[0,-1,0],right:[1,0,1],down:[0,1,2],left:[-1,0,3]}[d];
     if(!m) return;
     const c = grid[player.y][player.x];
-    if(c.w[m[2]]) { bump = 6; return; }
+    if(c.w[m[2]]) { if(bump <= 0) Sound.bump(); bump = 6; return; }
     player.x += m[0]; player.y += m[1];
+    Sound.step();
     const last = trail[trail.length-1];
     if(last.x!==player.x || last.y!==player.y) trail.push({x:player.x,y:player.y});
     const si = starsList.findIndex(s=>s.x===player.x&&s.y===player.y&&!s.got);
-    if(si>=0){ starsList[si].got=true; got++; burst(player.x,player.y,'#FFC23D'); updateHud(); }
+    if(si>=0){ starsList[si].got=true; got++; Sound.star(got); burst(player.x,player.y,'#FFC23D'); updateHud(); }
     if(player.x===goal.x && player.y===goal.y) win();
   }
   let bump = 0;
@@ -203,6 +207,7 @@
     const secs = Math.floor(elapsed/1000);
     const pts = Math.max(50, 500 - secs*5) + got*100;
     totalScore += pts;
+    Sound.win();
     for(let i=0;i<4;i++) burst(goal.x,goal.y);
     setTimeout(()=>{
       ovTitle.textContent = 'Level ' + level + ' done!';
@@ -215,6 +220,7 @@
 
   function start(){
     overlay.hidden = true;
+    Sound.init();
     startTime = performance.now() - elapsed;
     running = true;
   }
@@ -347,6 +353,140 @@
 
     requestAnimationFrame(draw);
   }
+
+  // ================= MUSIC AND SOUNDS =================
+  // Everything is made with the browser's built-in synthesiser, so there are no sound files.
+  const Sound = (() => {
+    let ac = null, master, musicBus, sfxBus;
+    let musicOn = true, sfxOn = true;
+    try { musicOn = localStorage.getItem('maze-music') !== 'off'; sfxOn = localStorage.getItem('maze-sfx') !== 'off'; } catch(e){}
+
+    function init(){
+      if(ac) { if(ac.state === 'suspended') ac.resume(); return; }
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if(!AC) return;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = 0.9; master.connect(ac.destination);
+      musicBus = ac.createGain(); musicBus.gain.value = musicOn ? 0.16 : 0; musicBus.connect(master);
+      sfxBus = ac.createGain(); sfxBus.gain.value = sfxOn ? 0.5 : 0; sfxBus.connect(master);
+      startMusic();
+    }
+
+    const hz = n => 440 * Math.pow(2, (n - 69) / 12); // MIDI note number to pitch
+
+    // one soft "ding" note
+    function tone(bus, midi, t, dur, type, vol){
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = type || 'sine'; o.frequency.value = hz(midi);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol || 0.5, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(bus); o.start(t); o.stop(t + dur + 0.05);
+    }
+    // music box sound: a pure tone plus a quiet sparkle an octave up
+    function bell(bus, midi, t, dur, vol){
+      tone(bus, midi, t, dur, 'sine', vol);
+      tone(bus, midi + 12, t, dur * 0.5, 'triangle', (vol || 0.5) * 0.25);
+    }
+
+    // ---- background tune: a little music-box melody that loops ----
+    const BPM = 96, STEP = 60 / BPM / 2; // eighth notes
+    // 0 = rest. Notes are in C major, happy and gentle.
+    const melody = [
+      76,0,79,0,81,79,76,0,   74,0,76,0,79,0,0,0,
+      72,0,76,0,79,81,84,0,   81,0,79,0,76,0,0,0,
+      77,0,81,0,84,81,77,0,   76,0,79,0,84,0,0,0,
+      74,0,77,79,81,0,79,77,  76,0,74,0,72,0,0,0
+    ];
+    const chords = [[48,55],[45,52],[41,48],[43,50]]; // C, Am, F, G (bass notes)
+    let step = 0, nextTime = 0, timer = null;
+
+    function startMusic(){
+      if(timer) return;
+      nextTime = ac.currentTime + 0.1;
+      timer = setInterval(() => {
+        while(nextTime < ac.currentTime + 0.15){
+          const n = melody[step % melody.length];
+          if(n) bell(musicBus, n, nextTime, STEP * 3, 0.35);
+          if(step % 8 === 0){
+            const [root, fifth] = chords[Math.floor(step / 16) % 4];
+            tone(musicBus, root, nextTime, STEP * 7, 'sine', 0.4);
+            tone(musicBus, fifth, nextTime + STEP * 4, STEP * 3, 'sine', 0.25);
+          }
+          step++; nextTime += STEP;
+        }
+      }, 30);
+    }
+
+    function duck(){ // quieten the music briefly so the victory tune stands out
+      if(!ac || !musicOn) return;
+      const g = musicBus.gain, t = ac.currentTime;
+      g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+      g.linearRampToValueAtTime(0.03, t + 0.1);
+      g.setValueAtTime(0.03, t + 2.2);
+      g.linearRampToValueAtTime(0.16, t + 3.2);
+    }
+
+    return {
+      init,
+      get musicOn(){ return musicOn; },
+      get sfxOn(){ return sfxOn; },
+      toggleMusic(){
+        musicOn = !musicOn;
+        try { localStorage.setItem('maze-music', musicOn ? 'on' : 'off'); } catch(e){}
+        if(ac){ musicBus.gain.cancelScheduledValues(ac.currentTime); musicBus.gain.setTargetAtTime(musicOn ? 0.16 : 0, ac.currentTime, 0.1); }
+        return musicOn;
+      },
+      toggleSfx(){
+        sfxOn = !sfxOn;
+        try { localStorage.setItem('maze-sfx', sfxOn ? 'on' : 'off'); } catch(e){}
+        if(ac) sfxBus.gain.setTargetAtTime(sfxOn ? 0.5 : 0, ac.currentTime, 0.05);
+        return sfxOn;
+      },
+      step(){ // soft hoof clip-clop
+        if(!ac || !sfxOn) return;
+        const t = ac.currentTime;
+        tone(sfxBus, 84 + (Math.random() < .5 ? 0 : 3), t, 0.06, 'triangle', 0.08);
+      },
+      bump(){ // gentle "boing" when walking into a hedge
+        if(!ac || !sfxOn) return;
+        const t = ac.currentTime, o = ac.createOscillator(), g = ac.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(260, t); o.frequency.exponentialRampToValueAtTime(140, t + 0.15);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+        o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + 0.2);
+      },
+      star(count){ // twinkly chime that climbs higher with each star
+        if(!ac || !sfxOn) return;
+        const t = ac.currentTime, base = 84 + Math.min(count - 1, 7);
+        [0, 4, 7, 12].forEach((iv, i) => bell(sfxBus, base + iv, t + i * 0.06, 0.5, 0.45));
+      },
+      win(){ // happy fanfare for the rainbow gate
+        if(!ac || !sfxOn) return;
+        duck();
+        const t = ac.currentTime + 0.05;
+        const tune = [[72,0],[76,.12],[79,.24],[84,.36],[79,.54],[84,.66],[88,.9]];
+        tune.forEach(([n, d], i) => bell(sfxBus, n, t + d, i === tune.length - 1 ? 1.4 : 0.4, 0.5));
+        [60, 64, 67].forEach(n => tone(sfxBus, n, t + 0.9, 1.4, 'triangle', 0.18));
+        for(let i = 0; i < 10; i++) bell(sfxBus, 91 + (i % 5) * 2, t + 1.1 + i * 0.07, 0.3, 0.2);
+      }
+    };
+  })();
+
+  const musicBtn = document.getElementById('musicBtn');
+  const sfxBtn = document.getElementById('sfxBtn');
+  function paintSoundBtns(){
+    musicBtn.textContent = Sound.musicOn ? '🎵 Music on' : '🎵 Music off';
+    musicBtn.setAttribute('aria-pressed', Sound.musicOn);
+    musicBtn.classList.toggle('off', !Sound.musicOn);
+    sfxBtn.textContent = Sound.sfxOn ? '🔊 Sounds on' : '🔈 Sounds off';
+    sfxBtn.setAttribute('aria-pressed', Sound.sfxOn);
+    sfxBtn.classList.toggle('off', !Sound.sfxOn);
+  }
+  musicBtn.addEventListener('click', () => { Sound.init(); Sound.toggleMusic(); paintSoundBtns(); });
+  sfxBtn.addEventListener('click', () => { Sound.init(); Sound.toggleSfx(); paintSoundBtns(); });
+  paintSoundBtns();
 
   newLevel();
   requestAnimationFrame(draw);
