@@ -281,6 +281,38 @@
 
   // ---------- sound ----------
   let ac = null, muted = false, musicOn = true, sfxOut = null, musicOut = null;
+  // Phones are fussy about web sound: iPhones mute it when the silent switch is on
+  // unless the page asks for "playback" audio, and every phone needs a tap to unlock it.
+  let silentEl = null;
+  function silentWavUrl() {
+    const n = 4410, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf);
+    const w = (o, str) => { for (let i = 0; i < str.length; i++) v.setUint8(o + i, str.charCodeAt(i)); };
+    w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt ');
+    v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+    v.setUint32(24, 44100, true); v.setUint32(28, 88200, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+    w(36, 'data'); v.setUint32(40, n * 2, true);
+    return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+  }
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    initAudio();
+    if (!ac) return;
+    try {
+      const b = ac.createBuffer(1, 1, 22050), src = ac.createBufferSource();
+      src.buffer = b; src.connect(ac.destination); src.start(0);
+    } catch (e) {}
+    if (!navigator.audioSession) {
+      try {
+        if (!silentEl) { silentEl = new Audio(silentWavUrl()); silentEl.loop = true; silentEl.setAttribute('playsinline', ''); }
+        const pr = silentEl.play(); if (pr && pr.catch) pr.catch(() => {});
+      } catch (e) {}
+    }
+  }
+  ['touchend', 'pointerup', 'click', 'keydown'].forEach(ev => addEventListener(ev, unlockAudio, { passive: true }));
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && ac && ac.state !== 'running') { try { ac.resume(); } catch (e) {} }
+  });
+
   function initAudio() {
     try {
       if (!ac) {
@@ -289,7 +321,7 @@
         musicOut = ac.createGain(); musicOut.gain.value = 0.9; musicOut.connect(ac.destination);
         setInterval(scheduleMusic, 25);
       }
-      if (ac.state === 'suspended') ac.resume();
+      if (ac.state !== 'running') ac.resume();
     } catch (e) { ac = null; }
   }
 
@@ -436,7 +468,7 @@
   const startScreen = document.getElementById('startScreen');
   const endScreen = document.getElementById('endScreen');
   function startGame() {
-    initAudio();
+    unlockAudio();
     buildLevel();
     resetUnicorn();
     glitter = 0; wingLevel = 0; starsGot = 0; spawnAcc = 0; wingAcc = 0;
