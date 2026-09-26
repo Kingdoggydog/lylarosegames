@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Lyla Rose Games</title>
-<meta name="description" content="A little collection of unicorn games.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦄</text></svg>">
+<meta name="description" content="A little collection of games to play.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
 <style>
@@ -41,6 +41,16 @@
     color:var(--pink);text-shadow:3px 3px 0 #fff;text-wrap:balance;
   }
   .tag{margin:0;font-size:clamp(16px,3.5vw,20px);font-weight:800;color:var(--muted)}
+  main{display:flex;flex-direction:column;gap:40px}
+  .section{display:flex;flex-direction:column;gap:16px;scroll-margin-top:16px}
+  .section-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .badge{width:56px;height:56px;border-radius:18px;display:grid;place-items:center;font-size:32px;flex:none}
+  .section h2.title{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(30px,6vw,40px);margin:0;line-height:1;color:var(--ink)}
+  .section .about{margin:2px 0 0;font-size:15px;color:var(--muted)}
+  .jump{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .jump a{background:var(--card);color:var(--ink);text-decoration:none;font-weight:800;font-size:15px;padding:8px 14px;border-radius:999px;box-shadow:0 4px 12px #2E6E6118}
+  .jump a:hover{background:#FDE2EC}
+  .jump a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
   .game{
     display:flex;flex-direction:column;background:var(--card);border-radius:22px;overflow:hidden;
@@ -51,7 +61,7 @@
   .game:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
   .art{aspect-ratio:4/3;display:grid;place-items:center;font-size:clamp(72px,18vw,96px);position:relative}
   .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
-  .game h2{font-family:"Chewy",cursive;font-weight:400;font-size:28px;margin:0;line-height:1.1}
+  .game h3{font-family:"Chewy",cursive;font-weight:400;font-size:28px;margin:0;line-height:1.1}
   .game p{margin:0;font-size:15px;color:var(--muted)}
   .meta{display:flex;gap:6px;flex-wrap:wrap}
   .chip{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;background:#EAF7EC;color:var(--hedge)}
@@ -73,53 +83,89 @@
       <span style="background:#FF6B6B"></span><span style="background:#FFA94D"></span><span style="background:#FFD43B"></span><span style="background:#69DB7C"></span><span style="background:#4DABF7"></span><span style="background:#9775FA"></span>
     </div>
     <h1>Lyla Rose Games</h1>
-    <p class="tag">Pick a unicorn game and press Play!</p>
+    <p class="tag">Pick a game and press Play!</p>
+    <nav class="jump" id="jump" aria-label="Game sections"></nav>
   </header>
 
-  <main class="grid" id="grid"></main>
+  <main id="sections"></main>
 
-  <footer>Made with love. More games galloping in soon.</footer>
+  <footer>Made with love. More games on the way.</footer>
 </div>
 
 <script>
-  // ===== ADD NEW GAMES HERE =====
-  // Put each game in its own folder inside "games", then add a line below.
-  const games = [
+  // ===== SECTIONS AND GAMES =====
+  // Each section is a group of games (Unicorns, Puzzles, Cars...).
+  // To add a game: put it in its own folder inside "games", then add it to a section's "games" list.
+  // To add a section: copy the example section at the bottom of this list.
+  const sections = [
     {
-      title: "Sparklehoof's Maze",
-      folder: "unicorn-maze",
+      id: "unicorns",
+      title: "Unicorns",
       emoji: "🦄",
-      colour: "#CFEFD8",
-      blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
-      tags: ["Maze", "Keyboard or touch"]
+      colour: "#FDE2EC",
+      about: "Magical games with unicorns, rainbows and sparkles.",
+      comingSoon: true,
+      games: [
+        {
+          title: "Sparklehoof's Maze",
+          folder: "unicorn-maze",
+          emoji: "🦄",
+          colour: "#CFEFD8",
+          blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
+          tags: ["Maze", "Keyboard or touch"]
+        },
+        // { title: "Next unicorn game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", blurb: "What it's about.", tags: ["Puzzle"] },
+      ]
     },
-    // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", blurb: "What it's about.", tags: ["Puzzle"] },
+    // {
+    //   id: "space", title: "Space", emoji: "🚀", colour: "#DDE3FF",
+    //   about: "Blast off to the stars.", comingSoon: false,
+    //   games: [ { title: "Rocket Run", folder: "rocket-run", emoji: "🚀", colour: "#DDE3FF", blurb: "Dodge the asteroids.", tags: ["Action"] } ]
+    // },
   ];
 
-  const grid = document.getElementById('grid');
-  games.forEach(g => {
-    const a = document.createElement('a');
-    a.className = 'game';
-    a.href = 'games/' + g.folder + '/';
-    a.innerHTML = `
-      <div class="art" style="background:${g.colour}" aria-hidden="true">${g.emoji}</div>
-      <div class="body">
-        <h2></h2>
-        <p></p>
-        <div class="meta">${(g.tags||[]).map(t=>`<span class="chip"></span>`).join('')}</div>
-        <span class="play">Play ▶</span>
-      </div>`;
-    a.querySelector('h2').textContent = g.title;
-    a.querySelector('p').textContent = g.blurb;
-    a.querySelectorAll('.chip').forEach((c,i)=>c.textContent = g.tags[i]);
-    grid.appendChild(a);
-  });
+  const main = document.getElementById('sections');
+  const jump = document.getElementById('jump');
 
-  const soon = document.createElement('div');
-  soon.className = 'game soon';
-  soon.innerHTML = `<div class="art" aria-hidden="true">✨</div>
-    <div class="body"><h2>Coming soon</h2><p>A new unicorn adventure is on its way.</p></div>`;
-  grid.appendChild(soon);
+  function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+
+  function gameCard(g){
+    const a = el('a','game');
+    a.href = 'games/' + g.folder + '/';
+    const art = el('div','art', g.emoji); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
+    const body = el('div','body');
+    body.append(el('h3',null,g.title), el('p',null,g.blurb));
+    const meta = el('div','meta'); (g.tags||[]).forEach(t=>meta.append(el('span','chip',t)));
+    body.append(meta, el('span','play','Play ▶'));
+    a.append(art, body);
+    return a;
+  }
+
+  function soonCard(){
+    const d = el('div','game soon');
+    const art = el('div','art','✨'); art.setAttribute('aria-hidden','true');
+    const body = el('div','body');
+    body.append(el('h3',null,'Coming soon'), el('p',null,'A new game is on its way.'));
+    d.append(art, body);
+    return d;
+  }
+
+  sections.forEach(sec => {
+    const s = el('section','section'); s.id = sec.id;
+    const head = el('div','section-head');
+    const badge = el('div','badge',sec.emoji); badge.style.background = sec.colour; badge.setAttribute('aria-hidden','true');
+    const txt = el('div');
+    txt.append(el('h2','title',sec.title), el('p','about',sec.about));
+    head.append(badge, txt);
+    const grid = el('div','grid');
+    sec.games.forEach(g => grid.append(gameCard(g)));
+    if(sec.comingSoon) grid.append(soonCard());
+    s.append(head, grid);
+    main.append(s);
+
+    const link = el('a',null, sec.emoji + ' ' + sec.title); link.href = '#' + sec.id;
+    jump.append(link);
+  });
 </script>
 </body>
 </html>
