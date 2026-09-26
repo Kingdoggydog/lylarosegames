@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en-AU">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Unicorn Penalty Shoot-out - Free Soccer Game for Kids | Lyla Rose Games</title>
+<title>Unicorn Penalty Shoot-out</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
 <style>
@@ -25,21 +25,18 @@
     background-color:var(--sky);
     color:var(--ink);
     font-family:"Nunito",system-ui,sans-serif;
-    /* fill the screen exactly, keeping clear of notches and rounded corners */
-    height:100vh;height:100dvh;
-    padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    padding-inline:16px;
+    padding-block:16px 24px;
     box-sizing:border-box;
-    overflow:hidden;
+    min-height:100%;
   }
-  .wrap{max-width:1000px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px}
-  /* the pitch grows to the biggest 4:3 box that fits the space left over */
-  .stage{flex:1;min-height:150px;container-type:size;display:grid;place-items:center}
+  .wrap{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
   header{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
   h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
   .sub{margin:4px 0 0;font-size:14px}
   .stats{display:flex;gap:8px;flex-wrap:wrap}
   .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
-  .board{position:relative;width:min(100cqw,100cqh*4/3);aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#6FBF73;box-shadow:0 10px 30px #2E6E6133;touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer}
+  .board{position:relative;width:100%;aspect-ratio:4/3;border-radius:18px;overflow:hidden;background:#6FBF73;box-shadow:0 10px 30px #2E6E6133;touch-action:manipulation;user-select:none;-webkit-user-select:none;cursor:pointer}
   canvas{display:block;width:100%;height:100%}
   .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45A6;padding:16px;cursor:default}
   .panel{background:#fff;border-radius:18px;padding:20px 22px;text-align:center;max-width:340px;display:flex;flex-direction:column;gap:10px}
@@ -50,101 +47,13 @@
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
   .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  #kick{flex:1 1 220px;font-size:22px;padding:16px 20px;border-radius:16px;box-shadow:0 6px 0 #C23A78;transition:transform .05s}
+  #kick{flex:1 1 160px;font-size:22px;padding:16px 20px;border-radius:16px;box-shadow:0 6px 0 #C23A78;transition:transform .05s}
   #kick:active{transform:translateY(3px);box-shadow:0 3px 0 #C23A78}
   #kick:disabled{opacity:.6;cursor:default}
   .help{font-size:13px;margin:0;flex:1 1 220px}
   .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
   .back:hover{text-decoration:underline}
-  /* phones and small screens: tuck away the extra words to make room for the pitch */
-  @media (pointer:coarse), (max-height:760px){ .help,.sub{display:none} h1{font-size:28px} }
-  /* phone on its side: title and kick button on the left, pitch on the right */
-  @media (orientation:landscape) and (max-height:620px){
-    .wrap{max-width:none;display:grid;grid-template-columns:minmax(180px,1fr) auto;grid-template-rows:auto auto 1fr;column-gap:18px;row-gap:8px}
-    .back{grid-column:1;grid-row:1;justify-self:start}
-    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;gap:8px}
-    h1{font-size:24px}
-    .controls{grid-column:1;grid-row:3;align-self:end;flex-wrap:wrap}
-    #kick{flex:1 1 100%;font-size:20px;padding:22px 16px}
-    .stage{grid-column:2;grid-row:1 / 4;height:100%;aspect-ratio:4/3;min-height:0}
-  }
 </style>
-<!-- asks phones to turn sideways (see site.js) -->
-<meta name="game-orientation" content="landscape">
-<meta name="description" content="Unicorn Penalty Shoot-out - a free soccer game for kids. Aim, kick and score past Lenny the Lemur.">
-<!-- ===== SEO for this game (Google + share previews) ===== -->
-<link rel="canonical" href="https://lylarosegames.com/games/unicorn-soccer/">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="Lyla Rose Games">
-<meta property="og:locale" content="en_AU">
-<meta property="og:title" content="Unicorn Penalty Shoot-out - Free Soccer Game for Kids | Lyla Rose Games">
-<meta property="og:description" content="Unicorn Penalty Shoot-out - a free soccer game for kids. Aim, kick and score past Lenny the Lemur.">
-<meta property="og:url" content="https://lylarosegames.com/games/unicorn-soccer/">
-<meta property="og:image" content="https://lylarosegames.com/games/unicorn-soccer/share.jpg">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Unicorn Penalty Shoot-out - free soccer game for kids">
-<meta name="twitter:card" content="summary_large_image">
-<!-- Game details for Google. Controls: Tap, click or press Space -->
-<script type="application/ld+json">
-{
- "@context": "https://schema.org",
- "@graph": [
-  {
-   "@type": "VideoGame",
-   "name": "Unicorn Penalty Shoot-out",
-   "url": "https://lylarosegames.com/games/unicorn-soccer/",
-   "description": "Unicorn Penalty Shoot-out - a free soccer game for kids. Aim, kick and score past Lenny the Lemur.",
-   "image": "https://lylarosegames.com/games/unicorn-soccer/share.jpg",
-   "genre": [
-    "Unicorns",
-    "Sport"
-   ],
-   "gamePlatform": "Web browser",
-   "applicationCategory": "Game",
-   "operatingSystem": "Any",
-   "playMode": "SinglePlayer",
-   "isAccessibleForFree": true,
-   "inLanguage": "en-AU",
-   "audience": {
-    "@type": "PeopleAudience",
-    "audienceType": "Children"
-   },
-   "publisher": {
-    "@type": "Organization",
-    "name": "Lyla Rose Games",
-    "url": "https://lylarosegames.com/",
-    "logo": "https://lylarosegames.com/brand/icon-512.png"
-   }
-  },
-  {
-   "@type": "BreadcrumbList",
-   "itemListElement": [
-    {
-     "@type": "ListItem",
-     "position": 1,
-     "name": "Lyla Rose Games",
-     "item": "https://lylarosegames.com/"
-    },
-    {
-     "@type": "ListItem",
-     "position": 2,
-     "name": "Sport games",
-     "item": "https://lylarosegames.com/sport-games/"
-    },
-    {
-     "@type": "ListItem",
-     "position": 3,
-     "name": "Unicorn Penalty Shoot-out",
-     "item": "https://lylarosegames.com/games/unicorn-soccer/"
-    }
-   ]
-  }
- ]
-}
-</script>
-<!-- ===== end SEO ===== -->
-<script src="../../site.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -160,7 +69,6 @@
     </div>
   </header>
 
-  <div class="stage">
   <div class="board" id="board">
     <canvas id="c"></canvas>
     <div class="overlay" id="overlay">
@@ -171,7 +79,6 @@
         <button id="ovBtn">Play</button>
       </div>
     </div>
-  </div>
   </div>
 
   <div class="controls">
@@ -1037,8 +944,6 @@
     ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
   }
   addEventListener('resize', resize);
-  // also redraw at the right size whenever the pitch itself changes size (turning the device, etc.)
-  if (window.ResizeObserver) new ResizeObserver(resize).observe(board);
 
   let last = performance.now();
   function loop(now){
