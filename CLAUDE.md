@@ -19,9 +19,10 @@ home.js             draws the game cards, filter buttons and Google data - no ne
 styles.css          shared look for the home page and category pages
 site.js             loaded by EVERY page: Google Analytics, logo, and the mobile kit for games
 unicorn-games/      one folder per category page, for Google (unicorn-games, sport-games,
-sport-games/          puzzle-games, flying-games). Each is a small index.html with its own
-puzzle-games/         Google title + description. The games on it come from games-data.js.
-flying-games/
+sport-games/          puzzle-games, flying-games, animal-games). Each is a small index.html
+puzzle-games/         with its own Google title + description. The games on it come from
+flying-games/         games-data.js.
+animal-games/
 brand/              logo (icon.svg + png sizes) and og-image.jpg (the share picture)
 site.webmanifest    lets phones add the site to the home screen as a full-screen app
 sitemap.xml         list of pages for Google

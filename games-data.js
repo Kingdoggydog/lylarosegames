@@ -18,6 +18,7 @@ const categories = [
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
   { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles & Mazes", heading: "Puzzle & maze games", emoji: "🧩", colour: "#FFF1C9", about: "Think it through and find the way." },
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
+  { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
   // { id: "cars", slug: "car-games", title: "Cars", heading: "Car games", emoji: "🚗", colour: "#FFE0CC", about: "Zoom zoom." },
 ];
 

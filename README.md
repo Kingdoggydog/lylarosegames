@@ -21,6 +21,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Sport | `sport-games/` |
 | Puzzles & Mazes | `puzzle-games/` |
 | Flying | `flying-games/` |
+| Animals | `animal-games/` |
 
 ## Adding a new game
 
