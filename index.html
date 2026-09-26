@@ -60,6 +60,8 @@
   .game:hover{transform:translateY(-4px) rotate(-.5deg);box-shadow:0 14px 30px #2E6E6133}
   .game:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
   .art{aspect-ratio:4/3;display:grid;place-items:center;font-size:clamp(72px,18vw,96px);position:relative}
+  .art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s ease}
+  .game:hover .art img{transform:scale(1.05)}
   .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:8px;flex:1}
   .game h3{font-family:"Chewy",cursive;font-weight:400;font-size:28px;margin:0;line-height:1.1}
   .game p{margin:0;font-size:15px;color:var(--muted)}
@@ -73,7 +75,7 @@
   .soon:hover{transform:none;box-shadow:none}
   .soon .art{filter:grayscale(.3);opacity:.7}
   footer{text-align:center;font-size:13px;color:var(--muted)}
-  @media (prefers-reduced-motion: reduce){.game{transition:none}.game:hover{transform:none}}
+  @media (prefers-reduced-motion: reduce){.game,.art img{transition:none}.game:hover,.game:hover .art img{transform:none}}
 </style>
 </head>
 <body>
@@ -111,16 +113,9 @@
           folder: "unicorn-maze",
           emoji: "🦄",
           colour: "#CFEFD8",
+          thumb: "thumb.svg",   // picture file inside the game's folder (optional)
           blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
           tags: ["Maze", "Keyboard or touch"]
-        },
-        {
-          title: "Unicorn Penalty Shoot-out",
-          folder: "unicorn-soccer",
-          emoji: "⚽",
-          colour: "#D6F0C8",
-          blurb: "Aim, kick and score past Lenny the Lemur. How many goals can you get in a row?",
-          tags: ["Soccer", "Tap or Space"]
         },
         // { title: "Next unicorn game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", blurb: "What it's about.", tags: ["Puzzle"] },
       ]
@@ -140,7 +135,13 @@
   function gameCard(g){
     const a = el('a','game');
     a.href = 'games/' + g.folder + '/';
-    const art = el('div','art', g.emoji); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
+    const art = el('div','art'); art.style.background = g.colour; art.setAttribute('aria-hidden','true');
+    if(g.thumb){
+      const img = el('img'); img.src = 'games/' + g.folder + '/' + g.thumb; img.alt = ''; img.loading = 'lazy';
+      art.append(img);
+    } else {
+      art.textContent = g.emoji;
+    }
     const body = el('div','body');
     body.append(el('h3',null,g.title), el('p',null,g.blurb));
     const meta = el('div','meta'); (g.tags||[]).forEach(t=>meta.append(el('span','chip',t)));
