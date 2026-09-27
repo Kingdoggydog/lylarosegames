@@ -182,7 +182,7 @@
         <h2 id="ovTitle">Glitter Getaway!</h2>
         <div class="stars" id="ovStars" hidden aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
         <p id="ovBig" class="big" hidden></p>
-        <p id="ovText">Starlight is galloping to the rainbow bridge, but cheeky Lenny the Lemur wants her glitter! Tap, or press Space or ↑, to jump. Hold for a bigger jump.</p>
+        <p id="ovText">Starlight is galloping to the rainbow bridge, but cheeky Lenny the Lemur wants her glitter! Tap, or press Space or ↑, to jump. Hold for a bigger jump. You have 3 hearts - if Lenny catches you 3 times, it's game over!</p>
         <button id="ovBtn">Let's gallop!</button>
         <button id="ovBtn2" class="ghost" hidden>Start again from level 1</button>
       </div>
@@ -194,7 +194,7 @@
     <button class="ghost" id="pause" aria-label="Pause">⏸️</button>
     <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
     <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
-    <p class="help">Tap anywhere, or press Space or the up arrow, to jump. Hold it down for a higher jump. Grab the rainbow star for a super-fast rainbow dash!</p>
+    <p class="help">Tap anywhere, or press Space or the up arrow, to jump. Hold it down for a higher jump. Grab the rainbow star for a super-fast rainbow dash! You have 3 hearts, and each rainbow bridge gives one back.</p>
   </div>
 </div>
 
@@ -233,7 +233,7 @@
   let state = 'intro';     // intro, run, bridge, celebrate, done
   let paused = false, ovMode = 'start';
   let clock = 0, stateT = 0;
-  let level = 1, glitter = 0, bestAtStart = best, bestShown = false;
+  let level = 1, glitter = 0, lives = 3, bestAtStart = best, bestShown = false;
   let L = null;            // this level's logs, rocks, puddles and glitter
   let camX = 0, bgX = 0, spd = 0;
   let uni, lenny, held = false;
@@ -375,7 +375,9 @@
       [89, 93, 96].forEach((m, i) => tone(hz(m), 0.3, 'sine', 0.04, null, 0.6 + i*0.08));
     },
     star(i, delay){ tone(hz([84, 88, 91][i]), 0.4, 'sine', 0.18, null, delay); tone(hz([96, 100, 103][i]), 0.3, 'triangle', 0.04, null, delay); },
-    go(){ tone(hz(72), 0.12, 'triangle', 0.12); tone(hz(79), 0.2, 'triangle', 0.12, null, 0.12); }
+    go(){ tone(hz(72), 0.12, 'triangle', 0.12); tone(hz(79), 0.2, 'triangle', 0.12, null, 0.12); },
+    heart(){ tone(hz(76), 0.18, 'triangle', 0.12, null, 0); tone(hz(71), 0.3, 'triangle', 0.12, null, 0.15); },
+    over(){ [72, 71, 69, 65].forEach((m, i) => tone(hz(m), 0.35, 'triangle', 0.13, null, 0.2 + i*0.22)); }
   };
 
   // ----- background music: a bouncy galloping tune that loops -----
@@ -475,14 +477,28 @@
     ovBig.hidden = false;
     ovBig.textContent = '✨ You kept ' + kept + ' of ' + L.total + ' glitter';
     const tips = stars === 3 ? 'Super sparkly! Three stars!' : stars === 2 ? 'Lovely galloping! Grab even more glitter for three stars.' : 'Safe across! Jump for the glitter to win more stars.';
-    ovText.textContent = tips + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
+    let heartBack = '';
+    if(lives < 3){ lives++; heartBack = ' Crossing the rainbow gave you a heart back! ❤️'; }
+    ovText.textContent = tips + heartBack + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
     ovBtn.textContent = 'Next level ➜';
     ovBtn.focus({preventScroll:true});
   }
 
   function newGame(){
-    level = 1; glitter = 0; bestAtStart = best; bestShown = false;
+    level = 1; glitter = 0; lives = 3; bestAtStart = best; bestShown = false;
     startLevel();
+  }
+
+  // all three hearts gone - Lenny wins this time!
+  function gameOver(){
+    state = 'over';
+    showOverlay('over');
+    ovTitle.textContent = 'Lenny got you!';
+    ovBig.hidden = false;
+    ovBig.textContent = '✨ ' + glitter + ' glitter - you reached level ' + level;
+    ovText.textContent = (bestShown ? '🏆 That is a new best! ' : 'Your best is ' + best + '. ') + 'Lenny is off to make a sparkly nest... Can you get further next time?';
+    ovBtn.textContent = 'Try again';
+    ovBtn.focus({preventScroll:true});
   }
 
   ovBtn.addEventListener('click', () => {
@@ -490,11 +506,12 @@
     if(ovMode === 'start'){ hideOverlay(); newGame(); sfx.go(); }
     else if(ovMode === 'pause'){ hideOverlay(); paused = false; }
     else if(ovMode === 'level'){ hideOverlay(); level++; startLevel(); sfx.go(); }
+    else if(ovMode === 'over'){ hideOverlay(); newGame(); sfx.go(); }
   });
   ovBtn2.addEventListener('click', () => { wake(); startMusic(); hideOverlay(); paused = false; newGame(); sfx.go(); });
 
   function pauseGame(){
-    if(!overlay.hidden || paused || !['run', 'bridge', 'celebrate'].includes(state)) return;
+    if(!overlay.hidden || paused || !['run', 'bridge', 'celebrate', 'caught'].includes(state)) return;
     paused = true; held = false; showOverlay('pause');
   }
   pauseBtn.addEventListener('click', () => { pauseBtn.blur(); pauseGame(); });
@@ -582,6 +599,8 @@
     else if(state === 'run') updateRun(dt);
     else if(state === 'bridge') updateBridge(dt);
     else if(state === 'celebrate') updateCelebrate(dt);
+    else if(state === 'caught') updateCaught(dt);
+    else if(state === 'over'){ lenny.ph += dt*4; }
 
     // floating words, sparkles and confetti
     floats = floats.filter(f => (f.t += dt) < 1.2);
@@ -678,7 +697,7 @@
     if(uni.dash > 0) drift = -0.45;
     else if(uni.stumble > 0) drift += 0.28;
     lenny.close = clamp(lenny.close + drift*dt, 0.1, 1);
-    if(lenny.close >= 1 && uni.dash <= 0) startCatch();
+    if(lenny.close >= 1 && uni.dash <= 0 && camX + UNI_X < L.length - 600) startCatch();
     if(lenny.close > 0.78 && !lenny.warned){ lenny.warned = true; lennySay(pick(['Almost got ya!', 'So sparkly...', 'Nearly there!', 'Glitter, glitter!']), 1.5); }
     if(lenny.close < 0.5) lenny.warned = false;
     lenny.x += (lennyHome(lenny.close) - lenny.x)*Math.min(1, dt*6);
@@ -714,7 +733,10 @@
         const took = Math.min(glitter, clamp(Math.round(glitter*0.2), 5, 25));
         glitter -= took; L.stolen += took; updateHud();
         sfx.grab(); setTimeout(sfx.laugh, 120);
-        lennySay(pick(['Hee hee! Mine!', 'Ooh, shiny! Thank you!', 'Glitter snack! Hee hee!', 'Sparkly! Hee hee!']), 1.6);
+        lives = Math.max(0, lives - 1); sfx.heart();
+        addFloat(28 + lives*30, 52, '💔', '#FF6B6B', 26);
+        if(lives > 0) lennySay(pick(['Hee hee! Mine!', 'Ooh, shiny! Thank you!', 'Glitter snack! Hee hee!', 'Sparkly! Hee hee!']), 1.6);
+        else lennySay('Hee hee! Gotcha!', 3);
         if(took > 0) addFloat(UNI_X + 10, G - uni.h - 130, '-' + took + ' ✨', '#9775FA', 26);
         // glitter flies from Starlight into Lenny's paws
         for(let i = 0; i < (reduced ? 6 : 22); i++){
@@ -723,6 +745,10 @@
       }
       lenny.x = rideX; lenny.h = rideH + (reduced ? 0 : Math.abs(Math.sin(t*10))*4);
       lenny.pose = 'grab'; lenny.mood = 'cheeky';
+    } else if(lives === 0){
+      // that was the last heart - Lenny hops down and does a happy dance
+      state = 'caught'; stateT = 0; lenny.catchT = 0; lenny.x0 = lenny.x; lenny.h0 = lenny.h;
+      sfx.over(); setTimeout(sfx.laugh, 900);
     } else if(t < 2.05){
       // ...then tumbles off the back, giggling
       if(lenny.pose !== 'tumble') lennySay(pick(['Whoops-a-daisy!', 'Wheee!', 'Worth it!']), 1.2);
@@ -735,6 +761,23 @@
       lenny.catchT = 0; lenny.close = 0.15; lenny.ang = 0; lenny.pose = 'run'; lenny.h = 0;
       uni.invul = Math.max(uni.invul, 0.8);
     }
+  }
+
+  function updateCaught(dt){
+    spd *= Math.pow(0.03, dt);
+    camX += spd*dt; bgX += spd*dt;
+    uni.ph += dt*9*(spd/250);
+    uni.sad += (0.6 - uni.sad)*Math.min(1, dt*6); uni.tilt *= Math.pow(0.001, dt);
+    uni.dash = 0; uni.stumble = 0; uni.invul = 0;
+    if(!uni.ground){ uni.vy -= 2300*dt; uni.h += uni.vy*dt; if(uni.h <= 0){ uni.h = 0; uni.vy = 0; uni.ground = true; } }
+    // Lenny jumps down in front of Starlight and dances with his glitter
+    const u = clamp(stateT/0.6, 0, 1), e = ease(u);
+    lenny.ph += dt*10;
+    lenny.x = lerp(lenny.x0, UNI_X + 95, e);
+    lenny.h = u < 1 ? lerp(lenny.h0, 0, e) + Math.sin(Math.PI*u)*50 : (reduced ? 0 : Math.abs(Math.sin(stateT*8))*14);
+    lenny.ang = u < 1 || reduced ? 0 : Math.sin(stateT*8)*0.15;
+    lenny.pose = 'grab'; lenny.mood = 'cheeky';
+    if(stateT > 2.6) gameOver();
   }
 
   function updateBridge(dt){
@@ -976,7 +1019,7 @@
   function legPose(){
     const air = !uni.ground && state === 'run';
     if(air) return {ff:[0.7, 1.1], fb:[-0.5, -0.5], nb:[-0.7, -0.6], nf:[0.9, 1.3], bob:0};
-    if(state === 'intro' || state === 'run' || state === 'bridge' || (state === 'celebrate' && stateT < 0.6)){
+    if(state === 'intro' || state === 'run' || state === 'bridge' || (state === 'celebrate' && stateT < 0.6) || (state === 'caught' && spd > 40)){
       const p = uni.ph, s = reduced ? 0.4 : 1;
       return {
         nf:[0.55*s*Math.sin(p), Math.max(0, Math.sin(p + 1.2))*1.1*s],
@@ -1180,7 +1223,20 @@
       if(!reduced) starShape(8, -82, 5 + Math.sin(t*10)*2, '#fff');
     }
 
-    // head
+    // big orange eyes that keep watching Starlight
+    const hx = uni.sx + 34, hy = G - uni.h - 80;
+    let ex = hx - x, ey = hy - (feet - 39*k - 36*k);
+    const c = Math.cos(-lenny.ang), s = Math.sin(-lenny.ang);
+    [ex, ey] = [ex*c - ey*s, ex*s + ey*c];
+    const el = Math.hypot(ex, ey) || 1; ex = ex/el*1.8; ey = ey/el*1.8;
+    lennyHead(ex, ey, lenny.mood);
+    ctx.restore();
+  }
+
+  // Lenny's head and face - used for Lenny himself and for the little face on the meter.
+  // (ex, ey) is which way his eyes are looking; mood is 'happy', 'cheeky' or 'sad'.
+  function lennyHead(ex, ey, mood){
+    const grey = '#9A9AA8', dark = '#55556A';
     ctx.fillStyle = dark;
     ctx.beginPath(); ctx.arc(-14, -52, 7, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(14, -52, 7, 0, Math.PI*2); ctx.fill();
@@ -1191,12 +1247,6 @@
     ctx.fillStyle = '#2B2B35';
     ctx.beginPath(); ctx.ellipse(-7, -36, 6, 6.5, -0.3, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.ellipse(7, -36, 6, 6.5, 0.3, 0, Math.PI*2); ctx.fill();
-    // big orange eyes that keep watching Starlight
-    const hx = uni.sx + 34, hy = G - uni.h - 80;
-    let ex = hx - x, ey = hy - (feet - 39*k - 36*k);
-    const c = Math.cos(-lenny.ang), s = Math.sin(-lenny.ang);
-    [ex, ey] = [ex*c - ey*s, ex*s + ey*c];
-    const el = Math.hypot(ex, ey) || 1; ex = ex/el*1.8; ey = ey/el*1.8;
     ctx.fillStyle = '#FF9F1C';
     ctx.beginPath(); ctx.arc(-7, -36, 4.2, 0, Math.PI*2); ctx.fill();
     ctx.beginPath(); ctx.arc(7, -36, 4.2, 0, Math.PI*2); ctx.fill();
@@ -1208,12 +1258,11 @@
     ctx.beginPath(); ctx.ellipse(0, -26, 4, 3, 0, 0, Math.PI*2); ctx.fill();
     ctx.strokeStyle = '#2B2B35'; ctx.lineWidth = 1.6;
     ctx.beginPath();
-    if(lenny.mood === 'happy' || lenny.mood === 'cheeky') ctx.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI);
-    else if(lenny.mood === 'sad') ctx.arc(0, -17, 4, 1.2*Math.PI, 1.8*Math.PI);
+    if(mood === 'happy' || mood === 'cheeky') ctx.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI);
+    else if(mood === 'sad') ctx.arc(0, -17, 4, 1.2*Math.PI, 1.8*Math.PI);
     else { ctx.moveTo(-3, -21); ctx.lineTo(3, -21); }
     ctx.stroke();
-    if(lenny.mood === 'cheeky'){ ctx.fillStyle = '#FF8FB8'; ctx.beginPath(); ctx.ellipse(1.5, -19, 2.6, 2.2, 0, 0, Math.PI*2); ctx.fill(); }
-    ctx.restore();
+    if(mood === 'cheeky'){ ctx.fillStyle = '#FF8FB8'; ctx.beginPath(); ctx.ellipse(1.5, -19, 2.6, 2.2, 0, 0, Math.PI*2); ctx.fill(); }
   }
 
   // ===== DRAWING: WORDS, BUBBLES AND THE "LENNY IS THIS CLOSE!" METER =====
@@ -1244,6 +1293,7 @@
     ctx.save(); ctx.translate(W/2, y0 + 26); ctx.scale(pulse, pulse); ctx.translate(-W/2, -(y0 + 26));
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
     rrect(x0, y0, mw, 52, 16); ctx.fill();
+    ctx.strokeStyle = '#E6DDEA'; ctx.lineWidth = 2; ctx.stroke();
     ctx.font = '19px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = near ? '#E8590C' : '#55556A';
     ctx.fillText('Lenny is this close!', W/2, y0 + 15);
@@ -1257,11 +1307,31 @@
     RAIN.forEach((col, i) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x0 + mw - 18, by + bh, 14 - i*2, Math.PI, Math.PI*2); ctx.stroke(); });
     // ...and a little Lenny face chasing it
     const fx = bx + Math.max(bh, bw*c) - 4, fy = by + bh/2;
-    ctx.fillStyle = '#55556A'; ctx.beginPath(); ctx.arc(fx - 7, fy - 8, 4, 0, Math.PI*2); ctx.arc(fx + 7, fy - 8, 4, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#9A9AA8'; ctx.beginPath(); ctx.arc(fx, fy, 10, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#FF9F1C'; ctx.beginPath(); ctx.arc(fx - 4, fy - 1, 2.8, 0, Math.PI*2); ctx.arc(fx + 4, fy - 1, 2.8, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(fx - 3.4, fy - 1, 1.2, 0, Math.PI*2); ctx.arc(fx + 4.6, fy - 1, 1.2, 0, Math.PI*2); ctx.fill();
+    // (the same face as Lenny in the game, shrunk down, looking ahead at the rainbow)
+    const fs = 0.62;
+    ctx.save(); ctx.translate(fx, fy + 36*fs); ctx.scale(fs, fs);
+    lennyHead(1.8, 0, lenny.mood === 'sad' ? 'sad' : 'cheeky');
     ctx.restore();
+    ctx.restore();
+  }
+
+  // Starlight's hearts (lives), top left
+  function heartShape(x, y, r){
+    ctx.beginPath(); ctx.moveTo(x, y + r*0.9);
+    ctx.bezierCurveTo(x - r*1.4, y - r*0.1, x - r*0.7, y - r*1.2, x, y - r*0.45);
+    ctx.bezierCurveTo(x + r*0.7, y - r*1.2, x + r*1.4, y - r*0.1, x, y + r*0.9); ctx.closePath();
+  }
+  function drawHearts(){
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    rrect(10, 14, 96, 40, 16); ctx.fill();
+    ctx.strokeStyle = '#E6DDEA'; ctx.lineWidth = 2; ctx.stroke();
+    for(let i = 0; i < 3; i++){
+      const x = 28 + i*30, y = 35, full = i < lives;
+      const beat = full && i === lives - 1 && lives === 1 && !reduced ? 1 + Math.abs(Math.sin(clock*5))*0.15 : 1;
+      heartShape(x, y, 11*beat);
+      ctx.fillStyle = full ? '#FF5C8A' : '#EDE6F2'; ctx.fill();
+      if(full){ ctx.fillStyle = 'rgba(255,255,255,0.6)'; ctx.beginPath(); ctx.ellipse(x - 4, y - 4, 2.6, 1.8, -0.6, 0, Math.PI*2); ctx.fill(); }
+    }
   }
 
   function drawProgress(){
@@ -1310,7 +1380,7 @@
       L.pows.forEach(p => { if(!p.got) drawPower(p); });
     }
     drawRainbow();
-    const riding = lenny.pose === 'grab' || (lenny.catchT > 0 && lenny.catchT < 0.35 && lenny.h > uni.h + 30);
+    const riding = lenny.pose === 'grab' || state === 'caught' || state === 'over' || (lenny.catchT > 0 && lenny.catchT < 0.35 && lenny.h > uni.h + 30);
     if(!riding) drawLenny();
     drawUnicorn();
     if(riding) drawLenny();
@@ -1327,7 +1397,7 @@
     ctx.globalAlpha = 1;
     drawBubble();
     drawFloats();
-    if(state !== 'intro') { drawMeter(); drawProgress(); }
+    if(state !== 'intro') { drawMeter(); drawProgress(); drawHearts(); }
     drawMsg();
   }
 
