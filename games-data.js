@@ -99,6 +99,26 @@ const games = [
     categories: ["flying", "action", "animals"],
     controls: "Drag, arrow keys or WASD"
   },
+  {
+    title: "Blossom's Easter Eggs",
+    folder: "blossoms-easter-eggs",
+    emoji: "🐰",
+    colour: "#E8F6D8",
+    thumb: "thumb.jpg",
+    blurb: "Help Blossom the Bunnycorn catch the Easter eggs (not the stinky rotten ones!) and deliver them to her animal friends and the baby unicorns.",
+    categories: ["unicorns", "animals", "action"],
+    controls: "Drag, tap or arrow keys"
+  },
+  {
+    title: "Chomper's Choo-Choo Express",
+    folder: "chompers-choo-choo",
+    emoji: "🚂",
+    colour: "#D6EEFF",
+    thumb: "thumb.jpg",
+    blurb: "Drive Chomper's colourful steam train, stop right at the platform to pick up dinosaur friends, and toot the cows off the track!",
+    categories: ["dinosaurs", "action"],
+    controls: "Hold, Space or →, T to toot"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
