@@ -182,7 +182,7 @@
         <h2 id="ovTitle">Glitter Getaway!</h2>
         <div class="stars" id="ovStars" hidden aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
         <p id="ovBig" class="big" hidden></p>
-        <p id="ovText">Starlight is galloping to the rainbow bridge, but cheeky Lenny the Lemur wants her glitter! Tap, or press Space or ↑, to jump. Hold for a bigger jump. You have 3 hearts - if Lenny catches you 3 times, it's game over!</p>
+        <p id="ovText">Starlight is galloping to the rainbow bridge, but cheeky Lenny the Lemur wants her glitter! Tap, or press Space or ↑, to jump. Hold for a bigger jump. You have 3 hearts for the whole game - if Lenny catches you 3 times, it's game over!</p>
         <button id="ovBtn">Let's gallop!</button>
         <button id="ovBtn2" class="ghost" hidden>Start again from level 1</button>
       </div>
@@ -194,7 +194,7 @@
     <button class="ghost" id="pause" aria-label="Pause">⏸️</button>
     <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
     <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
-    <p class="help">Tap anywhere, or press Space or the up arrow, to jump. Hold it down for a higher jump. Grab the rainbow star for a super-fast rainbow dash! You have 3 hearts, and each rainbow bridge gives one back.</p>
+    <p class="help">Tap anywhere, or press Space or the up arrow, to jump. Hold it down for a higher jump. Grab the rainbow star for a super-fast rainbow dash! You have 3 hearts for the whole game - look after them!</p>
   </div>
 </div>
 
@@ -477,9 +477,7 @@
     ovBig.hidden = false;
     ovBig.textContent = '✨ You kept ' + kept + ' of ' + L.total + ' glitter';
     const tips = stars === 3 ? 'Super sparkly! Three stars!' : stars === 2 ? 'Lovely galloping! Grab even more glitter for three stars.' : 'Safe across! Jump for the glitter to win more stars.';
-    let heartBack = '';
-    if(lives < 3){ lives++; heartBack = ' Crossing the rainbow gave you a heart back! ❤️'; }
-    ovText.textContent = tips + heartBack + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
+    ovText.textContent = tips + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
     ovBtn.textContent = 'Next level ➜';
     ovBtn.focus({preventScroll:true});
   }
@@ -1170,12 +1168,12 @@
     ctx.translate(x, feet - 39*k - bob); ctx.rotate(lenny.ang + (running ? 0.12 : 0)); ctx.scale(k, k);
     const grey = '#9A9AA8', dark = '#55556A';
 
-    // stripy tail
+    // stripy tail (trailing out behind him)
     const sway = reduced ? 0 : Math.sin(t*2.2)*14;
     const pts = [];
     for(let i = 0; i <= 14; i++){
       const u = i/14;
-      const bx = (1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway);
+      const bx = -((1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway));   // negative = behind him, as he chases to the right
       const by = (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66);
       pts.push([bx, by]);
     }
