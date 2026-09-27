@@ -46,6 +46,22 @@
   .filters a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   .filters .count{font-size:13px;background:#0000000F;border-radius:999px;padding:1px 8px}
   .filters a[aria-current="page"] .count{background:#FFFFFF33}
+  /* Phones: one row of category buttons you swipe sideways, instead of lots of rows */
+  @media (max-width:640px){
+    .filters{
+      align-self:stretch;min-width:0;max-width:none;
+      flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;
+      margin-inline:-16px;padding:6px 16px 10px;scroll-padding-inline:16px;
+      scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+      /* soft fade at the edges hints that there's more to swipe to */
+      -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%);
+      mask-image:linear-gradient(90deg,transparent 0,#000 16px,#000 calc(100% - 28px),transparent 100%);
+    }
+    .filters::-webkit-scrollbar{display:none}
+    .filters a{flex:none;scroll-snap-align:start;font-size:16px;padding:8px 14px;min-height:44px}
+    .filters a:hover{transform:none}
+    .filters a.clear{order:-1}   /* Clear sits first, so it's always easy to reach */
+  }
   .filters a.clear{background:transparent;box-shadow:none;border:3px dashed #2E6E6155;color:var(--muted)}
   .filters a.clear:hover{background:#FFFFFF99}
   .section-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}

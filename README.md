@@ -16,7 +16,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Chomper's Car Crunch | Dinosaurs, Cars, Action, Animals | `games/chompers-car-crunch/` |
 | Whirlybird Rescue | Flying, Action, Animals | `games/whirlybird-rescue/` |
 | Blossom's Easter Eggs | Unicorns, Animals, Action | `games/blossoms-easter-eggs/` |
-| Chomper's Choo-Choo Express | Dinosaurs, Action | `games/chompers-choo-choo/` |
+| Chomper's Choo-Choo Express | Dinosaurs, Trains, Action | `games/chompers-choo-choo/` |
 
 ## Category pages (for Google)
 
@@ -30,6 +30,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Action | `action-games/` |
 | Dinosaurs | `dinosaur-games/` |
 | Cars | `car-games/` |
+| Trains | `train-games/` |
 
 ## Adding a new game
 

@@ -154,6 +154,14 @@
     const c = id === 'all' ? ALL : (catById[id] || ALL);
     current = c.id;
     clearBtn.hidden = c.id === 'all';
+    // On phones the buttons are one sideways row - slide the chosen one into view
+    requestAnimationFrame(() => {
+      const on = buttons[c.id];
+      if (on && filtersEl.scrollWidth > filtersEl.clientWidth) {
+        const left = on.offsetLeft - (filtersEl.clientWidth - on.offsetWidth) / 2;
+        filtersEl.scrollTo({ left: c.id === 'all' ? 0 : Math.max(0, left), behavior: 'smooth' });
+      }
+    });
     Object.entries(buttons).forEach(([k, a]) => {
       const on = k === c.id;
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');

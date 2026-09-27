@@ -22,6 +22,7 @@ const categories = [
   { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
   { id: "dinosaurs", slug: "dinosaur-games", title: "Dinosaurs",     heading: "Dinosaur games",      emoji: "🦖", colour: "#DDF3E4", about: "Stomp, roar and chomp with friendly dinosaurs." },
   { id: "cars",     slug: "car-games",     title: "Cars",            heading: "Car games",           emoji: "🚗", colour: "#FFD9B8", about: "Zoom, beep and crunch - games with cars and trucks." },
+  { id: "trains",   slug: "train-games",   title: "Trains",          heading: "Train games",         emoji: "🚂", colour: "#D6EEFF", about: "All aboard! Toot, chug and choo-choo." },
 ];
 
 // ===== GAMES =====
@@ -116,7 +117,7 @@ const games = [
     colour: "#D6EEFF",
     thumb: "thumb.jpg",
     blurb: "Drive Chomper's colourful steam train, stop right at the platform to pick up dinosaur friends, and toot the cows off the track!",
-    categories: ["dinosaurs", "action"],
+    categories: ["dinosaurs", "trains", "action"],
     controls: "Hold, Space or →, T to toot"
   },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
