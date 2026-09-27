@@ -10,6 +10,8 @@
   const catById = Object.fromEntries(categories.map(c => [c.id, c]));
   const catBySlug = Object.fromEntries(categories.map(c => [c.slug, c]));
   games.forEach(g => (g.categories || []).forEach(id => { if (!catById[id]) console.warn('Game "' + g.title + '" uses unknown category "' + id + '"'); }));
+  // Newest games first: the list in games-data.js is oldest-to-newest, so show it backwards
+  const newestFirst = games.slice().reverse();
   const inCat = (g, id) => id === 'all' || (g.categories || []).includes(id);
   const used = categories.filter(c => games.some(g => inCat(g, c.id)));
   const pageCat = document.body.dataset.category || 'all';   // which page we're on
@@ -45,7 +47,66 @@
     if (g.controls) body.append(el('p', 'controls', '🎮 ' + g.controls));
     body.append(el('span', 'play', 'Play ▶'));
     a.append(art, body);
-    return a;
+    // The share button sits on top of the card (a button can't live inside a link)
+    const wrap = el('div', 'card');
+    wrap.append(a, shareButton(g));
+    return wrap;
+  }
+
+  // ----- Share a game: the phone's own share menu (Messages, WhatsApp, Facebook...),
+  //       or a small pop-up on computers that don't have one
+  const SHARE_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  function shareButton(g) {
+    const b = el('button', 'share');
+    b.type = 'button';
+    b.innerHTML = SHARE_ICON + '<span>Share</span>';
+    b.setAttribute('aria-label', 'Share ' + g.title);
+    b.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); share(g, b); });
+    return b;
+  }
+  function track(method, g) { if (window.gtag) gtag('event', 'share', { method, content_type: 'game', item_id: g.folder }); }
+  async function share(g, btn) {
+    const url = gameUrl(g);
+    const text = g.title + ' - a free game for kids on Lyla Rose Games. ' + g.blurb;
+    if (navigator.share) {
+      try { await navigator.share({ title: g.title, text, url }); track('native', g); return; }
+      catch (err) { if (err && err.name === 'AbortError') return; }   // they closed the menu
+    }
+    openShareMenu(g, btn, url, text);
+  }
+  let openMenu = null;
+  function closeShareMenu() { if (openMenu) { openMenu.remove(); openMenu = null; } }
+  document.addEventListener('click', e => { if (openMenu && !openMenu.contains(e.target)) closeShareMenu(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeShareMenu(); });
+  function openShareMenu(g, btn, url, text) {
+    closeShareMenu();
+    const m = el('div', 'share-menu');
+    m.setAttribute('role', 'menu');
+    const enc = encodeURIComponent;
+    const opts = [
+      ['📋', 'Copy link', null],
+      ['💬', 'WhatsApp', 'https://wa.me/?text=' + enc(text + ' ' + url)],
+      ['📘', 'Facebook', 'https://www.facebook.com/sharer/sharer.php?u=' + enc(url)],
+      ['✉️', 'Email', 'mailto:?subject=' + enc(g.title + ' - Lyla Rose Games') + '&body=' + enc(text + '\n\n' + url)],
+    ];
+    opts.forEach(([icon, label, href]) => {
+      const o = el(href ? 'a' : 'button', null, icon + ' ' + label);
+      o.setAttribute('role', 'menuitem');
+      if (href) { o.href = href; if (!href.startsWith('mailto:')) { o.target = '_blank'; o.rel = 'noopener'; } o.addEventListener('click', () => { track(label.toLowerCase(), g); closeShareMenu(); }); }
+      else {
+        o.type = 'button';
+        o.addEventListener('click', async () => {
+          try { await navigator.clipboard.writeText(url); o.textContent = '✅ Link copied!'; }
+          catch (e) { window.prompt('Copy this link:', url); }
+          track('copy', g);
+          setTimeout(closeShareMenu, 1200);
+        });
+      }
+      m.append(o);
+    });
+    btn.parentElement.append(m);
+    openMenu = m;
+    m.querySelector('a, button').focus();
   }
 
   function soonCard() {
@@ -110,7 +171,7 @@
     headEl.append(badge, txt);
 
     gridEl.replaceChildren();
-    games.filter(g => inCat(g, c.id)).forEach(g => gridEl.append(gameCard(g)));
+    newestFirst.filter(g => inCat(g, c.id)).forEach(g => gridEl.append(gameCard(g)));
     if (showComingSoon) gridEl.append(soonCard());
 
     if (current !== pageCat || document.title === '') document.title = c.id === 'all' ? SITE + ' - Free Games for Kids' : (c.heading || c.title) + ' for kids - ' + SITE;
@@ -125,7 +186,7 @@
 
   // ----- Structured data for Google (describes the page and its games)
   const pc = pageCat === 'all' ? ALL : catById[pageCat];
-  const list = games.filter(g => inCat(g, pageCat));
+  const list = newestFirst.filter(g => inCat(g, pageCat));
   const itemList = {
     '@type': 'ItemList',
     itemListElement: list.map((g, i) => ({

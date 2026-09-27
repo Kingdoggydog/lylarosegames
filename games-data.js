@@ -24,7 +24,8 @@ const categories = [
 ];
 
 // ===== GAMES =====
-// To add a game: put it in its own folder inside "games", then add it here (copy the example line).
+// To add a game: put it in its own folder inside "games", then add it to the END of this list (copy the example line).
+// Keep the list oldest-to-newest - the site shows it the other way round, so the newest game appears top left.
 // "categories" can list as many category ids as you like - the game shows under each one.
 const games = [
   {
