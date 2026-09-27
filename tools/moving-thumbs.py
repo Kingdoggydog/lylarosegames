@@ -24,7 +24,9 @@ CSS = '''
   @keyframes spin{to{transform:rotate(360deg)}}
   .blur{transform-box:fill-box;transform-origin:center;animation:blur .25s linear infinite}
   @keyframes blur{0%,100%{transform:scaleX(1);opacity:.75}50%{transform:scaleX(.35);opacity:.45}}
-  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht{opacity:0}}
+  .dust{fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:dust 1.2s ease-out infinite;animation-delay:var(--l,0s)}
+  @keyframes dust{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:.85}100%{opacity:0;transform:translate(-55px,-8px) scale(1.3)}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust{opacity:0}}
 '''
 STAR='M0 -{a} L{b} -{b} L{a} 0 L{b} {b} L0 {a} L-{b} {b} L-{a} 0 L-{b} -{b}Z'
 def star(x,y,size=14,delay=0,colour='#FFD43B',dur=2.8):
@@ -134,3 +136,16 @@ p.bob(35,140,190,185,dy=-4,dur=2)
 p.pulse(272,15,160,145,k=1.03,dur=1.6); p.pulse(437,15,160,145,k=1.03,dur=1.6,delay=.8)
 p.star(425,20,11); p.star(600,300,10,.9); p.star(270,440,10,1.7); p.star(750,180,9,1.2)
 print('memory', p.save())
+
+p=Pic('starlight-unicorn-race','a hopping crowd, Rainbow flying, dust puffs from galloping hooves, pulsing stars and a glowing sun')
+p.halo(680,90,70)
+p.bob(310,195,490,105,dy=-2,dur=.7)
+p.bob(0,195,150,88,dy=-2,dur=.7,delay=.35)
+p.bob(275,300,225,84,dy=-3,dur=2.2)
+p.bob(148,305,70,82,dy=-2,dur=.6,delay=.2)
+p.bob(0,285,112,96,dy=-2,dur=.7,delay=.4)
+for d in (0,.4,.8): p.add(f'<ellipse class="dust" style="--l:{d}s" cx="378" cy="522" rx="12" ry="8"/>')
+for d in (.2,.6,1): p.add(f'<ellipse class="dust" style="--l:{d}s" cx="440" cy="522" rx="10" ry="7"/>')
+p.pulse(719,397,46,40,k=1.1,dur=1.4); p.star(690,425,9,.5,colour='#FFF3B0')
+p.star(230,370,10); p.star(560,330,11,.9); p.star(760,150,10,1.7)
+print('race', p.save())

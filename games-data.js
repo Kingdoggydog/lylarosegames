@@ -147,6 +147,7 @@ const games = [
     emoji: "🏅",
     colour: "#D6F0C8",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Tap to gallop, jump the hurdles and race Lenny, Blossom and Chomper to the finish line. Catch rainbow stars for a Rainbow boost and win the gold medal!",
     categories: ["unicorns", "sport", "action"],
     controls: "Tap or Space, Jump button or ↑"
