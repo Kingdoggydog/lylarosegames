@@ -159,3 +159,18 @@
   .back-games{margin:0;text-align:center}
   .back-games .play{display:inline-block;text-decoration:none}
   .back-games .play:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+  /* favourite star on each game card */
+  .fav{
+    position:absolute;top:10px;right:10px;z-index:2;width:48px;height:48px;border-radius:50%;
+    display:grid;place-items:center;padding:0;cursor:pointer;
+    background:#FFFFFFE6;border:0;box-shadow:0 4px 12px #2E6E6133;
+  }
+  .fav svg{fill:none;stroke:#8AA39D;transition:fill .15s ease,stroke .15s ease}
+  .fav:hover svg{stroke:var(--gold)}
+  .fav.on svg{fill:var(--gold);stroke:#E0A21A}
+  .fav:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+  .fav.pop{animation:favpop .35s ease-out}
+  @keyframes favpop{0%{transform:scale(1)}45%{transform:scale(1.3)}100%{transform:scale(1)}}
+  .filters a.favs{background:#FFF6D6}
+  .filters a.favs[aria-current="page"]{background:var(--gold);color:var(--ink);box-shadow:0 6px 16px #FFC23D66}
+  @media (prefers-reduced-motion: reduce){.fav.pop{animation:none}}

@@ -6,19 +6,26 @@
 (function () {
   const ROOT = new URL('.', document.currentScript.src).href;   // the site's main address
   const SITE = 'Lyla Rose Games';
-  const ALL = { id: 'all', title: 'All games', emoji: '⭐', colour: '#FFF1C9', about: 'Every game on the site.' };
+  const ALL = { id: 'all', title: 'All games', emoji: '🎮', colour: '#FFF1C9', about: 'Every game on the site.' };
+  // "My favourites" - games starred on this device. Saved only in this browser, never sent anywhere.
+  const FAV = { id: 'favourites', title: 'Favourites', heading: 'My favourites', emoji: '⭐', colour: '#FFE7A0', about: 'Games you starred. They stay on this device.' };
+  const FAV_KEY = 'lr-favourites';
+  let favs = [];
+  try { favs = JSON.parse(localStorage.getItem(FAV_KEY) || '[]').filter(f => games.some(g => g.folder === f)); } catch (e) { favs = []; }
+  const saveFavs = () => { try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch (e) {} };
+  const isFav = g => favs.includes(g.folder);
   const catById = Object.fromEntries(categories.map(c => [c.id, c]));
   const catBySlug = Object.fromEntries(categories.map(c => [c.slug, c]));
   games.forEach(g => (g.categories || []).forEach(id => { if (!catById[id]) console.warn('Game "' + g.title + '" uses unknown category "' + id + '"'); }));
   // Newest games first: the list in games-data.js is oldest-to-newest, so show it backwards
   const newestFirst = games.slice().reverse();
-  const inCat = (g, id) => id === 'all' || (g.categories || []).includes(id);
+  const inCat = (g, id) => id === 'all' || (id === 'favourites' ? favs.includes(g.folder) : (g.categories || []).includes(id));
   const used = categories.filter(c => games.some(g => inCat(g, c.id)));
   const pageCat = document.body.dataset.category || 'all';   // which page we're on
   const headingTag = pageCat === 'all' ? 'h2' : 'h1';
   const canIntercept = location.protocol !== 'file:' && !!history.pushState;
 
-  const catUrl = c => c.id === 'all' ? ROOT : ROOT + c.slug + '/';
+  const catUrl = c => c.id === 'all' ? ROOT : c.id === 'favourites' ? ROOT + '#favourites' : ROOT + c.slug + '/';
   const gameUrl = g => ROOT + 'games/' + g.folder + '/';
   const thumbUrl = g => g.thumb ? ROOT + 'games/' + g.folder + '/' + g.thumb : ROOT + 'brand/og-image.jpg';
 
@@ -34,7 +41,8 @@
     a.href = gameUrl(g);
     const art = el('div', 'art'); art.style.background = g.colour; art.setAttribute('aria-hidden', 'true');
     if (g.thumb) {
-      const img = el('img'); img.src = thumbUrl(g); img.alt = ''; img.loading = 'lazy';
+      // "thumbAnim" = an optional gently-moving card picture (an .svg in the game's folder). Google still gets thumb.jpg.
+      const img = el('img'); img.src = g.thumbAnim ? ROOT + 'games/' + g.folder + '/' + g.thumbAnim : thumbUrl(g); img.alt = ''; img.loading = 'lazy';
       art.append(img);
     } else {
       art.textContent = g.emoji;
@@ -49,8 +57,34 @@
     a.append(art, body);
     // The share button sits on top of the card (a button can't live inside a link)
     const wrap = el('div', 'card');
-    wrap.append(a, shareButton(g));
+    wrap.append(a, favButton(g), shareButton(g));
     return wrap;
+  }
+
+  // ----- Favourite star (top right of each card). Tap to keep a game in "My favourites".
+  const STAR = '<svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d="M12 2.8l2.8 5.7 6.3.9-4.6 4.4 1.1 6.2L12 17.1 6.4 20l1.1-6.2L2.9 9.4l6.3-.9z" stroke-linejoin="round" stroke-width="2"/></svg>';
+  function favButton(g) {
+    const b = el('button', 'fav');
+    b.type = 'button';
+    b.innerHTML = STAR;
+    const paint = () => {
+      const on = isFav(g);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      b.setAttribute('aria-label', on ? 'Remove ' + g.title + ' from favourites' : 'Add ' + g.title + ' to favourites');
+      b.title = on ? 'In your favourites' : 'Add to favourites';
+    };
+    paint();
+    b.addEventListener('click', e => {
+      e.preventDefault(); e.stopPropagation();
+      if (isFav(g)) favs = favs.filter(f => f !== g.folder); else favs.push(g.folder);
+      saveFavs(); paint();
+      b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+      if (window.gtag) gtag('event', isFav(g) ? 'favourite_add' : 'favourite_remove', { item_id: g.folder });
+      updateFavButton();
+      if (current === 'favourites') show('favourites');   // take it off the favourites list straight away
+    });
+    return b;
   }
 
   // ----- Share a game: the phone's own share menu (Messages, WhatsApp, Facebook...),
@@ -109,6 +143,15 @@
     m.querySelector('a, button').focus();
   }
 
+  function emptyFavCard() {
+    const d = el('div', 'game soon');
+    const art = el('div', 'art', '⭐'); art.setAttribute('aria-hidden', 'true');
+    const body = el('div', 'body');
+    body.append(el('h3', null, 'No favourites yet'), el('p', null, 'Tap the star on any game to keep it here.'));
+    d.append(art, body);
+    return d;
+  }
+
   function soonCard() {
     const d = el('div', 'game soon');
     const art = el('div', 'art', '✨'); art.setAttribute('aria-hidden', 'true');
@@ -121,7 +164,7 @@
   // ----- Filter buttons (real links, so Google can follow them to each category page)
   const buttons = {};
   filtersEl.replaceChildren();
-  [ALL, ...used].forEach(c => {
+  [ALL, FAV, ...used].forEach(c => {
     const a = el('a');
     const n = games.filter(g => inCat(g, c.id)).length;
     a.append(el('span', null, c.emoji), el('span', null, c.title), el('span', 'count', String(n)));
@@ -131,8 +174,15 @@
       go(target, e);
     });
     buttons[c.id] = a;
+    if (c.id === 'favourites') a.classList.add('favs');
     filtersEl.append(a);
   });
+  // The favourites button only shows once something has been starred
+  function updateFavButton() {
+    const a = buttons.favourites;
+    a.querySelector('.count').textContent = String(favs.length);
+    a.hidden = favs.length === 0 && current !== 'favourites';
+  }
   const clearBtn = el('a', 'clear', '✕ Clear');
   clearBtn.href = ROOT;
   clearBtn.setAttribute('aria-label', 'Clear filter and show all games');
@@ -146,12 +196,12 @@
     if (!canIntercept) return;            // testing from a file: just follow the link
     e.preventDefault();
     show(id);
-    const c = id === 'all' ? ALL : catById[id];
+    const c = id === 'all' ? ALL : id === 'favourites' ? FAV : catById[id];
     history.pushState({ id }, '', catUrl(c));
   }
 
   function show(id) {
-    const c = id === 'all' ? ALL : (catById[id] || ALL);
+    const c = id === 'all' ? ALL : id === 'favourites' ? FAV : (catById[id] || ALL);
     current = c.id;
     clearBtn.hidden = c.id === 'all';
     // On phones the buttons are one sideways row - slide the chosen one into view
@@ -166,8 +216,9 @@
       const on = k === c.id;
       if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
       // A selected category links back to all games, so tapping it again clears it
-      a.href = on && k !== 'all' ? ROOT : catUrl(k === 'all' ? ALL : catById[k]);
+      a.href = on && k !== 'all' ? ROOT : catUrl(k === 'all' ? ALL : k === 'favourites' ? FAV : catById[k]);
     });
+    updateFavButton();
 
     crumbsEl.replaceChildren();
     crumbsEl.hidden = c.id === 'all';
@@ -180,17 +231,19 @@
 
     gridEl.replaceChildren();
     newestFirst.filter(g => inCat(g, c.id)).forEach(g => gridEl.append(gameCard(g)));
-    if (showComingSoon) gridEl.append(soonCard());
+    if (c.id === 'favourites') { if (!favs.length) gridEl.append(emptyFavCard()); }
+    else if (showComingSoon) gridEl.append(soonCard());
 
     if (current !== pageCat || document.title === '') document.title = c.id === 'all' ? SITE + ' - Free Games for Kids' : (c.heading || c.title) + ' for kids - ' + SITE;
   }
 
   window.addEventListener('popstate', () => {
-    const slug = location.href.slice(ROOT.length).split('/')[0];
+    if (location.hash === '#favourites') { show('favourites'); return; }
+    const slug = location.href.slice(ROOT.length).split(/[/#]/)[0];
     show(catBySlug[slug] ? catBySlug[slug].id : 'all');
   });
 
-  show(pageCat);
+  show(pageCat === 'all' && location.hash === '#favourites' ? 'favourites' : pageCat);
 
   // ----- Structured data for Google (describes the page and its games)
   const pc = pageCat === 'all' ? ALL : catById[pageCat];
