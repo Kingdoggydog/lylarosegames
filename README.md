@@ -18,6 +18,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Blossom's Easter Eggs | Unicorns, Animals, Action | `games/blossoms-easter-eggs/` |
 | Chomper's Choo-Choo Express | Dinosaurs, Trains, Action | `games/chompers-choo-choo/` |
 | Lenny's Memory Match | Puzzles & Mazes, Animals | `games/lenny-memory-match/` |
+| Starlight's Unicorn Race | Unicorns, Sport, Action | `games/starlight-unicorn-race/` |
 
 ## Category pages (for Google)
 
