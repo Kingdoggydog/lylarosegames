@@ -1,0 +1,783 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lenny's Memory Match - Free Memory Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --jungle:#2E7D55;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,#FFF1C9 0%,#D8F2DC 100%);
+    background-color:#FFF1C9;
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1100px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .snd{display:flex;gap:8px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(26px,5.5vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .stats{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* Lenny and his speech bubble */
+  .lennybar{display:flex;align-items:center;gap:6px;min-height:0}
+  #lenny{width:64px;height:64px;flex:none}
+  .bubble{position:relative;background:#fff;border-radius:16px;padding:8px 14px;font-weight:800;font-size:16px;line-height:1.2;box-shadow:0 3px 0 #2E7D5522;max-width:100%}
+  .bubble::before{content:"";position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:#fff}
+  .bubble.pop{animation:pop .35s ease-out}
+  @keyframes pop{0%{transform:scale(.85)}60%{transform:scale(1.06)}100%{transform:scale(1)}}
+
+  /* the card table fills whatever space is left over */
+  .stage{flex:1;min-height:150px;position:relative;container-type:size;display:grid;place-items:center}
+  .grid{display:grid;gap:var(--gap,8px);justify-content:center;align-content:center;touch-action:manipulation}
+  .card{all:unset;box-sizing:border-box;position:relative;cursor:pointer;perspective:700px;border-radius:14px;-webkit-tap-highlight-color:transparent}
+  .card:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+  .inner{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .38s cubic-bezier(.3,1.3,.5,1)}
+  .card.up .inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;display:grid;place-items:center;box-sizing:border-box}
+  .back{
+    background:
+      radial-gradient(circle at 50% 50%,#ffffff22 0 30%,transparent 31%),
+      repeating-linear-gradient(135deg,#ffffff1a 0 8px,transparent 8px 18px),
+      linear-gradient(160deg,#48B27A,#2E7D55);
+    border:3px solid #fff;
+    box-shadow:0 4px 0 #1F5C3E,0 6px 12px #1F5C3E40;
+  }
+  .back span{font-family:"Chewy",cursive;color:var(--gold);font-size:calc(var(--fs,40px)*.9);text-shadow:0 3px 0 #1F5C3E;line-height:1}
+  .front{transform:rotateY(180deg);background:var(--bg,#fff);border:3px solid #fff;box-shadow:0 4px 0 #0000001f,0 6px 12px #00000018;font-size:var(--fs,40px);line-height:1}
+  .front img{width:82%;height:82%;object-fit:contain}
+  .card.done .front{border-color:var(--gold);box-shadow:0 0 0 3px var(--gold),0 4px 0 #0000001f}
+  .card.done{animation:matched .5s ease-out}
+  @keyframes matched{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+  .card.nope{animation:nope .4s ease-in-out}
+  @keyframes nope{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+  .card.hint{animation:hint .6s ease-in-out 3}
+  @keyframes hint{0%,100%{transform:rotate(0) scale(1)}25%{transform:rotate(-6deg) scale(1.06)}75%{transform:rotate(6deg) scale(1.06)}}
+  #fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+  /* start and finish panels */
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45A6;padding:10px;border-radius:18px;z-index:3}
+  .panel{background:#fff;border-radius:18px;padding:16px 18px;text-align:center;max-width:360px;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:9px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink);line-height:1.05}
+  .panel p{margin:0;font-size:15px}
+  .panel .big{font-size:19px;font-weight:800}
+  .panel .starrow{font-size:40px;line-height:1;letter-spacing:4px}
+  .panel .starrow .off{opacity:.22;filter:grayscale(1)}
+  .panel .small{font-size:13px;font-weight:800;color:#5B7A73}
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .levels button{background:#FFF4D6;color:var(--ink);padding:4px 6px;font-size:15px;line-height:1.15;border-radius:12px;box-shadow:0 3px 0 #E8C77A}
+  .levels button small{display:block;font-size:12px;letter-spacing:1px}
+  .levels button.now{background:#FFE08A}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--pink);color:#fff;font-size:17px;min-height:48px;min-width:48px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
+  #ovBtn{box-shadow:0 5px 0 #C23A78}
+  #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C23A78}
+  .back-link{font-weight:800;color:var(--jungle);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back-link:hover{text-decoration:underline}
+
+  @media (prefers-reduced-motion:reduce){
+    .inner{transition:transform .01s}
+    .card.done,.card.nope,.card.hint,.bubble.pop{animation:none}
+    .card.hint .back{box-shadow:0 0 0 4px var(--gold)}
+  }
+  /* short screens: smaller title and Lenny */
+  @media (max-height:760px){ h1{font-size:28px} .pill{font-size:14px;padding:5px 10px} #lenny{width:54px;height:54px} .bubble{font-size:15px;padding:6px 12px} }
+  /* phone on its side: title, scores and Lenny on the left, cards on the right */
+  @media (orientation:landscape) and (max-height:620px){
+    .wrap{max-width:none;display:grid;grid-template-columns:minmax(170px,230px) 1fr;grid-template-rows:auto auto 1fr;gap:8px 14px}
+    .top{grid-column:1;grid-row:1;flex-wrap:wrap}
+    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;gap:8px}
+    h1{font-size:24px}
+    .stats{gap:5px}
+    .lennybar{grid-column:1;grid-row:3;align-self:start;flex-direction:column;align-items:flex-start}
+    .bubble::before{left:22px;top:-8px;margin-top:0;border:8px solid transparent;border-top:0;border-bottom-color:#fff}
+    .stage{grid-column:2;grid-row:1 / 4;min-height:0}
+  }
+  @media (orientation:landscape) and (max-height:430px){
+    #lenny{width:48px;height:48px}
+    .bubble{font-size:14px}
+  }
+</style>
+<meta name="description" content="Lenny's Memory Match - a free memory game for kids. Flip the cards, find the matching jungle pairs and help Lenny the Lemur remember where everything is!">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/lenny-memory-match/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Lenny's Memory Match - Free Memory Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Lenny's Memory Match - a free memory game for kids. Flip the cards, find the matching jungle pairs and help Lenny the Lemur remember where everything is!">
+<meta property="og:url" content="https://lylarosegames.com/games/lenny-memory-match/">
+<meta property="og:image" content="https://lylarosegames.com/games/lenny-memory-match/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lenny's Memory Match - free memory game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: Tap, or arrow keys and Enter -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Lenny's Memory Match",
+   "url": "https://lylarosegames.com/games/lenny-memory-match/",
+   "description": "Lenny's Memory Match - a free memory game for kids. Flip the cards, find the matching jungle pairs and help Lenny the Lemur remember where everything is!",
+   "image": "https://lylarosegames.com/games/lenny-memory-match/share.jpg",
+   "genre": [
+    "Puzzles & Mazes",
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Puzzle & maze games",
+     "item": "https://lylarosegames.com/puzzle-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Lenny's Memory Match",
+     "item": "https://lylarosegames.com/games/lenny-memory-match/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back-link" href="../../">← All games</a>
+    <div class="snd">
+      <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+      <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+  <header>
+    <h1>Lenny's Memory Match</h1>
+    <div class="stats">
+      <span class="pill" id="level">Level 1</span>
+      <span class="pill" id="pairs">✨ 0/3</span>
+      <span class="pill" id="tries">👆 Tries 0</span>
+    </div>
+  </header>
+  <div class="lennybar">
+    <canvas id="lenny" aria-hidden="true"></canvas>
+    <div class="bubble" id="bubble" role="status" aria-live="polite">Let's find the pairs!</div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="grid" id="grid"></div>
+    <canvas id="fx"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 id="ovTitle">Lenny's Memory Match</h2>
+        <p id="ovStars" class="starrow" hidden></p>
+        <p id="ovBig" class="big" hidden></p>
+        <p id="ovText">Flip two cards at a time and find the pairs that match. Find both Lenny cards and he lets you peek at all of them!</p>
+        <button id="ovBtn">Play</button>
+        <p class="small">Or pick a level</p>
+        <div class="levels" id="levels"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const grid = document.getElementById('grid');
+  const stage = document.getElementById('stage');
+  const fx = document.getElementById('fx');
+  const fctx = fx.getContext('2d');
+  const lc = document.getElementById('lenny');
+  const lctx = lc.getContext('2d');
+  const bubble = document.getElementById('bubble');
+  const overlay = document.getElementById('overlay');
+  const ovTitle = document.getElementById('ovTitle');
+  const ovStars = document.getElementById('ovStars');
+  const ovBig = document.getElementById('ovBig');
+  const ovText = document.getElementById('ovText');
+  const ovBtn = document.getElementById('ovBtn');
+  const levelsEl = document.getElementById('levels');
+  const soundBtn = document.getElementById('sound');
+  const musicBtn = document.getElementById('music');
+  const levelEl = document.getElementById('level');
+  const pairsEl = document.getElementById('pairs');
+  const triesEl = document.getElementById('tries');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // how many pairs on each level
+  const LEVELS = [3, 4, 6, 8, 10, 12];
+  // the jungle friends on the cards (emoji + a soft card colour)
+  const FACES = [
+    ['🐒','#FFE8C7'], ['🦜','#DFF5E1'], ['🐸','#E3F7C8'], ['🐘','#E3E8F5'], ['🦒','#FFF1C9'],
+    ['🐯','#FFE3CC'], ['🦋','#E6E0FF'], ['🐢','#D8F2DC'], ['🦛','#F4E1F0'], ['🦓','#EDEDED'],
+    ['🐼','#E8F4F0'], ['🦥','#F1E6D6'], ['🐨','#E4ECF2'], ['🍌','#FFF6B8'], ['🍍','#FFEFC2'],
+    ['🥥','#F2E4D4'], ['🌺','#FFE0EA'], ['🐞','#FFE0DC']
+  ];
+  const RAINBOW = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA'];
+
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  let bestStars = load('lrg-lenny-memory-match-stars', [0,0,0,0,0,0]);
+  if(!Array.isArray(bestStars) || bestStars.length !== LEVELS.length) bestStars = [0,0,0,0,0,0];
+  let muted = load('lrg-lenny-memory-match-muted', false);
+  let musicOn = load('lrg-lenny-memory-match-music', true);
+
+  let level = 0, cards = [], open = [], tries = 0, found = 0, missStreak = 0, busy = false, state = 'menu';
+  let flipBackTimer = null, cols = 4;
+  let lastLook = null;   // where Lenny's eyes look (a spot on screen)
+  const lenny = {mood: 'ready', moodT: 0, dance: 0, blink: 0, jump: 0};
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.4 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+
+  const sfx = {
+    flip(){ if(audio()) noise(actx.currentTime, 0.09, 'bandpass', 1800, 1.2, 0.12, 0.004, null, 3500); tone(620, 0.07, 'triangle', 0.07, 900); },
+    match(){ [784, 988, 1319].forEach((f, i) => tone(f, 0.22, 'triangle', 0.14, null, i*0.07)); for(let i = 0; i < 5; i++) tone(2200 + Math.random()*1600, 0.15, 'sine', 0.035, null, 0.15 + i*0.05); },
+    miss(){ tone(392, 0.16, 'sine', 0.13, 370); tone(330, 0.24, 'sine', 0.13, 294, 0.17); },
+    hehe(){ for(let i = 0; i < 3; i++) tone(1000 + i*60, 0.08, 'triangle', 0.07, 1300 + i*60, i*0.12); },
+    psst(){ if(audio()){ noise(actx.currentTime, 0.12, 'highpass', 4500, 0.7, 0.1, 0.01); noise(actx.currentTime + 0.18, 0.2, 'highpass', 4000, 0.7, 0.12, 0.02); } },
+    peek(){ for(let i = 0; i < 10; i++) tone(700 + i*140, 0.18, 'sine', 0.07, null, i*0.04); },
+    go(){ tone(523, 0.12, 'triangle', 0.15); tone(784, 0.25, 'triangle', 0.16, null, 0.12); },
+    win(){ [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, i === 5 ? 0.5 : 0.16, 'triangle', 0.15, null, i*0.12)); },
+    star(i){ tone([659, 784, 1047][i], 0.3, 'triangle', 0.15); tone([1319, 1568, 2093][i], 0.35, 'sine', 0.06, null, 0.05); }
+  };
+
+  // ----- background music: a gentle, thinking-time marimba tune that loops -----
+  const BPM = 96, STEP = 60/BPM/2;
+  const CHORDS = [48, 45, 41, 43, 48, 45, 41, 43];   // C, Am, F, G
+  const MINOR = [45];
+  const MELODY = [
+    76,0,79,0,76,74,72,0,   76,0,0,72,69,0,72,0,
+    77,0,76,74,72,0,69,0,   74,0,76,0,74,0,0,0,
+    76,0,79,0,81,79,76,0,   72,0,76,0,74,72,69,0,
+    72,0,74,76,77,0,76,74,  72,0,0,0,67,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+  function marimba(f, t, vol){
+    const d = t - actx.currentTime;
+    tone(f, 0.4, 'sine', vol, null, d, musicBus);
+    tone(f*4, 0.05, 'sine', vol*0.3, null, d, musicBus);
+  }
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    if(beat === 0 || beat === 4) tone(hz(root - 12), STEP*2.5, 'triangle', 0.18, null, d, musicBus);
+    if(beat === 0) [12, 16, 19].forEach(n => {
+      const nn = MINOR.includes(root) && n === 16 ? 15 : n;
+      tone(hz(root + nn - 12), STEP*7, 'sine', 0.03, null, d, musicBus);
+    });
+    const m = MELODY[i];
+    if(m) marimba(hz(m), t, 0.1);
+    if(beat % 2 === 1) noise(t, 0.04, 'highpass', 7000, 0.7, 0.02, 0.004, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){
+      playStep(mStep, mNext);
+      mNext += STEP; mStep = (mStep + 1) % 64;
+    }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  document.addEventListener('visibilitychange', () => {
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.4 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save('lrg-lenny-memory-match-muted', muted); wake(); startMusic(); setSoundBtn(); soundBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save('lrg-lenny-memory-match-music', musicOn); wake(); startMusic(); setSoundBtn(); musicBtn.blur(); });
+  setSoundBtn();
+
+  // ===== LENNY THE LEMUR (drawn like he is in Unicorn Penalty Shoot-out, in his everyday grey fur) =====
+  const GREY = '#9A9AA8', DARK = '#55556A';
+  // his head, centred on (0,0) at size 1 = about 40 across
+  function drawHead(c, mood, ex, ey, blink){
+    c.fillStyle = DARK;
+    c.beginPath(); c.arc(-14, -16, 7, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.arc(14, -16, 7, 0, Math.PI*2); c.fill();
+    c.fillStyle = GREY;
+    c.beginPath(); c.arc(0, 0, 18, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#F4F4F6';
+    c.beginPath(); c.ellipse(0, 5, 14, 12, 0, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#2B2B35';
+    c.beginPath(); c.ellipse(-7, 0, 6, 6.5, -0.3, 0, Math.PI*2); c.fill();
+    c.beginPath(); c.ellipse(7, 0, 6, 6.5, 0.3, 0, Math.PI*2); c.fill();
+    if(blink){
+      c.strokeStyle = '#FF9F1C'; c.lineWidth = 2; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(-10, 0); c.lineTo(-4, 0); c.moveTo(4, 0); c.lineTo(10, 0); c.stroke();
+    } else {
+      c.fillStyle = '#FF9F1C';
+      c.beginPath(); c.arc(-7, 0, 4.2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(7, 0, 4.2, 0, Math.PI*2); c.fill();
+      c.fillStyle = '#111';
+      c.beginPath(); c.arc(-7 + ex, ey, 2, 0, Math.PI*2); c.fill();
+      c.beginPath(); c.arc(7 + ex, ey, 2, 0, Math.PI*2); c.fill();
+    }
+    c.fillStyle = '#2B2B35';
+    c.beginPath(); c.ellipse(0, 10, 4, 3, 0, 0, Math.PI*2); c.fill();
+    c.strokeStyle = '#2B2B35'; c.lineWidth = 1.6; c.lineCap = 'round';
+    c.beginPath();
+    if(mood === 'happy') c.arc(0, 12, 5, 0.2*Math.PI, 0.8*Math.PI);
+    else if(mood === 'oops'){ c.ellipse(0, 17, 2.4, 2.8, 0, 0, Math.PI*2); }
+    else { c.moveTo(-3, 15); c.lineTo(3, 15); }
+    c.stroke();
+  }
+
+  // the little Lenny beside the speech bubble
+  function drawLenny(t){
+    const r = lc.getBoundingClientRect();
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    const w = Math.round(r.width*dpr), h = Math.round(r.height*dpr);
+    if(!w || !h) return;
+    if(lc.width !== w || lc.height !== h){ lc.width = w; lc.height = h; }
+    lctx.setTransform(1, 0, 0, 1, 0, 0);
+    lctx.clearRect(0, 0, w, h);
+    const k = w/64;
+    const hop = lenny.dance > 0 && !reduced ? Math.abs(Math.sin(t*9))*6 : (lenny.jump > 0 ? Math.sin(lenny.jump*Math.PI)*5 : 0);
+    const tilt = lenny.dance > 0 && !reduced ? Math.sin(t*9)*0.15 : (lenny.mood === 'oops' ? -0.12 : 0);
+    lctx.setTransform(k, 0, 0, k, 32*k, 40*k - hop*k);
+    lctx.rotate(tilt);
+    // stripy tail peeking up behind him
+    const sway = reduced ? 0 : Math.sin(t*2.2)*4;
+    lctx.lineCap = 'round';
+    for(let i = 0; i < 8; i++){
+      const u0 = i/8, u1 = (i + 1)/8;
+      const px = u => 14 + u*12 + Math.sin(u*3)*4 + sway*u, py = u => 18 - u*44;
+      lctx.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6';
+      lctx.lineWidth = 6.5 - i*0.3;
+      lctx.beginPath(); lctx.moveTo(px(u0), py(u0)); lctx.lineTo(px(u1), py(u1)); lctx.stroke();
+    }
+    // body
+    lctx.fillStyle = GREY;
+    lctx.beginPath(); lctx.ellipse(0, 20, 15, 14, 0, 0, Math.PI*2); lctx.fill();
+    lctx.fillStyle = '#F4F4F6';
+    lctx.beginPath(); lctx.ellipse(0, 22, 9, 10, 0, 0, Math.PI*2); lctx.fill();
+    // arms: up when happy or dancing, on his cheeks when "oops", down otherwise
+    let hands;
+    if(lenny.dance > 0 || lenny.mood === 'happy') hands = [[-22, -8 + (reduced ? 0 : Math.sin(t*9)*3)], [22, -8 - (reduced ? 0 : Math.sin(t*9)*3)]];
+    else if(lenny.mood === 'oops') hands = [[-14, -2], [14, -2]];
+    else hands = [[-17, 26], [17, 26]];
+    lctx.strokeStyle = GREY; lctx.lineWidth = 6;
+    lctx.beginPath(); lctx.moveTo(-10, 12); lctx.lineTo(hands[0][0], hands[0][1]); lctx.moveTo(10, 12); lctx.lineTo(hands[1][0], hands[1][1]); lctx.stroke();
+    // head on top
+    lctx.save(); lctx.translate(0, -8);
+    let ex = 0, ey = 0;
+    if(lastLook){
+      const hx = r.left + r.width/2, hy = r.top + r.height*0.5;
+      const dx = lastLook.x - hx, dy = lastLook.y - hy, dl = Math.hypot(dx, dy) || 1;
+      ex = dx/dl*1.8; ey = dy/dl*1.8;
+    }
+    drawHead(lctx, lenny.dance > 0 ? 'happy' : lenny.mood, ex, ey, lenny.blink > 0);
+    lctx.restore();
+    // hands last, so they sit on his cheeks for "oops"
+    lctx.fillStyle = DARK;
+    hands.forEach(p => { lctx.beginPath(); lctx.arc(p[0], p[1], 4.5, 0, Math.PI*2); lctx.fill(); });
+  }
+
+  // a picture of Lenny's happy face, used on the special Lenny cards
+  const lennyFace = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 160;
+    const x = c.getContext('2d');
+    x.translate(80, 86); x.scale(3.4, 3.4);
+    drawHead(x, 'happy', 0, 0.6, false);
+    return c.toDataURL();
+  })();
+
+  function say(text){
+    bubble.textContent = text;
+    bubble.classList.remove('pop'); void bubble.offsetWidth; bubble.classList.add('pop');
+  }
+  function mood(m, secs){ lenny.mood = m; lenny.moodT = secs; }
+
+  // ===== THE CARDS =====
+  function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+
+  function dealLevel(n){
+    level = n;
+    const pairs = LEVELS[level];
+    const pool = shuffle(FACES.slice());
+    const picks = [];
+    const withLenny = level >= 2;   // the Lenny pair joins from level 3
+    if(withLenny) picks.push({id: 'lenny', emoji: null, bg: '#FFF1C9'});
+    while(picks.length < pairs){ const f = pool.pop(); picks.push({id: f[0], emoji: f[0], bg: f[1]}); }
+    const deck = shuffle(picks.concat(picks).map(p => ({...p})));
+    grid.innerHTML = '';
+    cards = deck.map((p, i) => {
+      const b = document.createElement('button');
+      b.className = 'card';
+      b.type = 'button';
+      b.setAttribute('aria-label', 'Card ' + (i + 1) + ', face down');
+      const front = p.emoji ? '<span class="face front" style="--bg:' + p.bg + '">' + p.emoji + '</span>'
+        : '<span class="face front" style="--bg:' + p.bg + '"><img src="' + lennyFace + '" alt=""></span>';
+      b.innerHTML = '<span class="inner"><span class="face back"><span>?</span></span>' + front + '</span>';
+      const card = {el: b, id: p.id, name: p.emoji ? nameOf(p.emoji) : 'Lenny', up: false, done: false, seen: false, i};
+      b.addEventListener('click', () => flip(card));
+      grid.appendChild(b);
+      return card;
+    });
+    open = []; tries = 0; found = 0; missStreak = 0; busy = false;
+    clearTimeout(flipBackTimer);
+    layout();
+    updateHud();
+  }
+
+  const NAMES = {'🐒':'monkey','🦜':'parrot','🐸':'frog','🐘':'elephant','🦒':'giraffe','🐯':'tiger','🦋':'butterfly','🐢':'turtle','🦛':'hippo','🦓':'zebra','🐼':'panda','🦥':'sloth','🐨':'koala','🍌':'banana','🍍':'pineapple','🥥':'coconut','🌺':'flower','🐞':'ladybird'};
+  function nameOf(e){ return NAMES[e] || 'friend'; }
+
+  function setUp(card, up){
+    card.up = up;
+    card.el.classList.toggle('up', up);
+    card.el.setAttribute('aria-label', 'Card ' + (card.i + 1) + (card.done ? ', matched ' : up ? ', ' : ', face down') + (up || card.done ? card.name : ''));
+  }
+
+  function flipBackNow(){
+    clearTimeout(flipBackTimer); flipBackTimer = null;
+    open.forEach(c => setUp(c, false));
+    open = [];
+  }
+
+  function flip(card){
+    if(state !== 'play' || busy || card.done || card.up) return;
+    if(open.length === 2) flipBackNow();   // tapping quickly skips the wait
+    wake();
+    setUp(card, true);
+    card.seen = true;
+    sfx.flip();
+    const r = card.el.getBoundingClientRect();
+    lastLook = {x: r.left + r.width/2, y: r.top + r.height/2};
+    lenny.jump = 1;
+    open.push(card);
+    if(open.length < 2) return;
+
+    tries++;
+    const [a, b] = open;
+    if(a.id === b.id){
+      a.done = b.done = true;
+      a.el.classList.add('done'); b.el.classList.add('done');
+      setUp(a, true); setUp(b, true);
+      open = [];
+      found++; missStreak = 0;
+      const mid = midpoint(a, b);
+      burst(mid.x, mid.y, 26);
+      if(a.id === 'lenny'){
+        sfx.hehe();
+        mood('happy', 2);
+        say("That's me! Have a peek!");
+        lennyPeek();
+      } else {
+        sfx.match();
+        mood('happy', 1.2);
+        say(pick(['A match! Two ' + plural(a.name) + '!', 'Yes! Two ' + plural(a.name) + '!', 'Brilliant memory!', 'You found a pair!']));
+      }
+      updateHud();
+      if(found === LEVELS[level]) setTimeout(levelDone, 700);
+    } else {
+      missStreak++;
+      mood('oops', 1);
+      say(pick(['Oops, not the same!', 'Not a pair - try again!', 'Hmm, remember those!', 'So close!']));
+      setTimeout(() => { if(open.length === 2 && open[0] === a){ a.el.classList.add('nope'); b.el.classList.add('nope'); sfx.miss(); } }, 380);
+      setTimeout(() => { a.el.classList.remove('nope'); b.el.classList.remove('nope'); }, 900);
+      flipBackTimer = setTimeout(() => { flipBackNow(); if(missStreak >= 4) hint(); }, 1100);
+      updateHud();
+    }
+  }
+
+  function plural(n){ return n === 'butterfly' ? 'butterflies' : n === 'ladybird' ? 'ladybirds' : n + 's'; }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function midpoint(a, b){
+    const s = stage.getBoundingClientRect(), ra = a.el.getBoundingClientRect(), rb = b.el.getBoundingClientRect();
+    return {x: (ra.left + ra.right + rb.left + rb.right)/4 - s.left, y: (ra.top + ra.bottom + rb.top + rb.bottom)/4 - s.top};
+  }
+
+  // matching the two Lenny cards shows every card for a moment
+  function lennyPeek(){
+    busy = true;
+    setTimeout(() => {
+      sfx.peek();
+      cards.forEach(c => { if(!c.done) setUp(c, true); });
+      setTimeout(() => {
+        cards.forEach(c => { if(!c.done){ setUp(c, false); c.seen = true; } });
+        busy = false;
+        say('Now you know where they are!');
+      }, reduced ? 2200 : 1700);
+    }, 500);
+  }
+
+  // after a few misses in a row, Lenny wiggles a pair to help
+  function hint(){
+    const left = cards.filter(c => !c.done);
+    if(left.length < 4) return;
+    const seenIds = left.filter(c => c.seen).map(c => c.id);
+    const id = seenIds.length ? seenIds[Math.floor(Math.random()*seenIds.length)] : left[0].id;
+    const pair = left.filter(c => c.id === id);
+    pair.forEach(c => { c.el.classList.remove('hint'); void c.el.offsetWidth; c.el.classList.add('hint'); });
+    setTimeout(() => pair.forEach(c => c.el.classList.remove('hint')), 1900);
+    sfx.psst();
+    say('Psst! Try the wiggly ones!');
+    missStreak = 0;
+  }
+
+  function starsFor(pairs, t){
+    if(t <= Math.ceil(pairs*1.5) + 1) return 3;
+    if(t <= Math.ceil(pairs*2.2) + 2) return 2;
+    return 1;
+  }
+
+  function updateHud(){
+    levelEl.textContent = 'Level ' + (level + 1);
+    pairsEl.textContent = '✨ ' + found + '/' + LEVELS[level];
+    pairsEl.setAttribute('aria-label', 'Pairs found: ' + found + ' of ' + LEVELS[level]);
+    triesEl.textContent = '👆 Tries ' + tries;
+  }
+
+  // ===== GAME FLOW =====
+  function startLevel(n){
+    wake(); startMusic();
+    dealLevel(n);
+    overlay.hidden = true;
+    state = 'play';
+    sfx.go();
+    mood('ready', 0);
+    say(level >= 2 ? 'Find the pairs - and find me too!' : 'Tap two cards to find a pair!');
+    setTimeout(() => { if(cards[0]) cards[0].el.focus({preventScroll: true}); }, 50);
+  }
+
+  function levelDone(){
+    state = 'done';
+    const pairs = LEVELS[level];
+    const s = starsFor(pairs, tries);
+    const newBest = s > bestStars[level];
+    if(newBest){ bestStars[level] = s; save('lrg-lenny-memory-match-stars', bestStars); }
+    lenny.dance = 3;
+    say(s === 3 ? 'Wow! Super memory!' : 'You did it! Hooray!');
+    sfx.win();
+    const r = stage.getBoundingClientRect();
+    burst(r.width/2, r.height*0.45, 90);
+    setTimeout(() => {
+      ovTitle.textContent = s === 3 ? 'Super memory!' : s === 2 ? 'Brilliant!' : 'You did it!';
+      ovStars.hidden = false;
+      ovStars.innerHTML = [0, 1, 2].map(i => '<span class="' + (i < s ? '' : 'off') + '">⭐</span>').join('');
+      ovStars.setAttribute('aria-label', s + ' stars out of 3');
+      ovBig.hidden = false;
+      ovBig.textContent = 'Level ' + (level + 1) + ' done in ' + tries + ' tries';
+      const next3 = Math.ceil(pairs*1.5) + 1;
+      const last = level === LEVELS.length - 1;
+      ovText.textContent = s < 3 ? 'Find all the pairs in ' + next3 + ' tries or fewer for 3 stars.'
+        : last ? 'You finished the biggest level! You have a super memory.'
+        : 'Ready for more cards?';
+      ovBtn.textContent = last ? 'Play again' : s < 3 ? 'Next level' : 'Next level';
+      ovBtn.dataset.go = last ? level : level + 1;
+      buildLevels();
+      overlay.hidden = false;
+      for(let i = 0; i < s; i++) setTimeout(() => sfx.star(i), 250 + i*260);
+      ovBtn.focus({preventScroll: true});
+    }, 1300);
+  }
+
+  function nextToPlay(){
+    const i = bestStars.findIndex(v => v === 0);
+    return i === -1 ? LEVELS.length - 1 : i;
+  }
+
+  function buildLevels(){
+    levelsEl.innerHTML = '';
+    LEVELS.forEach((p, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      if(String(i) === String(ovBtn.dataset.go)) b.className = 'now';
+      b.innerHTML = 'Level ' + (i + 1) + '<small>' + ('⭐'.repeat(bestStars[i]) + '☆'.repeat(3 - bestStars[i])) + '</small>';
+      b.setAttribute('aria-label', 'Level ' + (i + 1) + ', ' + p + ' pairs, ' + bestStars[i] + ' stars');
+      b.addEventListener('click', () => startLevel(i));
+      levelsEl.appendChild(b);
+    });
+  }
+
+  ovBtn.addEventListener('click', () => startLevel(+ovBtn.dataset.go || 0));
+
+  // ----- keyboard: arrow keys move between cards, Enter or Space flips -----
+  addEventListener('keydown', e => {
+    if(state !== 'play') {
+      if((e.key === 'Enter' || e.key === ' ') && !overlay.hidden && !(e.target && e.target.tagName === 'BUTTON')){ e.preventDefault(); ovBtn.click(); }
+      return;
+    }
+    const d = {ArrowLeft: -1, ArrowRight: 1, ArrowUp: -cols, ArrowDown: cols}[e.key];
+    if(d === undefined) return;
+    e.preventDefault();
+    let i = cards.findIndex(c => c.el === document.activeElement);
+    if(i === -1) i = 0; else i = Math.max(0, Math.min(cards.length - 1, i + d));
+    cards[i].el.focus();
+  });
+
+  // ===== FIT THE CARDS TO ANY SCREEN =====
+  function layout(){
+    const r = stage.getBoundingClientRect();
+    const W = r.width, H = r.height, n = cards.length;
+    if(!W || !H || !n) return;
+    const gap = Math.max(6, Math.min(14, Math.min(W, H)*0.022));
+    let bestFit = null;
+    for(let c = 1; c <= n; c++){
+      const rows = Math.ceil(n/c);
+      const cw = (W - gap*(c - 1))/c, ch = (H - gap*(rows - 1))/rows;
+      let w = Math.min(cw, ch/0.85, 190);
+      let h = Math.min(ch, w*1.25);
+      w = Math.min(w, h*1.15);
+      const score = Math.min(w, h)*(c*rows === n ? 1 : 0.9);
+      if(!bestFit || score > bestFit.score) bestFit = {score, c, w, h};
+    }
+    cols = bestFit.c;
+    grid.style.setProperty('--gap', gap + 'px');
+    grid.style.gridTemplateColumns = 'repeat(' + cols + ',' + Math.floor(bestFit.w) + 'px)';
+    grid.style.gridAutoRows = Math.floor(bestFit.h) + 'px';
+    grid.style.setProperty('--fs', Math.floor(Math.min(bestFit.w, bestFit.h)*0.56) + 'px');
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    fx.width = Math.round(W*dpr); fx.height = Math.round(H*dpr);
+    fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  new ResizeObserver(layout).observe(stage);
+
+  // ===== CONFETTI =====
+  let confetti = [];
+  function burst(x, y, n){
+    if(reduced) n = Math.min(n, 12);
+    for(let i = 0; i < n; i++){
+      const a = -Math.PI/2 + (Math.random() - .5)*2.6, sp = 3 + Math.random()*6;
+      confetti.push({x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, life: 1, c: RAINBOW[i%6], r: Math.random()*6, s: 5 + Math.random()*5});
+    }
+  }
+  function drawFx(){
+    const s = stage.getBoundingClientRect();
+    fctx.clearRect(0, 0, s.width, s.height);
+    confetti.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.22; p.vx *= 0.99; p.life -= 0.012; p.r += 0.15;
+      fctx.globalAlpha = Math.max(0, p.life);
+      fctx.fillStyle = p.c;
+      fctx.save(); fctx.translate(p.x, p.y); fctx.rotate(p.r); fctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); fctx.restore();
+    });
+    fctx.globalAlpha = 1;
+    confetti = confetti.filter(p => p.life > 0 && p.y < s.height + 20);
+  }
+
+  // ===== MAIN LOOP (Lenny's wiggles and the confetti) =====
+  let last = performance.now(), blinkT = 2.5;
+  function loop(now){
+    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    const t = now/1000;
+    if(lenny.moodT > 0){ lenny.moodT -= dt; if(lenny.moodT <= 0) lenny.mood = 'ready'; }
+    lenny.dance = Math.max(0, lenny.dance - dt);
+    lenny.jump = Math.max(0, lenny.jump - dt*4);
+    blinkT -= dt;
+    if(blinkT <= 0){ lenny.blink = 0.14; blinkT = 2.5 + Math.random()*3; }
+    lenny.blink = Math.max(0, lenny.blink - dt);
+    drawLenny(t);
+    if(confetti.length) drawFx();
+    requestAnimationFrame(loop);
+  }
+
+  // ===== START =====
+  ovBtn.dataset.go = nextToPlay();
+  if(bestStars.some(v => v > 0)) ovBtn.textContent = 'Play level ' + (nextToPlay() + 1);
+  buildLevels();
+  dealLevel(nextToPlay());
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

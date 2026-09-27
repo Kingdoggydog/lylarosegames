@@ -219,7 +219,7 @@
   ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
   document.head.append(ld);
 
-  // ----- Footer: add-to-home-screen link, grown-ups contact, maker link
+  // ----- Footer: add-to-home-screen link, privacy line + For parents link, grown-ups contact, maker link
   // The email address is put together here (not written in the page) so spam robots that read pages can't grab it.
   const footer = document.querySelector('footer');
   const ua = navigator.userAgent;
@@ -241,6 +241,10 @@
       addBtn.addEventListener('click', () => openAddSheet(true));
       footer.append(addBtn);
     }
+    const trust = el('p', 'foot-line small');
+    const parents = el('a', null, 'For parents'); parents.href = ROOT + 'for-parents/';
+    trust.append('Free. No ads, no sign-ups, no personal details collected. ', parents);
+    footer.append(trust);
     const mail = ['hello', 'lylarosegames.com'].join('@');
     const line2 = el('p', 'foot-line small');
     const m = el('a', null, mail); m.href = 'mailto:' + mail + '?subject=' + encodeURIComponent('Lyla Rose Games');

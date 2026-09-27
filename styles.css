@@ -145,3 +145,17 @@
   .crumbs a:hover{background:#FDE2EC}
   .crumbs a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   .section-head h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(30px,6vw,40px);margin:0;line-height:1;color:var(--ink)}
+  /* "For parents" page */
+  .info{display:flex;flex-direction:column;gap:20px;max-width:720px;width:100%;margin:0 auto}
+  .ticks{display:flex;flex-wrap:wrap;gap:8px}
+  .ticks span{background:var(--card);border-radius:999px;padding:6px 14px;font-weight:800;font-size:15px;box-shadow:0 4px 12px #2E6E6118}
+  .info-card{background:var(--card);border-radius:22px;padding:20px 22px;box-shadow:0 8px 24px #2E6E6122}
+  .info-card h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(24px,5vw,30px);margin:0 0 8px;line-height:1.1;color:var(--pink)}
+  .info-card p,.info-card li{font-size:16px;line-height:1.55;margin:0}
+  .info-card p + p{margin-top:10px}
+  .info-card ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+  .info-card a{color:var(--ink);font-weight:800;text-decoration:underline;text-decoration-color:#F2559B66;text-underline-offset:2px;overflow-wrap:anywhere}
+  .info-card .small-print{font-size:14px;color:var(--muted)}
+  .back-games{margin:0;text-align:center}
+  .back-games .play{display:inline-block;text-decoration:none}
+  .back-games .play:focus-visible{outline:4px solid var(--gold);outline-offset:3px}

@@ -17,6 +17,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Whirlybird Rescue | Flying, Action, Animals | `games/whirlybird-rescue/` |
 | Blossom's Easter Eggs | Unicorns, Animals, Action | `games/blossoms-easter-eggs/` |
 | Chomper's Choo-Choo Express | Dinosaurs, Trains, Action | `games/chompers-choo-choo/` |
+| Lenny's Memory Match | Puzzles & Mazes, Animals | `games/lenny-memory-match/` |
 
 ## Category pages (for Google)
 
@@ -31,6 +32,10 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Dinosaurs | `dinosaur-games/` |
 | Cars | `car-games/` |
 | Trains | `train-games/` |
+
+## For parents page
+
+`for-parents/` - plain information for grown-ups: no ads, no purchases, no sign-ups, no chat, what Google Analytics counts, and the contact email. Linked from the footer of the home and category pages.
 
 ## Adding a new game
 

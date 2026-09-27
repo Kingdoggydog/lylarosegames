@@ -120,6 +120,16 @@ const games = [
     categories: ["dinosaurs", "trains", "action"],
     controls: "Hold, Space or →, T to toot"
   },
+  {
+    title: "Lenny's Memory Match",
+    folder: "lenny-memory-match",
+    emoji: "🧠",
+    colour: "#FFF1C9",
+    thumb: "thumb.jpg",
+    blurb: "Flip the cards and find the matching jungle pairs. Find both Lenny cards and he lets you peek at them all!",
+    categories: ["puzzles", "animals"],
+    controls: "Tap, or arrow keys and Enter"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

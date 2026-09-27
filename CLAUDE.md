@@ -27,6 +27,9 @@ action-games/
 dinosaur-games/
 car-games/
 train-games/
+for-parents/        the "For parents" page (safety, privacy, contact) - hand-written, linked from the footer.
+                      If a game ever adds something that changes what it says (sign-ups, links out, chat,
+                      collecting details), update this page too - or better, don't add it.
 brand/              logo (icon.svg + png sizes) and og-image.jpg (the share picture)
 site.webmanifest    lets phones add the site to the home screen as a full-screen app
 sitemap.xml         list of pages for Google
