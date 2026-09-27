@@ -218,4 +218,64 @@
   const ld = el('script'); ld.type = 'application/ld+json';
   ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
   document.head.append(ld);
+
+  // ----- Footer: add-to-home-screen link, grown-ups contact, maker link
+  // The email address is put together here (not written in the page) so spam robots that read pages can't grab it.
+  const footer = document.querySelector('footer');
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = navigator.standalone === true || matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches;
+  const isTouch = matchMedia('(pointer: coarse)').matches;
+  let installEvent = null;   // Android/Chrome can show its own "Install" box
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvent = e; if (addBtn) addBtn.hidden = false; });
+
+  let addBtn = null;
+  if (footer) {
+    footer.replaceChildren();
+    const line1 = el('p', 'foot-line', 'Made with love. More games on the way.');
+    footer.append(line1);
+    if (isTouch && !isStandalone) {
+      addBtn = el('button', 'foot-add', '📲 Add to your home screen');
+      addBtn.type = 'button';
+      addBtn.hidden = !isIOS && !installEvent;
+      addBtn.addEventListener('click', () => openAddSheet(true));
+      footer.append(addBtn);
+    }
+    const mail = ['hello', 'lylarosegames.com'].join('@');
+    const line2 = el('p', 'foot-line small');
+    const m = el('a', null, mail); m.href = 'mailto:' + mail + '?subject=' + encodeURIComponent('Lyla Rose Games');
+    const maker = el('a', null, 'u/coolcato'); maker.href = 'https://kingdoggydog.github.io/'; maker.rel = 'noopener';
+    line2.append('Grown-ups: ideas or problems? Say hi at ', m, ' · Made by ', maker);
+    footer.append(line2);
+  }
+
+  // ----- One-off "add to home screen" pop-up (iPhone/iPad only - Android uses its own install box)
+  const SEEN = 'lr-add-home-seen';
+  let seen = false; try { seen = localStorage.getItem(SEEN) === '1'; } catch (e) {}
+  if (isIOS && !isStandalone && !seen) setTimeout(() => openAddSheet(false), 4000);
+
+  function openAddSheet(fromButton) {
+    if (!fromButton) { try { localStorage.setItem(SEEN, '1'); } catch (e) {} }
+    if (!isIOS && installEvent) { installEvent.prompt(); installEvent.userChoice.finally(() => { installEvent = null; if (addBtn) addBtn.hidden = true; }); if (window.gtag) gtag('event', 'add_to_home', { method: 'install_prompt' }); return; }
+    if (document.querySelector('.add-sheet')) return;
+    const sheet = el('div', 'add-sheet');
+    sheet.setAttribute('role', 'dialog'); sheet.setAttribute('aria-label', 'Add to your home screen');
+    const shareIcon = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+    const where = /iPad/.test(ua) || navigator.platform === 'MacIntel' ? 'at the top of the screen' : 'at the bottom of the screen';
+    sheet.innerHTML =
+      '<button type="button" class="add-x" aria-label="Close">✕</button>' +
+      '<img src="' + ROOT + 'brand/icon-180.png" alt="" width="56" height="56">' +
+      '<b>Play like an app!</b>' +
+      '<p>Put Lyla Rose Games on your home screen. It opens full screen, with no address bar.</p>' +
+      '<ol><li>Tap the <strong>Share</strong> button ' + shareIcon + ' ' + where + ' <span>(on newer iPhones, tap <strong>•••</strong> first)</span></li>' +
+      '<li>Tap <strong>Add to Home Screen</strong> <span>(you may need to scroll down)</span></li>' +
+      '<li>Tap <strong>Add</strong></li></ol>' +
+      '<button type="button" class="add-ok">Got it</button>';
+    const close = () => { sheet.classList.remove('show'); setTimeout(() => sheet.remove(), 250); };
+    sheet.querySelector('.add-x').addEventListener('click', close);
+    sheet.querySelector('.add-ok').addEventListener('click', close);
+    document.body.append(sheet);
+    requestAnimationFrame(() => sheet.classList.add('show'));
+    if (window.gtag) gtag('event', 'add_to_home', { method: fromButton ? 'footer_button' : 'auto_popup' });
+  }
 })();
