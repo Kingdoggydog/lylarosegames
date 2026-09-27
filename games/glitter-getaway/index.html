@@ -1,0 +1,1374 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="game-orientation" content="landscape">
+<title>Glitter Getaway - Free Unicorn Running Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CDEBF5;
+    --sky2:#F7DDEB;
+    --hedge:#2E6E61;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%);
+    background-color:var(--sky);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(12px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(12px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1100px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+  /* the play area grows to the biggest box that fits the space left over (between 4:3 and 16:9) */
+  .stage{flex:1;min-height:150px;container-type:size;display:grid;place-items:center}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .sub{margin:4px 0 0;font-size:14px}
+  .stats{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .board{position:relative;width:min(100cqw,100cqh*16/9);height:min(100cqh,100cqw*3/4);container-type:size;border-radius:18px;overflow:hidden;background:#BFE6F5;box-shadow:0 10px 30px #2E6E6133;touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}
+  canvas{display:block;width:100%;height:100%}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#1F4F45A6;padding:12px;cursor:default}
+  .panel{background:#fff;border-radius:18px;padding:18px 22px;text-align:center;max-width:360px;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:10px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink);line-height:1.05}
+  .panel p{margin:0;font-size:15px}
+  .panel .big{font-size:19px;font-weight:800}
+  .stars{display:flex;justify-content:center;gap:6px;font-size:44px;line-height:1}
+  .stars span{color:#E9E0EE;display:inline-block}
+  .stars span.on{color:var(--gold);text-shadow:0 3px 0 #E0A21C;animation:pop .45s cubic-bezier(.3,1.6,.5,1) both}
+  .stars span.on:nth-child(2){animation-delay:.35s}
+  .stars span.on:nth-child(3){animation-delay:.7s}
+  @keyframes pop{from{transform:scale(0) rotate(-40deg)}to{transform:scale(1) rotate(0)}}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px;min-height:48px;min-width:48px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  .panel button.ghost{background:#F5EEF8;font-size:14px}
+  .controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .help{font-size:13px;margin:0;flex:1 1 220px}
+  .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
+  .back:hover{text-decoration:underline}
+  /* small play area (phone held upright): squeeze the pop-up panels */
+  @container (max-height:320px){
+    .panel{padding:10px 14px;gap:6px}
+    .panel h2{font-size:23px}
+    .panel p{font-size:13px}
+    .panel .big{font-size:15px}
+    .stars{font-size:30px}
+  }
+  /* phones and small screens: tuck away the extra words to make room for the game */
+  @media (pointer:coarse), (max-height:760px){ .help,.sub{display:none} h1{font-size:28px} }
+  /* phone on its side: title, scores and buttons on the left, game on the right */
+  @media (orientation:landscape) and (max-height:620px){
+    .wrap{max-width:none;display:grid;grid-template-columns:150px 1fr;grid-template-rows:auto auto 1fr;column-gap:14px;row-gap:8px}
+    .back{grid-column:1;grid-row:1;justify-self:start}
+    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start;gap:8px}
+    h1{font-size:23px}
+    .stats{flex-direction:column;align-items:flex-start;gap:6px}
+    .pill{font-size:14px;padding:5px 10px}
+    .controls{grid-column:1;grid-row:3;align-self:end;gap:8px}
+    .stage{grid-column:2;grid-row:1 / 4;min-height:0}
+  }
+</style>
+<meta name="description" content="Glitter Getaway - a free unicorn running game for kids. Jump over logs, collect glitter and gallop to the rainbow bridge before cheeky Lenny the Lemur pinches your sparkles.">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/glitter-getaway/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Glitter Getaway - Free Unicorn Running Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Glitter Getaway - a free unicorn running game for kids. Jump over logs, collect glitter and gallop to the rainbow bridge before cheeky Lenny the Lemur pinches your sparkles.">
+<meta property="og:url" content="https://lylarosegames.com/games/glitter-getaway/">
+<meta property="og:image" content="https://lylarosegames.com/games/glitter-getaway/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Glitter Getaway - free unicorn running game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: Tap, click, Space or the up arrow -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Glitter Getaway",
+   "url": "https://lylarosegames.com/games/glitter-getaway/",
+   "description": "Glitter Getaway - a free unicorn running game for kids. Jump over logs, collect glitter and gallop to the rainbow bridge before cheeky Lenny the Lemur pinches your sparkles.",
+   "image": "https://lylarosegames.com/games/glitter-getaway/share.jpg",
+   "genre": [
+    "Unicorns",
+    "Action",
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Unicorn games",
+     "item": "https://lylarosegames.com/unicorn-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Glitter Getaway",
+     "item": "https://lylarosegames.com/games/glitter-getaway/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../../">← All games</a>
+  <header>
+    <div>
+      <h1>Glitter Getaway</h1>
+      <p class="sub">Gallop to the rainbow bridge before cheeky Lenny the Lemur pinches your glitter!</p>
+    </div>
+    <div class="stats">
+      <span class="pill" id="glitter">✨ Glitter: 0</span>
+      <span class="pill" id="level">🌈 Level 1</span>
+      <span class="pill" id="best">🏆 Best: 0</span>
+    </div>
+  </header>
+
+  <div class="stage">
+  <div class="board" id="board">
+    <canvas id="c"></canvas>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2 id="ovTitle">Glitter Getaway!</h2>
+        <div class="stars" id="ovStars" hidden aria-hidden="true"><span>★</span><span>★</span><span>★</span></div>
+        <p id="ovBig" class="big" hidden></p>
+        <p id="ovText">Starlight is galloping to the rainbow bridge, but cheeky Lenny the Lemur wants her glitter! Tap, or press Space or ↑, to jump. Hold for a bigger jump.</p>
+        <button id="ovBtn">Let's gallop!</button>
+        <button id="ovBtn2" class="ghost" hidden>Start again from level 1</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="controls">
+    <button class="ghost" id="pause" aria-label="Pause">⏸️</button>
+    <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+    <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+    <p class="help">Tap anywhere, or press Space or the up arrow, to jump. Hold it down for a higher jump. Grab the rainbow star for a super-fast rainbow dash!</p>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const $ = id => document.getElementById(id);
+  const cvs = $('c'), ctx = cvs.getContext('2d'), board = $('board');
+  const overlay = $('overlay'), ovTitle = $('ovTitle'), ovBig = $('ovBig'), ovText = $('ovText'), ovStars = $('ovStars');
+  const ovBtn = $('ovBtn'), ovBtn2 = $('ovBtn2');
+  const pauseBtn = $('pause'), soundBtn = $('sound'), musicBtn = $('music');
+  const glitterEl = $('glitter'), levelEl = $('level'), bestEl = $('best');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // The picture is always 450 "points" tall. Its width changes to fit the screen (600 to 800).
+  const H = 450, G = 372;          // G = the ground line
+  let W = 800, UNI_X = 320;        // Starlight's spot across the screen
+  const RAINBOW = ['#FF6B6B','#FFA94D','#FFD43B','#69DB7C','#4DABF7','#9775FA'];
+  const RAIN = ['#FF8FB8','#FFB86B','#FFE066','#8BE38F','#7CC7FF','#B79CFF'];
+  const rand = (a, b) => a + Math.random()*(b - a);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const smooth = t => t*t*(3 - 2*t);
+
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+  const KEY = 'lrg-glitter-getaway-';
+
+  let best = load(KEY + 'best', 0);
+  let muted = load(KEY + 'muted', false);
+  let musicOn = load(KEY + 'music', true);
+
+  // ===== GAME STATE =====
+  let state = 'intro';     // intro, run, bridge, celebrate, done
+  let paused = false, ovMode = 'start';
+  let clock = 0, stateT = 0;
+  let level = 1, glitter = 0, bestAtStart = best, bestShown = false;
+  let L = null;            // this level's logs, rocks, puddles and glitter
+  let camX = 0, bgX = 0, spd = 0;
+  let uni, lenny, held = false;
+  let parts = [], floats = [], confetti = [], msg = null, combo = 0, lastGemT = -9;
+
+  function baseSpeed(){ return Math.min(360, 250 + (level - 1)*14); }
+  function bridgeW(){ return Math.min(340, W - UNI_X - 80); }
+  const ARCH = 110;
+
+  // ===== BUILDING A LEVEL =====
+  const SIZES = { log:[66, 30], rock:[50, 36], puddle:[84, 6], bigrock:[58, 50] };
+  function mk(t, x){ const d = SIZES[t]; return {t, x, w:d[0], h:d[1], hit:false, knock:0, seed:Math.random()}; }
+  function gem(x, h){ return {x, h, got:false, c:Math.floor(Math.random()*6), ph:Math.random()*6}; }
+
+  function buildLevel(n){
+    const length = Math.min(15000, 7200 + (n - 1)*1300);
+    const obs = [], gems = [], pows = [];
+    const gapMin = Math.max(300, 640 - n*40), gapMax = Math.max(520, 1050 - n*65);
+    const wantPows = n === 1 ? 1 : (Math.random() < 0.5 ? 1 : 2);
+    let x = 950, i = 0;
+    while(x < length - 900){
+      let made;
+      if(n >= 3 && Math.random() < Math.min(0.35, 0.08 + n*0.04)){
+        // two in a row - hold the jump to clear both!
+        const a = mk(Math.random() < 0.5 ? 'log' : 'puddle', x), b = mk('rock', x + a.w + 14);
+        obs.push(a, b); made = {x0:x, x1:b.x + b.w, h:b.h};
+      } else {
+        let t = pick(['log', 'rock', 'puddle']);
+        if(n >= 4 && Math.random() < 0.25) t = 'bigrock';
+        const o = mk(t, x); obs.push(o); made = {x0:x, x1:x + o.w, h:o.h};
+      }
+      // a rainbow of glitter over the top
+      if(Math.random() < 0.7){
+        const cx = (made.x0 + made.x1)/2, span = (made.x1 - made.x0)/2 + 70;
+        for(let k = -2; k <= 2; k++){ const u = k/2.5; gems.push(gem(cx + k*span/2.2, made.h + 45 + 65*(1 - u*u))); }
+      }
+      const gap = rand(gapMin, gapMax);
+      const late = x > length*0.45;
+      if(pows.length < wantPows && i >= 2 && (Math.random() < 0.18 || (late && pows.length === 0))){
+        pows.push({x: made.x1 + gap*0.5, h:105, got:false});
+      } else if(Math.random() < 0.75){
+        const high = Math.random() < 0.35, nG = 3 + Math.floor(Math.random()*3), start = made.x1 + gap*0.3;
+        for(let k = 0; k < nG; k++) gems.push(gem(start + k*34, high ? 118 : 36));
+      }
+      x = made.x1 + gap; i++;
+    }
+    // a sparkly path to the rainbow bridge
+    for(let k = 0; k < 8; k++) gems.push(gem(length - 600 + k*40, 36));
+    return {n, length, obs, gems, pows, total:gems.length, got:0, stolen:0};
+  }
+
+  function resetRunners(){
+    uni = {sx:UNI_X, h:0, vy:0, ground:true, holdT:0, buffer:0, stumble:0, invul:0, dash:0, ph:0, sad:0, tilt:0};
+    lenny = {close:0.12, x:lerp(40, UNI_X - 64, 0.12), h:0, ph:0, ang:0, pose:'run', mood:'happy',
+             catchT:0, grabbed:false, x0:0, h0:0, warned:false, say:null, sulked:false};
+  }
+
+  function startLevel(){
+    L = buildLevel(level);
+    camX = 0; spd = baseSpeed()*0.6;
+    resetRunners();
+    parts = []; floats = []; combo = 0;
+    state = 'run'; stateT = 0;
+    showMsg('Level ' + level + ' - Go!', '#F2559B');
+    updateHud();
+  }
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.45 : 0; musicBus.connect(master);
+      // two seconds of "hiss" used for splashes and drums
+      noiseBuf = actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + delay;
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.value = freq; fl.Q.value = q;
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + attack);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*1.5); src.stop(t0 + dur + 0.05);
+  }
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  const GEM_NOTES = [72, 74, 76, 79, 81, 84, 86, 88, 91, 93];
+
+  const sfx = {
+    jump(){ tone(420, 0.18, 'triangle', 0.14, 820); tone(1300, 0.12, 'sine', 0.04, 1900, 0.03); },
+    land(){ tone(150, 0.08, 'sine', 0.12, 80); },
+    gem(n){ const m = GEM_NOTES[Math.min(n, GEM_NOTES.length - 1)]; tone(hz(m), 0.14, 'triangle', 0.11); tone(hz(m + 12), 0.25, 'sine', 0.04, null, 0.02); },
+    bonk(){ tone(520, 0.32, 'triangle', 0.16, 170); tone(90, 0.15, 'sine', 0.2, 50); },
+    splash(){ if(!audio()) return; noise(actx.currentTime, 0.4, 'bandpass', 1300, 0.7, 0.3, 0.01); tone(260, 0.2, 'sine', 0.1, 700, 0.02); },
+    knock(){ tone(700, 0.2, 'square', 0.05, 1400); tone(1400, 0.15, 'sine', 0.06, 2200, 0.05); },
+    // Lenny's cheeky "hee hee hee!"
+    laugh(){
+      if(!audio()) return;
+      const t = actx.currentTime;
+      [0, 0.13, 0.26, 0.42].forEach((d, i) => {
+        const t0 = t + d, dur = i === 3 ? 0.22 : 0.11, f = i === 3 ? 1000 : 860 - i*25;
+        const o = actx.createOscillator(), bp = actx.createBiquadFilter(), g = actx.createGain();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(f, t0); o.frequency.exponentialRampToValueAtTime(f*0.7, t0 + dur);
+        bp.type = 'bandpass'; bp.frequency.value = 2300; bp.Q.value = 2.5;
+        g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.2, t0 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+        o.connect(bp).connect(g).connect(sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+      });
+    },
+    // a jingly handful of glitter being grabbed
+    grab(){ [96, 91, 88, 84].forEach((m, i) => tone(hz(m), 0.1, 'sine', 0.06, null, i*0.04)); },
+    hey(){ tone(620, 0.1, 'square', 0.05, 820); tone(820, 0.18, 'square', 0.05, 560, 0.1); },
+    aww(){ tone(640, 0.3, 'triangle', 0.12, 540); tone(560, 0.6, 'triangle', 0.12, 330, 0.3); },
+    power(){ [60, 64, 67, 72, 76, 79, 84, 88].forEach((m, i) => tone(hz(m), 0.16, 'triangle', 0.12, null, i*0.045)); if(audio()) noise(actx.currentTime, 0.6, 'highpass', 6000, 0.7, 0.08, 0.05); },
+    fanfare(){
+      [65, 69, 72, 77].forEach((m, i) => tone(hz(m), 0.22, 'triangle', 0.16, null, i*0.12));
+      [77, 81, 84].forEach(m => tone(hz(m), 0.9, 'triangle', 0.1, null, 0.5));
+      [89, 93, 96].forEach((m, i) => tone(hz(m), 0.3, 'sine', 0.04, null, 0.6 + i*0.08));
+    },
+    star(i, delay){ tone(hz([84, 88, 91][i]), 0.4, 'sine', 0.18, null, delay); tone(hz([96, 100, 103][i]), 0.3, 'triangle', 0.04, null, delay); },
+    go(){ tone(hz(72), 0.12, 'triangle', 0.12); tone(hz(79), 0.2, 'triangle', 0.12, null, 0.12); }
+  };
+
+  // ----- background music: a bouncy galloping tune that loops -----
+  const BPM = 138, STEP = 60/BPM/2;   // each step is half a beat
+  const CHORDS = [41, 38, 46, 48, 41, 38, 46, 48];   // F, Dm, Bb, C (bass notes)
+  const MELODY = [
+    72,0,69,72, 77,0,76,74,   74,0,69,0, 65,67,69,0,
+    70,0,74,0, 77,0,74,70,    72,0,76,0, 79,0,0,0,
+    77,76,74,72, 69,0,72,0,   74,72,69,67, 65,0,69,0,
+    70,0,74,77, 76,0,74,0,    72,0,67,0, 65,0,0,0
+  ];
+  let mNext = 0, mStep = 0, mTimer = null;
+
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    if(beat % 2 === 0) tone(hz(root + (beat === 2 || beat === 6 ? 7 : 0)), STEP*1.5, 'triangle', 0.22, null, d, musicBus);
+    if(beat === 0) [12, 16, 19].forEach(n => {
+      const nn = root === 38 && n === 16 ? 15 : n;   // D minor chord
+      tone(hz(root + nn), STEP*7, 'sine', 0.04, null, d, musicBus);
+    });
+    const m = MELODY[i];
+    if(m){ tone(hz(m), STEP*1.4, 'square', 0.03, null, d, musicBus); tone(hz(m), STEP*1.7, 'triangle', 0.07, null, d, musicBus); }
+    // clip-clop hooves and a little drum
+    tone(beat % 2 ? 950 : 1250, 0.03, 'sine', beat % 2 ? 0.04 : 0.07, null, d, musicBus);
+    if(beat === 0 || beat === 4) tone(130, 0.14, 'sine', 0.28, 45, d, musicBus);
+    if(beat === 2 || beat === 6) noise(t, 0.1, 'bandpass', 1800, 0.8, 0.1, 0.004, musicBus);
+    // extra sparkles during a rainbow dash
+    if(uni && uni.dash > 0) tone(hz(84 + [0, 4, 7, 12][i % 4]), STEP, 'sine', 0.035, null, d, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){
+      playStep(mStep, mNext);
+      mNext += STEP; mStep = (mStep + 1) % 64;
+    }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.45 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save(KEY + 'muted', muted); wake(); startMusic(); setSoundBtn(); soundBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save(KEY + 'music', musicOn); wake(); startMusic(); setSoundBtn(); musicBtn.blur(); });
+  setSoundBtn();
+
+  // ===== SCORES ON SCREEN =====
+  function updateHud(){
+    glitterEl.textContent = '✨ Glitter: ' + glitter;
+    levelEl.textContent = '🌈 Level ' + level;
+    bestEl.textContent = '🏆 Best: ' + best;
+  }
+  function checkBest(){
+    if(glitter > best){
+      best = glitter; save(KEY + 'best', best);
+      if(!bestShown && bestAtStart > 0){ bestShown = true; addFloat(UNI_X + 30, G - 170, 'New best!', '#F2559B', 30); }
+    }
+  }
+  function showMsg(text, col){ msg = {text, col, t:0}; }
+  function addFloat(x, y, text, col, size = 22){ floats.push({x, y, text, col, size, t:0}); }
+  function lennySay(text, dur = 1.8){ lenny.say = {text, t:0, dur}; }
+
+  // ===== OVERLAY (start, pause and level done) =====
+  function showOverlay(mode){
+    ovMode = mode;
+    overlay.hidden = false;
+    ovStars.hidden = true; ovBig.hidden = true; ovBtn2.hidden = true;
+    if(mode === 'pause'){
+      ovTitle.textContent = 'Having a rest';
+      ovText.textContent = 'Starlight and Lenny are catching their breath. Ready to keep galloping?';
+      ovBtn.textContent = 'Keep going';
+      ovBtn2.hidden = false;
+    }
+    ovBtn.focus({preventScroll:true});
+  }
+  function hideOverlay(){ overlay.hidden = true; if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
+
+  function levelDone(){
+    state = 'done';
+    const kept = Math.max(0, L.got - L.stolen);
+    const p = kept/Math.max(1, L.total);
+    const stars = p >= 0.85 ? 3 : p >= 0.5 ? 2 : 1;
+    [...ovStars.children].forEach((s, i) => s.classList.toggle('on', i < stars));
+    for(let i = 0; i < stars; i++) sfx.star(i, 0.2 + i*0.35);
+    showOverlay('level');
+    ovTitle.textContent = 'Level ' + level + ' done!';
+    ovStars.hidden = false;
+    ovBig.hidden = false;
+    ovBig.textContent = '✨ You kept ' + kept + ' of ' + L.total + ' glitter';
+    const tips = stars === 3 ? 'Super sparkly! Three stars!' : stars === 2 ? 'Lovely galloping! Grab even more glitter for three stars.' : 'Safe across! Jump for the glitter to win more stars.';
+    ovText.textContent = tips + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
+    ovBtn.textContent = 'Next level ➜';
+    ovBtn.focus({preventScroll:true});
+  }
+
+  function newGame(){
+    level = 1; glitter = 0; bestAtStart = best; bestShown = false;
+    startLevel();
+  }
+
+  ovBtn.addEventListener('click', () => {
+    wake(); startMusic();
+    if(ovMode === 'start'){ hideOverlay(); newGame(); sfx.go(); }
+    else if(ovMode === 'pause'){ hideOverlay(); paused = false; }
+    else if(ovMode === 'level'){ hideOverlay(); level++; startLevel(); sfx.go(); }
+  });
+  ovBtn2.addEventListener('click', () => { wake(); startMusic(); hideOverlay(); paused = false; newGame(); sfx.go(); });
+
+  function pauseGame(){
+    if(!overlay.hidden || paused || !['run', 'bridge', 'celebrate'].includes(state)) return;
+    paused = true; held = false; showOverlay('pause');
+  }
+  pauseBtn.addEventListener('click', () => { pauseBtn.blur(); pauseGame(); });
+
+  // pause everything when the page is hidden
+  document.addEventListener('visibilitychange', () => {
+    if(document.hidden){ pauseGame(); if(actx) actx.suspend(); }
+    else if(actx) actx.resume();
+  });
+
+  // ===== JUMPING =====
+  function doJump(){
+    uni.vy = 700; uni.ground = false; uni.holdT = 0; uni.buffer = 0;
+    sfx.jump();
+  }
+  function press(){
+    wake(); startMusic();
+    held = true;
+    if(paused || state !== 'run') return;
+    if(uni.ground) doJump(); else uni.buffer = 0.15;   // pressed just before landing? jump as soon as she lands
+  }
+  function release(){ held = false; }
+
+  // tap anywhere on the page (except buttons and links)
+  document.addEventListener('pointerdown', e => {
+    if(e.target.closest && e.target.closest('button, a, .panel, .lr-rotate')) return;
+    if(!overlay.hidden) return;
+    if(e.button > 0) return;
+    e.preventDefault();
+    press();
+  });
+  addEventListener('pointerup', release);
+  addEventListener('pointercancel', release);
+  addEventListener('blur', release);
+
+  addEventListener('keydown', e => {
+    const jumpKey = e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W';
+    if(e.key === 'Escape' || e.key === 'p' || e.key === 'P'){ if(overlay.hidden) pauseGame(); return; }
+    if(!overlay.hidden){
+      if(e.target && e.target.tagName === 'BUTTON') return;   // the button handles it
+      if((jumpKey || e.key === 'Enter') && !e.repeat){ e.preventDefault(); ovBtn.click(); }
+      return;
+    }
+    if(!jumpKey) return;
+    e.preventDefault();
+    if(e.target && e.target.blur && e.target.tagName === 'BUTTON') e.target.blur();
+    if(!e.repeat) press();
+  });
+  addEventListener('keyup', e => {
+    if(e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W'){ if(overlay.hidden) e.preventDefault(); release(); }
+  });
+
+  // ===== PARTICLES =====
+  function sparkle(x, y, n, cols = RAINBOW, sp = 160){
+    if(reduced) n = Math.min(n, 5);
+    for(let i = 0; i < n; i++){
+      const a = Math.random()*Math.PI*2, s = sp*(0.4 + Math.random()*0.8);
+      parts.push({x, y, vx:Math.cos(a)*s, vy:Math.sin(a)*s - 40, g:200, life:0.6 + Math.random()*0.4, max:1, c:pick(cols), s:2 + Math.random()*3, k:'star'});
+    }
+  }
+  function dust(x, y, n = 6){
+    if(reduced) n = 2;
+    for(let i = 0; i < n; i++) parts.push({x:x + rand(-20, 20), y, vx:rand(-90, -20), vy:rand(-60, -10), g:60, life:0.5, max:0.5, c:'rgba(210,180,140,0.7)', s:4 + Math.random()*4, k:'dust'});
+  }
+  function splash(x, y){
+    for(let i = 0; i < (reduced ? 4 : 14); i++) parts.push({x:x + rand(-25, 25), y, vx:rand(-120, 120), vy:rand(-260, -120), g:700, life:0.7, max:0.7, c:pick(['#7CC7FF', '#4DABF7', '#BDE4FF']), s:3 + Math.random()*3, k:'drop'});
+  }
+  function burst(x, y, n){
+    if(reduced) n = Math.min(n, 20);
+    for(let i = 0; i < n; i++){
+      const a = -Math.PI/2 + (Math.random() - .5)*2.4, sp = 240 + Math.random()*420;
+      confetti.push({x, y, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1.4, c:RAINBOW[i % 6], r:Math.random()*6, s:5 + Math.random()*4});
+    }
+  }
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt; stateT += dt;
+    if(msg) msg.t += dt;
+    if(lenny && lenny.say){ lenny.say.t += dt; if(lenny.say.t > lenny.say.dur) lenny.say = null; }
+
+    if(state === 'intro'){
+      bgX += 120*dt; uni.ph += dt*9; lenny.ph += dt*14;
+    }
+    else if(state === 'run') updateRun(dt);
+    else if(state === 'bridge') updateBridge(dt);
+    else if(state === 'celebrate') updateCelebrate(dt);
+
+    // floating words, sparkles and confetti
+    floats = floats.filter(f => (f.t += dt) < 1.2);
+    parts = parts.filter(p => (p.life -= dt) > 0);
+    parts.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += p.g*dt; if(p.tx !== undefined){ const u = Math.min(1, dt*6); p.x += (p.tx - p.x)*u; p.y += (p.ty - p.y)*u; } });
+    confetti = confetti.filter(p => (p.life -= dt*0.7) > 0);
+    confetti.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 900*dt; p.vx *= Math.pow(0.4, dt); p.r += dt*9; });
+  }
+
+  function updateRun(dt){
+    // speed: slower while stumbling, super fast in a rainbow dash
+    const target = baseSpeed()*(uni.stumble > 0 ? 0.55 : 1)*(uni.dash > 0 ? 1.6 : 1);
+    spd += (target - spd)*Math.min(1, dt*5);
+    camX += spd*dt; bgX += spd*dt;
+    uni.ph += dt*9*(spd/250);
+    uni.stumble = Math.max(0, uni.stumble - dt);
+    uni.invul = Math.max(0, uni.invul - dt);
+    uni.dash = Math.max(0, uni.dash - dt);
+    uni.sad += ((uni.stumble > 0 ? 0.6 : 0) - uni.sad)*Math.min(1, dt*10);
+    uni.tilt = uni.stumble > 0 && !reduced ? Math.sin(uni.stumble*18)*0.08 + 0.1 : uni.tilt*Math.pow(0.001, dt);
+
+    // jumping: holding the button keeps her floating up a little longer
+    uni.buffer = Math.max(0, uni.buffer - dt);
+    if(!uni.ground){
+      const g = (held && uni.vy > 0 && uni.holdT < 0.2) ? 1500 : 2300;
+      uni.holdT += dt; uni.vy -= g*dt; uni.h += uni.vy*dt;
+      if(uni.h <= 0){
+        uni.h = 0; uni.vy = 0; uni.ground = true; sfx.land(); dust(UNI_X, G);
+        if(uni.buffer > 0) doJump();
+      }
+    }
+
+    const ux = camX + UNI_X;
+    // bumping into logs, rocks and puddles
+    for(const o of L.obs){
+      if(o.knock > 0){ o.knock += dt; continue; }
+      if(o.hit) continue;
+      const inset = o.t === 'puddle' ? 16 : 8;
+      if(o.x + o.w - inset < ux - 18 || o.x + inset > ux + 18) continue;
+      if(uni.h >= o.h - 4) continue;
+      if(uni.dash > 0){ o.knock = 0.001; sfx.knock(); sparkle(o.x - camX + o.w/2, G - o.h, 10); addFloat(o.x - camX + o.w/2, G - o.h - 20, 'Boing!', '#9775FA'); continue; }
+      o.hit = true;
+      if(uni.invul > 0 || lenny.catchT > 0) continue;
+      uni.stumble = 0.75; uni.invul = 1.2;
+      lenny.close = Math.min(1, lenny.close + 0.2 + Math.min(0.1, 0.015*(level - 1)));
+      combo = 0;
+      if(o.t === 'puddle'){ sfx.splash(); splash(UNI_X, G); showMsg('Splash!', '#4DABF7'); }
+      else { sfx.bonk(); showMsg(pick(['Oops!', 'Whoopsie!', 'Wobble!', 'Bonk!']), '#E8590C'); }
+      if(Math.random() < 0.5) lennySay(pick(['Ooh, glitter!', 'Here I come!', 'Hee hee!', 'Wait for me!']), 1.4);
+    }
+
+    // collecting glitter
+    const bodyH = uni.h + 50;
+    for(const g of L.gems){
+      if(g.got || Math.abs(g.x - ux) > 50) continue;
+      const dx = g.x - ux, dy = g.h - bodyH;
+      if(dx*dx + dy*dy < 46*46){
+        g.got = true; glitter++; L.got++;
+        combo = clock - lastGemT < 0.7 ? combo + 1 : 0; lastGemT = clock;
+        sfx.gem(combo);
+        sparkle(g.x - camX, G - g.h, 6);
+        checkBest(); updateHud();
+      }
+    }
+    // rainbow dash stars
+    for(const p of L.pows){
+      if(p.got) continue;
+      const dx = p.x - ux, dy = p.h - bodyH;
+      if(dx*dx + dy*dy < 52*52){
+        p.got = true; uni.dash = 3.2; uni.stumble = 0;
+        sfx.power(); showMsg('Rainbow dash!', '#9775FA');
+        sparkle(p.x - camX, G - p.h, 24);
+        setTimeout(sfx.hey, 350); lennySay('Hey! No fair!', 1.6);
+      }
+    }
+
+    updateLenny(dt);
+
+    // reached the rainbow bridge?
+    if(ux >= L.length){
+      state = 'bridge'; stateT = 0;
+      camX = L.length - UNI_X; spd = 0;
+      uni.h = 0; uni.vy = 0; uni.ground = true; uni.dash = 0; uni.stumble = 0; uni.sad = 0; uni.tilt = 0;
+      if(lenny.catchT > 0){ lenny.catchT = 0; lenny.pose = 'run'; lenny.ang = 0; lenny.close = 0.3; }
+    }
+  }
+
+  // Lenny scampers along behind, getting closer when Starlight stumbles
+  function lennyHome(c){ return lerp(40, UNI_X - 64, c); }
+  function updateLenny(dt){
+    lenny.ph += dt*15;
+    if(lenny.catchT > 0){ updateCatch(dt); return; }
+    let drift = Math.min(0.02, -0.035 + 0.009*(level - 1));   // later levels: a faster Lenny
+    if(uni.dash > 0) drift = -0.45;
+    else if(uni.stumble > 0) drift += 0.28;
+    lenny.close = clamp(lenny.close + drift*dt, 0.1, 1);
+    if(lenny.close >= 1 && uni.dash <= 0) startCatch();
+    if(lenny.close > 0.78 && !lenny.warned){ lenny.warned = true; lennySay(pick(['Almost got ya!', 'So sparkly...', 'Nearly there!', 'Glitter, glitter!']), 1.5); }
+    if(lenny.close < 0.5) lenny.warned = false;
+    lenny.x += (lennyHome(lenny.close) - lenny.x)*Math.min(1, dt*6);
+    lenny.mood = uni.dash > 0 ? 'sad' : 'happy';
+    lenny.pose = 'run';
+    // hop over logs and rocks automatically
+    const lx = lenny.x + camX;
+    let hop = 0;
+    for(const o of L.obs){
+      if(o.knock > 0) continue;
+      const d = lx - (o.x + o.w/2);
+      if(Math.abs(d) < 70) hop = Math.max(hop, (o.h + 24)*Math.cos(d/70*Math.PI/2));
+    }
+    lenny.h += (hop - lenny.h)*Math.min(1, dt*14);
+  }
+
+  function startCatch(){
+    lenny.catchT = 0.001; lenny.grabbed = false;
+    lenny.x0 = lenny.x; lenny.h0 = lenny.h;
+    uni.invul = Math.max(uni.invul, 2.2);
+  }
+  function updateCatch(dt){
+    const t = (lenny.catchT += dt);
+    const rideX = UNI_X - 4, rideH = uni.h + 60;
+    if(t < 0.35){
+      // big leap onto Starlight's back
+      const e = ease(t/0.35);
+      lenny.x = lerp(lenny.x0, rideX, e); lenny.h = lerp(lenny.h0, rideH, e) + Math.sin(Math.PI*e)*45;
+      lenny.pose = 'stay';
+    } else if(t < 1.15){
+      if(!lenny.grabbed){
+        lenny.grabbed = true;
+        const took = Math.min(glitter, clamp(Math.round(glitter*0.2), 5, 25));
+        glitter -= took; L.stolen += took; updateHud();
+        sfx.grab(); setTimeout(sfx.laugh, 120);
+        lennySay(pick(['Hee hee! Mine!', 'Ooh, shiny! Thank you!', 'Glitter snack! Hee hee!', 'Sparkly! Hee hee!']), 1.6);
+        if(took > 0) addFloat(UNI_X + 10, G - uni.h - 130, '-' + took + ' ✨', '#9775FA', 26);
+        // glitter flies from Starlight into Lenny's paws
+        for(let i = 0; i < (reduced ? 6 : 22); i++){
+          parts.push({x:UNI_X + rand(-30, 40), y:G - uni.h - rand(30, 80), vx:rand(-60, 60), vy:rand(-120, -40), g:0, life:0.6, max:0.6, c:pick(RAINBOW), s:2 + Math.random()*3, k:'star', tx:rideX, ty:G - rideH - 50});
+        }
+      }
+      lenny.x = rideX; lenny.h = rideH + (reduced ? 0 : Math.abs(Math.sin(t*10))*4);
+      lenny.pose = 'grab'; lenny.mood = 'cheeky';
+    } else if(t < 2.05){
+      // ...then tumbles off the back, giggling
+      if(lenny.pose !== 'tumble') lennySay(pick(['Whoops-a-daisy!', 'Wheee!', 'Worth it!']), 1.2);
+      const u = (t - 1.15)/0.9;
+      lenny.pose = 'tumble';
+      lenny.x = lerp(rideX, lennyHome(0.15), ease(u));
+      lenny.h = Math.max(0, rideH*(1 - u) + Math.sin(Math.PI*u)*55);
+      lenny.ang = reduced ? 0 : -u*Math.PI*2;
+    } else {
+      lenny.catchT = 0; lenny.close = 0.15; lenny.ang = 0; lenny.pose = 'run'; lenny.h = 0;
+      uni.invul = Math.max(uni.invul, 0.8);
+    }
+  }
+
+  function updateBridge(dt){
+    const BW = bridgeW(), bx = UNI_X, cx = bx + BW/2;
+    uni.ph += dt*8;
+    const u = smooth(clamp(stateT/2.2, 0, 1)), th = Math.PI*u;
+    uni.sx = cx - BW/2*Math.cos(th);
+    uni.h = ARCH*Math.sin(th) + 4*Math.sin(th);
+    // Lenny runs up to the river bank... and stops
+    lenny.ph += dt*15;
+    const stop = bx - 46;
+    if(lenny.x < stop){ lenny.x = Math.min(stop, lenny.x + 240*dt); lenny.pose = 'run'; lenny.mood = 'happy'; }
+    else { lenny.pose = 'stay'; lenny.mood = 'sad'; }
+    lenny.h = Math.max(0, lenny.h - 300*dt);
+    lenny.ang = 0;
+    if(!lenny.sulked && stateT > 1.0){ lenny.sulked = true; lennySay("Aww! Lemurs can't cross rainbows!", 3.2); sfx.aww(); }
+    if(stateT >= 2.2){ state = 'celebrate'; stateT = 0; uni.x0 = uni.sx; sfx.fanfare(); showMsg('Safe across!', '#F2559B'); burst(uni.sx, G - 80, 70); }
+  }
+
+  function updateCelebrate(dt){
+    const BW = bridgeW(), end = UNI_X + BW + 36;
+    uni.sx = lerp(uni.x0, end, ease(clamp(stateT/0.6, 0, 1)));
+    uni.ph += dt*(stateT < 0.6 ? 8 : 0);
+    uni.h = reduced ? 0 : Math.abs(Math.sin(stateT*7))*24;
+    lenny.ph += dt*4;
+    if(!lenny.sulked){ lenny.sulked = true; lennySay("Aww! Lemurs can't cross rainbows!", 3); }
+    if(Math.floor((stateT - dt)/0.7) !== Math.floor(stateT/0.7) && stateT < 2.2) burst(rand(W*0.3, W*0.9), G - 120, 40);
+    if(stateT > 2.7){ uni.h = 0; levelDone(); }
+  }
+
+  // ===== DRAWING: THE WORLD =====
+  const THEMES = [
+    {sky:['#BFE6F5', '#F7DDEB'], sun:'#FFE58A', far:'#B8E3C0', near:'#95D39E', tree:'#6FBF73', bloom:'#FFB3D1', grass:'#7CCB7E', grass2:'#6ABB6C', dirt:'#EBCB9C', night:false},
+    {sky:['#FFE3EF', '#FFF4DC'], sun:'#FFD27A', far:'#F5C8DD', near:'#BDE5A8', tree:'#92CF83', bloom:'#FF9FC7', grass:'#8ED47F', grass2:'#7CC56E', dirt:'#EFD2A6', night:false},
+    {sky:['#FFB9A3', '#FFE1A8'], sun:'#FFF1B8', far:'#D4B4EC', near:'#A6D69F', tree:'#7DC27A', bloom:'#FFC08A', grass:'#86CC7A', grass2:'#74BD69', dirt:'#E9C596', night:false},
+    {sky:['#5E63B8', '#C6A4E6'], sun:'#FFF6D6', far:'#7B8FD0', near:'#62A98F', tree:'#4C9A7E', bloom:'#C9A7FF', grass:'#5DAF7E', grass2:'#4FA070', dirt:'#CDB392', night:true}
+  ];
+  const theme = () => THEMES[(level - 1) % THEMES.length];
+  const CLOUDS = [[80, 60, 1], [420, 95, 0.8], [760, 50, 1.2], [1100, 85, 0.9], [1450, 65, 1.1]];
+  const STARS = Array.from({length:40}, () => [Math.random()*1000, Math.random()*230, Math.random()*6]);
+  const hash = k => { const s = Math.sin(k*127.1 + 311.7)*43758.5453; return s - Math.floor(s); };
+
+  function cloud(x, y, s, col = 'rgba(255,255,255,0.9)'){
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.arc(x, y, 22*s, 0, Math.PI*2); ctx.arc(x + 24*s, y - 12*s, 26*s, 0, Math.PI*2);
+    ctx.arc(x + 52*s, y, 22*s, 0, Math.PI*2); ctx.arc(x + 26*s, y + 8*s, 22*s, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawBackground(){
+    const th = theme();
+    const sky = ctx.createLinearGradient(0, 0, 0, G);
+    sky.addColorStop(0, th.sky[0]); sky.addColorStop(1, th.sky[1]);
+    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, G);
+    if(th.night){
+      STARS.forEach(s => { ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.4*Math.sin(clock*2 + s[2])})`; ctx.beginPath(); ctx.arc((s[0] - bgX*0.03) % 1000 + (s[0] - bgX*0.03 < 0 ? 1000 : 0), s[1], 1.6, 0, Math.PI*2); ctx.fill(); });
+    }
+    // sun (or moon)
+    ctx.fillStyle = th.sun;
+    ctx.beginPath(); ctx.arc(W - 110, 92, 34, 0, Math.PI*2); ctx.fill();
+    if(th.night){ ctx.fillStyle = th.sky[0]; ctx.beginPath(); ctx.arc(W - 96, 82, 30, 0, Math.PI*2); ctx.fill(); }
+    // clouds drift slowly
+    CLOUDS.forEach(c => {
+      const span = W + 1600;
+      let x = (c[0] - bgX*0.12) % span; if(x < -150) x += span;
+      cloud(x, c[1], c[2], th.night ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.9)');
+    });
+    // far hills
+    ctx.fillStyle = th.far;
+    ctx.beginPath(); ctx.moveTo(0, G);
+    for(let x = 0; x <= W + 20; x += 20){ const q = x + bgX*0.2; ctx.lineTo(x, 262 - 38*Math.sin(q/170) - 18*Math.sin(q/71)); }
+    ctx.lineTo(W, G); ctx.closePath(); ctx.fill();
+    // nearer hills
+    ctx.fillStyle = th.near;
+    ctx.beginPath(); ctx.moveTo(0, G);
+    for(let x = 0; x <= W + 20; x += 20){ const q = x + bgX*0.35; ctx.lineTo(x, 312 - 22*Math.sin(q/120 + 1) - 10*Math.sin(q/53)); }
+    ctx.lineTo(W, G); ctx.closePath(); ctx.fill();
+    // trees and blossom trees
+    const gap = 150, off = bgX*0.5, first = Math.floor(off/gap) - 1;
+    for(let k = first; k < first + W/gap + 3; k++){
+      const r = hash(k); if(r < 0.3) continue;
+      const x = k*gap - off + r*60, s = 0.7 + hash(k + 50)*0.5;
+      ctx.fillStyle = '#9C7456'; ctx.fillRect(x - 5*s, G - 70*s, 10*s, 70*s);
+      ctx.fillStyle = r > 0.7 ? th.bloom : th.tree;
+      [[0, -82, 30], [-22, -66, 20], [22, -66, 20]].forEach(b => { ctx.beginPath(); ctx.arc(x + b[0]*s, G + b[1]*s, b[2]*s, 0, Math.PI*2); ctx.fill(); });
+      if(r > 0.7){ ctx.fillStyle = 'rgba(255,255,255,0.6)'; for(let i = 0; i < 5; i++){ ctx.beginPath(); ctx.arc(x + (hash(k + i)*50 - 25)*s, G - (60 + hash(k + i + 9)*40)*s, 3*s, 0, Math.PI*2); ctx.fill(); } }
+    }
+    // the ground: grass on top, a sandy path to run on
+    ctx.fillStyle = th.grass; ctx.fillRect(0, G - 4, W, H - G + 4);
+    ctx.fillStyle = th.dirt; ctx.fillRect(0, G + 12, W, H - G - 12);
+    ctx.fillStyle = th.grass2; ctx.fillRect(0, G + 8, W, 4);
+    // pebbles and flowers rushing past
+    for(let k = Math.floor(bgX/46) - 1; k < Math.floor(bgX/46) + W/46 + 2; k++){
+      const x = k*46 - bgX, r = hash(k + 7);
+      ctx.fillStyle = 'rgba(160,120,80,0.35)';
+      ctx.beginPath(); ctx.ellipse(x, G + 30 + r*40, 4 + r*4, 2 + r*2, 0, 0, Math.PI*2); ctx.fill();
+      if(r > 0.6){ ctx.fillStyle = RAIN[Math.floor(r*60) % 6]; ctx.beginPath(); ctx.arc(x + 12, G + 2, 3.5, 0, Math.PI*2); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x + 12, G + 2, 1.4, 0, Math.PI*2); ctx.fill(); }
+      else if(r > 0.3){ ctx.strokeStyle = th.grass2; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(x, G + 4); ctx.lineTo(x - 3, G - 5); ctx.moveTo(x + 3, G + 4); ctx.lineTo(x + 5, G - 6); ctx.stroke(); }
+    }
+  }
+
+  // the river under the rainbow bridge, and the bridge itself
+  function drawRiver(){
+    if(!L) return;
+    const bx = L.length - camX, BW = bridgeW();
+    if(bx > W + 40 || bx + BW < -40) return;
+    const wg = ctx.createLinearGradient(0, G, 0, H);
+    wg.addColorStop(0, '#7CC7FF'); wg.addColorStop(1, '#4D9FE0');
+    ctx.fillStyle = wg;
+    ctx.beginPath(); ctx.moveTo(bx, G - 2);
+    ctx.quadraticCurveTo(bx + 10, H, bx - 6, H); ctx.lineTo(bx + BW + 6, H); ctx.quadraticCurveTo(bx + BW - 10, H, bx + BW, G - 2);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 2.5;
+    for(let i = 0; i < 4; i++){
+      const y = G + 16 + i*16, sh = (clock*30 + i*37) % 40;
+      ctx.beginPath();
+      for(let x = bx + 14 + sh; x < bx + BW - 30; x += 60){ ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 8, y - 4, x + 16, y); }
+      ctx.stroke();
+    }
+  }
+  function drawRainbow(){
+    if(!L) return;
+    const bx = L.length - camX, BW = bridgeW();
+    if(bx > W + 60 || bx + BW < -60) return;
+    const cx = bx + BW/2;
+    ctx.lineCap = 'butt';
+    RAINBOW.forEach((c, i) => {
+      ctx.strokeStyle = c; ctx.lineWidth = 9;
+      ctx.beginPath(); ctx.ellipse(cx, G, BW/2 - i*8 + 4, ARCH - i*8, 0, Math.PI, Math.PI*2); ctx.stroke();
+    });
+    // sparkles on the bridge
+    if(!reduced) for(let i = 0; i < 6; i++){
+      const u = ((clock*0.25 + i/6) % 1), th = Math.PI*(1 - u);
+      ctx.fillStyle = `rgba(255,255,255,${0.9*Math.sin(Math.PI*u)})`;
+      ctx.beginPath(); ctx.arc(cx + Math.cos(th)*(BW/2 - 16), G - Math.sin(th)*(ARCH - 20), 2.5, 0, Math.PI*2); ctx.fill();
+    }
+    // fluffy clouds where the rainbow touches the ground
+    cloud(bx - 34, G - 6, 0.75); cloud(bx + BW - 36, G - 6, 0.75);
+  }
+
+  // ===== DRAWING: LOGS, ROCKS, PUDDLES, GLITTER =====
+  function drawObstacle(o){
+    let x = o.x - camX;
+    if(x > W + 40 || x + o.w < -60) return;
+    ctx.save();
+    if(o.knock > 0){
+      // knocked flying by a rainbow dash!
+      const k = o.knock;
+      if(k > 1.2){ ctx.restore(); return; }
+      ctx.globalAlpha = Math.max(0, 1 - k/1.2);
+      ctx.translate(x + o.w/2 + k*260, G - o.h/2 - k*380 + k*k*300); ctx.rotate(k*8);
+      x = -o.w/2;
+      ctx.translate(0, -G + o.h/2);
+    }
+    if(o.t === 'log'){
+      const y = G - o.h;
+      ctx.fillStyle = '#A0693F'; ctx.strokeStyle = '#7A4A28'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, o.w, o.h, 12) : ctx.rect(x, y, o.w, o.h); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#8A5733'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(x + 18, y + 9); ctx.lineTo(x + o.w - 8, y + 9); ctx.moveTo(x + 22, y + 20); ctx.lineTo(x + o.w - 14, y + 20); ctx.stroke();
+      // the cut end, with rings
+      ctx.fillStyle = '#E8C18F'; ctx.strokeStyle = '#7A4A28'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.ellipse(x + 10, y + o.h/2, 10, o.h/2, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#C9955E'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.ellipse(x + 10, y + o.h/2, 5, o.h/4, 0, 0, Math.PI*2); ctx.stroke();
+      // a little leaf sprouting on top
+      ctx.fillStyle = '#6FBF73';
+      ctx.beginPath(); ctx.ellipse(x + o.w - 20, y - 5, 7, 3.5, -0.6, 0, Math.PI*2); ctx.fill();
+    } else if(o.t === 'rock' || o.t === 'bigrock'){
+      const y = G - o.h;
+      ctx.fillStyle = '#A7A9B8'; ctx.strokeStyle = '#7D7F90'; ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(x, G); ctx.quadraticCurveTo(x - 2, y + o.h*0.3, x + o.w*0.3, y + 2);
+      ctx.quadraticCurveTo(x + o.w*0.55, y - 5, x + o.w*0.78, y + o.h*0.2);
+      ctx.quadraticCurveTo(x + o.w + 4, y + o.h*0.5, x + o.w, G); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
+      ctx.beginPath(); ctx.ellipse(x + o.w*0.35, y + o.h*0.3, o.w*0.14, o.h*0.1, -0.4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#8BCB7E';
+      ctx.beginPath(); ctx.ellipse(x + o.w*0.7, y + o.h*0.22, 8, 4, 0.3, 0, Math.PI*2); ctx.fill();
+    } else {
+      // puddle
+      ctx.fillStyle = '#7CC7FF'; ctx.strokeStyle = '#4DABF7'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.ellipse(x + o.w/2, G + 5, o.w/2, 9, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2;
+      const r = reduced ? 0 : (clock*2 + o.seed*5) % 1;
+      ctx.globalAlpha *= 1 - r;
+      ctx.beginPath(); ctx.ellipse(x + o.w/2, G + 5, 8 + r*28, 2 + r*5, 0, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGem(x, y, c, ph){
+    const b = reduced ? 0 : Math.sin(clock*4 + ph)*3, s = 10;
+    y += b;
+    ctx.fillStyle = RAIN[c]; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(x, y - s*1.2); ctx.lineTo(x + s, y - s*0.2); ctx.lineTo(x, y + s*1.1); ctx.lineTo(x - s, y - s*0.2); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath(); ctx.moveTo(x, y - s*1.2); ctx.lineTo(x + s*0.4, y - s*0.2); ctx.lineTo(x, y + s*0.2); ctx.lineTo(x - s*0.4, y - s*0.2); ctx.closePath(); ctx.fill();
+    const tw = reduced ? 0.6 : 0.5 + 0.5*Math.sin(clock*7 + ph*3);
+    if(tw > 0.7) starShape(x + 8, y - 10, 4*tw, '#fff');
+  }
+  function starShape(x, y, r, col){
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    for(let i = 0; i < 8; i++){ const a = i*Math.PI/4, rr = i % 2 ? r*0.35 : r; ctx.lineTo(x + Math.cos(a)*rr, y + Math.sin(a)*rr); }
+    ctx.closePath(); ctx.fill();
+  }
+  function drawPower(p){
+    const x = p.x - camX, y = G - p.h + (reduced ? 0 : Math.sin(clock*3)*5);
+    if(x < -40 || x > W + 40) return;
+    const pulse = reduced ? 1 : 1 + Math.sin(clock*6)*0.08;
+    const glow = ctx.createRadialGradient(x, y, 4, x, y, 42);
+    glow.addColorStop(0, 'rgba(255,255,255,0.9)'); glow.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(x, y, 42, 0, Math.PI*2); ctx.fill();
+    ctx.save(); ctx.translate(x, y); ctx.rotate(reduced ? 0 : Math.sin(clock*2)*0.3); ctx.scale(pulse, pulse);
+    const star = r => { ctx.beginPath(); for(let i = 0; i < 10; i++){ const a = -Math.PI/2 + i*Math.PI/5, rr = i % 2 ? r*0.45 : r; ctx.lineTo(Math.cos(a)*rr, Math.sin(a)*rr); } ctx.closePath(); };
+    RAINBOW.forEach((c, i) => { ctx.fillStyle = c; star(24 - i*3.4); ctx.fill(); });
+    ctx.fillStyle = '#fff'; star(4); ctx.fill();
+    ctx.restore();
+  }
+
+  // ===== DRAWING: STARLIGHT (copied from Unicorn Penalty Shoot-out, turned to face right) =====
+  function limb(x, y, a1, a2, far, len1 = 32, len2 = 32){
+    // a leg in two parts (top and bottom) with a shiny hoof
+    const body = far ? '#ECE4F4' : '#FFFFFF', line = '#D8C8E8';
+    ctx.save(); ctx.translate(x, y); ctx.rotate(a1);
+    ctx.fillStyle = body; ctx.strokeStyle = line; ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-8, -6, 16, len1 + 10, 8) : ctx.rect(-8, -6, 16, len1 + 10); ctx.fill(); ctx.stroke();
+    ctx.translate(0, len1); ctx.rotate(-a2);
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-7, -4, 14, len2, 7) : ctx.rect(-7, -4, 14, len2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = far ? '#D9A93A' : '#FFC23D'; ctx.strokeStyle = '#E0A21C';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-8.5, len2 - 8, 17, 11, [3,3,6,6]) : ctx.rect(-8.5, len2 - 8, 17, 11); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  // leg angles for galloping, jumping and standing
+  function legPose(){
+    const air = !uni.ground && state === 'run';
+    if(air) return {ff:[0.7, 1.1], fb:[-0.5, -0.5], nb:[-0.7, -0.6], nf:[0.9, 1.3], bob:0};
+    if(state === 'intro' || state === 'run' || state === 'bridge' || (state === 'celebrate' && stateT < 0.6)){
+      const p = uni.ph, s = reduced ? 0.4 : 1;
+      return {
+        nf:[0.55*s*Math.sin(p), Math.max(0, Math.sin(p + 1.2))*1.1*s],
+        ff:[0.55*s*Math.sin(p - 0.5), Math.max(0, Math.sin(p + 0.7))*1.1*s],
+        nb:[0.5*s*Math.sin(p + Math.PI), -Math.max(0, Math.sin(p + Math.PI + 1.2))*0.8*s],
+        fb:[0.5*s*Math.sin(p + Math.PI - 0.5), -Math.max(0, Math.sin(p + Math.PI + 0.7))*0.8*s],
+        bob: reduced ? 0 : Math.abs(Math.sin(p))*3
+      };
+    }
+    return {ff:[0, 0], fb:[0, 0], nb:[0, 0], nf:[0, 0], bob:0};
+  }
+
+  function drawUnicorn(){
+    const t = clock, S = 0.5;
+    const x = uni.sx, feet = G - uni.h;
+    const breathe = reduced ? 0 : Math.sin(t*2.5)*1.5;
+    const legs = legPose();
+    // shadow on the ground (smaller when she's high up)
+    const sh = Math.max(0.35, 1 - uni.h/220);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(x + 3, G + 2, 80*S*sh, 6*sh, 0, 0, Math.PI*2); ctx.fill();
+
+    // rainbow dash streaks behind her
+    if(uni.dash > 0){
+      const a = Math.min(1, uni.dash/0.5);
+      ctx.globalAlpha = a*0.85; ctx.lineCap = 'round';
+      RAINBOW.forEach((c, i) => {
+        ctx.strokeStyle = c; ctx.lineWidth = 6;
+        const y = feet - 72 + i*6;
+        ctx.beginPath(); ctx.moveTo(x - 30, y);
+        for(let k = 1; k <= 6; k++) ctx.lineTo(x - 30 - k*32, y + (reduced ? 0 : Math.sin(t*14 + k + i*0.3)*4));
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
+    // flash gently while Lenny can't catch her again
+    if(uni.invul > 0 && uni.dash <= 0 && state === 'run' && !reduced && Math.floor(t*12) % 2) ctx.globalAlpha = 0.6;
+
+    ctx.save();
+    ctx.translate(x, feet - legs.bob); ctx.rotate(uni.tilt); ctx.scale(-S, S);
+    // (0,0) is the ground under the middle of the body; drawn facing left, then flipped to face right
+
+    // far-side legs (a bit darker, behind the body)
+    limb(-30, -64, legs.ff[0], legs.ff[1], true);
+    limb(40, -64, legs.fb[0], legs.fb[1], true);
+
+    // rainbow tail
+    const sway = reduced ? 0 : Math.sin(t*2)*8;
+    ctx.lineCap = 'round';
+    RAIN.forEach((c, i) => {
+      ctx.strokeStyle = c; ctx.lineWidth = 9;
+      ctx.beginPath();
+      ctx.moveTo(52, -96 + i*2);
+      ctx.bezierCurveTo(88 + i*2, -110 + i*6, 78 + sway, -40 + i*4, 96 + sway + i*3, -22 + i*5);
+      ctx.stroke();
+    });
+
+    // body
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.ellipse(4, -86 + breathe*0.3, 60, 32 + breathe*0.2, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    // sparkly heart on the side
+    ctx.fillStyle = '#FF8FB8';
+    ctx.beginPath(); ctx.moveTo(16, -80); ctx.bezierCurveTo(4, -90, 8, -102, 16, -95); ctx.bezierCurveTo(24, -102, 28, -90, 16, -80); ctx.fill();
+
+    // near-side back leg
+    limb(42, -66, legs.nb[0], legs.nb[1], false);
+
+    // neck and head (tilts down a little when she stumbles)
+    ctx.save();
+    ctx.translate(-40, -104); ctx.rotate(-uni.sad*0.35 + breathe*0.01);
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-12, 16); ctx.lineTo(18, 6); ctx.lineTo(-4, -52); ctx.lineTo(-30, -44); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    // head
+    ctx.save(); ctx.translate(-26, -58); ctx.rotate(-0.35);
+    ctx.beginPath(); ctx.ellipse(0, 0, 25, 19, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFE3EE';
+    ctx.beginPath(); ctx.ellipse(-20, 6, 15, 13, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#E88AAE';
+    ctx.beginPath(); ctx.ellipse(-27, 4, 2.5, 3.5, 0.3, 0, Math.PI*2); ctx.fill();
+    // smile (or a little frown after a stumble)
+    ctx.strokeStyle = '#C0668C'; ctx.lineWidth = 2;
+    ctx.beginPath();
+    if(uni.sad > 0.3) ctx.arc(-19, 17, 5, 1.15*Math.PI, 1.85*Math.PI); else ctx.arc(-19, 11, 5, 0.2*Math.PI, 0.8*Math.PI);
+    ctx.stroke();
+    // big sparkly eye
+    ctx.fillStyle = '#2B2340';
+    ctx.beginPath(); ctx.ellipse(-2, -4, 6, 7.5, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.beginPath(); ctx.arc(-4, -7, 2.4, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -1, 1.2, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2B2340'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6, -11); ctx.lineTo(-9, -15); ctx.moveTo(-2, -12); ctx.lineTo(-3, -17); ctx.moveTo(2, -11); ctx.lineTo(4, -15); ctx.stroke();
+    // rosy cheek
+    ctx.fillStyle = 'rgba(255,143,184,0.5)';
+    ctx.beginPath(); ctx.ellipse(-6, 8, 5, 3.5, 0, 0, Math.PI*2); ctx.fill();
+    // ear
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(10, -12); ctx.lineTo(18, -34); ctx.lineTo(22, -10); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFC6DA';
+    ctx.beginPath(); ctx.moveTo(14, -13); ctx.lineTo(18, -27); ctx.lineTo(19, -12); ctx.closePath(); ctx.fill();
+    // golden horn with stripes
+    ctx.fillStyle = '#FFD84D'; ctx.strokeStyle = '#E8B21C'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6, -16); ctx.lineTo(-10, -58); ctx.lineTo(6, -18); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    for(let i = 1; i < 4; i++){ const y = -18 - i*9, w = 6 - i*1.4; ctx.moveTo(-2 - w - i*0.9, y + 2); ctx.lineTo(-2 + w - i*0.9, y - 2); }
+    ctx.stroke();
+    // twinkle on the horn tip
+    if(!reduced){ ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.5*Math.sin(t*6)})`; ctx.beginPath(); ctx.arc(-10, -58, 3, 0, Math.PI*2); ctx.fill(); }
+    ctx.restore();
+    // rainbow mane down the back of the neck
+    const mane = [[-18,-74],[-8,-60],[0,-46],[6,-32],[10,-18],[14,-4],[12,8]];
+    mane.forEach((p, i) => {
+      ctx.fillStyle = RAIN[i % RAIN.length];
+      ctx.beginPath(); ctx.arc(p[0] + 4, p[1], 10 - i*0.4, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.fillStyle = RAIN[0];
+    ctx.beginPath(); ctx.arc(-30, -80, 8, 0, Math.PI*2); ctx.fill();   // fringe
+    ctx.restore();
+
+    // near-side front leg
+    limb(-38, -66, legs.nf[0], legs.nf[1], false);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+
+    // dizzy stars circling her head after a stumble
+    if(uni.stumble > 0){
+      for(let i = 0; i < 3; i++){
+        const a = t*6 + i*Math.PI*2/3;
+        starShape(x + 34 + Math.cos(a)*18, feet - 112 + Math.sin(a)*6, 6, i === 1 ? '#FFC23D' : '#FF8FB8');
+      }
+    }
+  }
+
+  // ===== DRAWING: LENNY (copied from Unicorn Penalty Shoot-out, in his everyday fur) =====
+  function drawLenny(){
+    const t = clock, k = 0.66;
+    const x = lenny.x, feet = G - lenny.h;
+    const running = lenny.pose === 'run';
+    const bob = running && !reduced ? Math.abs(Math.sin(lenny.ph))*3 : 0;
+    // shadow on the ground
+    const sh = Math.max(0.3, 1 - lenny.h/200);
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath(); ctx.ellipse(x, G + 2, 30*k*sh, 6*k*sh, 0, 0, Math.PI*2); ctx.fill();
+
+    ctx.save();
+    ctx.translate(x, feet - 39*k - bob); ctx.rotate(lenny.ang + (running ? 0.12 : 0)); ctx.scale(k, k);
+    const grey = '#9A9AA8', dark = '#55556A';
+
+    // stripy tail
+    const sway = reduced ? 0 : Math.sin(t*2.2)*14;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      const bx = (1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway);
+      const by = (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66);
+      pts.push([bx, by]);
+    }
+    ctx.lineCap = 'round';
+    for(let i = 0; i < 14; i++){
+      ctx.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6';
+      ctx.lineWidth = 10 - i*0.25;
+      ctx.beginPath(); ctx.moveTo(pts[i][0], pts[i][1]); ctx.lineTo(pts[i+1][0], pts[i+1][1]); ctx.stroke();
+    }
+    // legs (scampering!)
+    const step = running && !reduced ? Math.sin(lenny.ph)*5 : 0;
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.ellipse(-9, 26 - Math.max(0, step), 7, 11, 0.15, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(9, 26 - Math.max(0, -step), 7, 11, -0.15, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-11, 35 - Math.max(0, step), 7, 4, 0, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(11, 35 - Math.max(0, -step), 7, 4, 0, 0, Math.PI*2); ctx.fill();
+
+    // arms
+    let hands;
+    if(lenny.pose === 'grab' || lenny.pose === 'tumble') hands = [[-10, -60], [10, -60]];
+    else if(lenny.pose === 'stay') hands = [[-40, -42], [40, -42]];
+    else { const b = reduced ? 0 : Math.sin(lenny.ph)*7; hands = [[-30, 2 + b], [30, 2 - b]]; }
+    ctx.strokeStyle = grey; ctx.lineWidth = 8;
+    ctx.beginPath(); ctx.moveTo(-13, -14); ctx.lineTo(hands[0][0], hands[0][1]); ctx.moveTo(13, -14); ctx.lineTo(hands[1][0], hands[1][1]); ctx.stroke();
+
+    // furry body with a pale tummy
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.ellipse(0, 2, 18, 24, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4F4F6';
+    ctx.beginPath(); ctx.ellipse(0, 6, 11, 16, 0, 0, Math.PI*2); ctx.fill();
+
+    // little dark paws
+    hands.forEach(h => {
+      ctx.fillStyle = dark;
+      ctx.beginPath(); ctx.arc(h[0], h[1], 5.5, 0, Math.PI*2); ctx.fill();
+    });
+    // a handful of pinched glitter!
+    if(lenny.pose === 'grab'){
+      for(let i = 0; i < 7; i++){
+        const a = i*0.9 + t*3;
+        ctx.fillStyle = RAINBOW[i % 6];
+        ctx.beginPath(); ctx.arc(Math.cos(a)*9, -72 + Math.sin(a)*5, 3.5, 0, Math.PI*2); ctx.fill();
+      }
+      if(!reduced) starShape(8, -82, 5 + Math.sin(t*10)*2, '#fff');
+    }
+
+    // head
+    ctx.fillStyle = dark;
+    ctx.beginPath(); ctx.arc(-14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(14, -52, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = grey;
+    ctx.beginPath(); ctx.arc(0, -36, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#F4F4F6';
+    ctx.beginPath(); ctx.ellipse(0, -31, 14, 12, 0, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(-7, -36, 6, 6.5, -0.3, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(7, -36, 6, 6.5, 0.3, 0, Math.PI*2); ctx.fill();
+    // big orange eyes that keep watching Starlight
+    const hx = uni.sx + 34, hy = G - uni.h - 80;
+    let ex = hx - x, ey = hy - (feet - 39*k - 36*k);
+    const c = Math.cos(-lenny.ang), s = Math.sin(-lenny.ang);
+    [ex, ey] = [ex*c - ey*s, ex*s + ey*c];
+    const el = Math.hypot(ex, ey) || 1; ex = ex/el*1.8; ey = ey/el*1.8;
+    ctx.fillStyle = '#FF9F1C';
+    ctx.beginPath(); ctx.arc(-7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7, -36, 4.2, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111';
+    ctx.beginPath(); ctx.arc(-7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7 + ex, -36 + ey, 2, 0, Math.PI*2); ctx.fill();
+    // nose and mouth
+    ctx.fillStyle = '#2B2B35';
+    ctx.beginPath(); ctx.ellipse(0, -26, 4, 3, 0, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#2B2B35'; ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    if(lenny.mood === 'happy' || lenny.mood === 'cheeky') ctx.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI);
+    else if(lenny.mood === 'sad') ctx.arc(0, -17, 4, 1.2*Math.PI, 1.8*Math.PI);
+    else { ctx.moveTo(-3, -21); ctx.lineTo(3, -21); }
+    ctx.stroke();
+    if(lenny.mood === 'cheeky'){ ctx.fillStyle = '#FF8FB8'; ctx.beginPath(); ctx.ellipse(1.5, -19, 2.6, 2.2, 0, 0, Math.PI*2); ctx.fill(); }
+    ctx.restore();
+  }
+
+  // ===== DRAWING: WORDS, BUBBLES AND THE "LENNY IS THIS CLOSE!" METER =====
+  function rrect(x, y, w, h, r){ ctx.beginPath(); ctx.roundRect ? ctx.roundRect(x, y, w, h, r) : ctx.rect(x, y, w, h); }
+
+  function drawBubble(){
+    const b = lenny.say; if(!b) return;
+    const a = Math.min(1, b.t*6, (b.dur - b.t)*4);
+    ctx.save(); ctx.globalAlpha = Math.max(0, a);
+    ctx.font = '800 16px "Nunito",system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const w = ctx.measureText(b.text).width + 22, h = 32;
+    const px = lenny.x, py = G - lenny.h - 88;
+    const bx = clamp(px - w/2 + 30, 8, W - w - 8), by = Math.max(70, py - h);
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#55556A'; ctx.lineWidth = 2;
+    rrect(bx, by, w, h, 14); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(clamp(px, bx + 12, bx + w - 24), by + h - 1); ctx.lineTo(clamp(px, bx + 12, bx + w - 24) + 12, by + h - 1); ctx.lineTo(clamp(px, bx + 12, bx + w - 24) + 2, by + h + 10); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.fillRect(clamp(px, bx + 12, bx + w - 24) + 1, by + h - 3, 10, 3);
+    ctx.fillStyle = '#3B3B4F'; ctx.fillText(b.text, bx + w/2, by + h/2 + 1);
+    ctx.restore();
+  }
+
+  function drawMeter(){
+    const mw = Math.min(330, W - 40), x0 = (W - mw)/2, y0 = 8;
+    const c = lenny.catchT > 0 && lenny.catchT < 1.15 ? 1 : lenny.close;
+    const near = c > 0.75;
+    const pulse = near && !reduced ? 1 + Math.sin(clock*12)*0.03 : 1;
+    ctx.save(); ctx.translate(W/2, y0 + 26); ctx.scale(pulse, pulse); ctx.translate(-W/2, -(y0 + 26));
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    rrect(x0, y0, mw, 52, 16); ctx.fill();
+    ctx.font = '19px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = near ? '#E8590C' : '#55556A';
+    ctx.fillText('Lenny is this close!', W/2, y0 + 15);
+    // the bar
+    const bx = x0 + 16, bw = mw - 50, by = y0 + 30, bh = 14;
+    ctx.fillStyle = '#EDE6F2'; rrect(bx, by, bw, bh, 7); ctx.fill();
+    const fill = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+    fill.addColorStop(0, '#8BE38F'); fill.addColorStop(0.55, '#FFD43B'); fill.addColorStop(1, '#FF6B6B');
+    ctx.fillStyle = fill; rrect(bx, by, Math.max(bh, bw*c), bh, 7); ctx.fill();
+    // Starlight's rainbow at the end...
+    RAIN.forEach((col, i) => { ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x0 + mw - 18, by + bh, 14 - i*2, Math.PI, Math.PI*2); ctx.stroke(); });
+    // ...and a little Lenny face chasing it
+    const fx = bx + Math.max(bh, bw*c) - 4, fy = by + bh/2;
+    ctx.fillStyle = '#55556A'; ctx.beginPath(); ctx.arc(fx - 7, fy - 8, 4, 0, Math.PI*2); ctx.arc(fx + 7, fy - 8, 4, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#9A9AA8'; ctx.beginPath(); ctx.arc(fx, fy, 10, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#FF9F1C'; ctx.beginPath(); ctx.arc(fx - 4, fy - 1, 2.8, 0, Math.PI*2); ctx.arc(fx + 4, fy - 1, 2.8, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#111'; ctx.beginPath(); ctx.arc(fx - 3.4, fy - 1, 1.2, 0, Math.PI*2); ctx.arc(fx + 4.6, fy - 1, 1.2, 0, Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawProgress(){
+    if(!L) return;
+    const x0 = 24, x1 = W - 40, y = H - 16;
+    const p = state === 'run' ? clamp((camX + UNI_X)/L.length, 0, 1) : 1;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 6;
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x1, y); ctx.stroke();
+    ctx.strokeStyle = '#F2559B';
+    ctx.beginPath(); ctx.moveTo(x0, y); ctx.lineTo(x0 + (x1 - x0)*p, y); ctx.stroke();
+    RAIN.forEach((col, i) => { ctx.strokeStyle = col; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(x1 + 14, y + 3, 12 - i*2.2, Math.PI, Math.PI*2); ctx.stroke(); });
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#F2559B'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(x0 + (x1 - x0)*p, y, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+  }
+
+  function drawMsg(){
+    if(!msg || msg.t > 1.3) return;
+    const s = reduced ? 1 : Math.min(1, msg.t*5)*(1 + 0.15*Math.max(0, 1 - msg.t*3));
+    ctx.save(); ctx.globalAlpha = Math.min(1, (1.3 - msg.t)*4);
+    ctx.translate(W/2, 150); ctx.scale(s, s); ctx.rotate(-0.04);
+    ctx.font = '58px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round'; ctx.lineWidth = 10; ctx.strokeStyle = '#fff'; ctx.strokeText(msg.text, 0, 0);
+    ctx.fillStyle = msg.col; ctx.fillText(msg.text, 0, 0);
+    ctx.restore();
+  }
+
+  function drawFloats(){
+    floats.forEach(f => {
+      ctx.save(); ctx.globalAlpha = Math.min(1, (1.2 - f.t)*3);
+      ctx.font = f.size + 'px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.lineJoin = 'round'; ctx.lineWidth = 6; ctx.strokeStyle = '#fff';
+      const y = f.y - f.t*40;
+      ctx.strokeText(f.text, f.x, y); ctx.fillStyle = f.col; ctx.fillText(f.text, f.x, y);
+      ctx.restore();
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    drawBackground();
+    drawRiver();
+    if(L){
+      L.obs.forEach(drawObstacle);
+      L.gems.forEach(g => { if(!g.got){ const x = g.x - camX; if(x > -20 && x < W + 20) drawGem(x, G - g.h, g.c, g.ph); } });
+      L.pows.forEach(p => { if(!p.got) drawPower(p); });
+    }
+    drawRainbow();
+    const riding = lenny.pose === 'grab' || (lenny.catchT > 0 && lenny.catchT < 0.35 && lenny.h > uni.h + 30);
+    if(!riding) drawLenny();
+    drawUnicorn();
+    if(riding) drawLenny();
+    parts.forEach(p => {
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life/p.max*1.5));
+      if(p.k === 'star') starShape(p.x, p.y, p.s*1.6, p.c);
+      else { ctx.fillStyle = p.c; ctx.beginPath(); ctx.arc(p.x, p.y, p.s, 0, Math.PI*2); ctx.fill(); }
+    });
+    ctx.globalAlpha = 1;
+    confetti.forEach(p => {
+      ctx.globalAlpha = Math.max(0, Math.min(1, p.life)); ctx.fillStyle = p.c;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillRect(-p.s/2, -p.s/4, p.s, p.s/2); ctx.restore();
+    });
+    ctx.globalAlpha = 1;
+    drawBubble();
+    drawFloats();
+    if(state !== 'intro') { drawMeter(); drawProgress(); }
+    drawMsg();
+  }
+
+  // ===== SIZE AND LOOP =====
+  function resize(){
+    const r = board.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+    if(!r.width || !r.height) return;
+    W = Math.round(clamp(H*r.width/r.height, 560, 820));
+    const oldX = UNI_X;
+    UNI_X = Math.round(W*0.4);
+    if(uni){
+      uni.sx += UNI_X - oldX;
+      if(state === 'run' || state === 'intro'){ uni.sx = UNI_X; }
+      if(state === 'bridge' || state === 'celebrate' || state === 'done') camX = L.length - UNI_X;
+      lenny.x += UNI_X - oldX;
+    }
+    cvs.width = Math.round(r.width*dpr); cvs.height = Math.round(r.height*dpr);
+    ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+    if(paused || state === 'done' || state === 'intro') draw();
+  }
+  addEventListener('resize', resize);
+  // also redraw at the right size whenever the play area itself changes size (turning the device, etc.)
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now - last)/1000); last = now;
+    if(!paused && state !== 'done') update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // the scene behind the start screen
+  L = buildLevel(1);
+  resetRunners();
+  lenny.close = 0.45; lenny.x = lennyHome(0.45);
+  updateHud();
+  resize();
+  ovBtn.focus({preventScroll:true});
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

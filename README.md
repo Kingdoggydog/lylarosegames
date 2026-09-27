@@ -12,6 +12,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Glitter Sky Unicorn | Unicorns, Flying, Action | `games/glitter-sky/` |
 | Unicorn Penalty Shoot-out | Unicorns, Sport | `games/unicorn-soccer/` |
 | Lenny's Banana Catch | Animals, Action | `games/lenny-banana-catch/` |
+| Glitter Getaway | Unicorns, Action, Animals | `games/glitter-getaway/` |
 
 ## Category pages (for Google)
 

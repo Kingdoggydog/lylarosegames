@@ -68,6 +68,16 @@ const games = [
     categories: ["animals", "action"],
     controls: "Drag or arrow keys"
   },
+  {
+    title: "Glitter Getaway",
+    folder: "glitter-getaway",
+    emoji: "✨",
+    colour: "#FDE2EC",
+    thumb: "thumb.jpg",
+    blurb: "Gallop to the rainbow bridge, jump the logs and grab the glitter before cheeky Lenny the Lemur pinches it!",
+    categories: ["unicorns", "action", "animals"],
+    controls: "Tap, Space or ↑"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
