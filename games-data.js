@@ -78,6 +78,16 @@ const games = [
     categories: ["unicorns", "action", "animals"],
     controls: "Tap, Space or ↑"
   },
+  {
+    title: "Chomper's Car Crunch",
+    folder: "chompers-car-crunch",
+    emoji: "🦖",
+    colour: "#E6DCFF",
+    thumb: "thumb.jpg",
+    blurb: "Stomp around as Chomper the friendly purple dinosaur, crunch cars and trucks into bouncing bits, and fill up your giant ROAR!",
+    categories: ["action", "animals"],
+    controls: "Drag, arrow keys or WASD"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
