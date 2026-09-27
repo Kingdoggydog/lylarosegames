@@ -89,6 +89,16 @@ const games = [
     categories: ["dinosaurs", "cars", "action", "animals"],
     controls: "Drag, arrow keys or WASD"
   },
+  {
+    title: "Whirlybird Rescue",
+    folder: "whirlybird-rescue",
+    emoji: "🚁",
+    colour: "#DDE3FF",
+    thumb: "thumb.jpg",
+    blurb: "Fly Whirly the helicopter with Lenny the Lemur, rescue animal friends stuck up trees and on rooftops, and land them at the picnic!",
+    categories: ["flying", "action", "animals"],
+    controls: "Drag, arrow keys or WASD"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

@@ -14,6 +14,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Lenny's Banana Catch | Animals, Action | `games/lenny-banana-catch/` |
 | Glitter Getaway | Unicorns, Action, Animals | `games/glitter-getaway/` |
 | Chomper's Car Crunch | Dinosaurs, Cars, Action, Animals | `games/chompers-car-crunch/` |
+| Whirlybird Rescue | Flying, Action, Animals | `games/whirlybird-rescue/` |
 
 ## Category pages (for Google)
 
