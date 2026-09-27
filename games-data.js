@@ -20,7 +20,8 @@ const categories = [
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
   { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
-  // { id: "cars", slug: "car-games", title: "Cars", heading: "Car games", emoji: "🚗", colour: "#FFE0CC", about: "Zoom zoom." },
+  { id: "dinosaurs", slug: "dinosaur-games", title: "Dinosaurs",     heading: "Dinosaur games",      emoji: "🦖", colour: "#DDF3E4", about: "Stomp, roar and chomp with friendly dinosaurs." },
+  { id: "cars",     slug: "car-games",     title: "Cars",            heading: "Car games",           emoji: "🚗", colour: "#FFD9B8", about: "Zoom, beep and crunch - games with cars and trucks." },
 ];
 
 // ===== GAMES =====
@@ -85,7 +86,7 @@ const games = [
     colour: "#E6DCFF",
     thumb: "thumb.jpg",
     blurb: "Stomp around as Chomper the friendly purple dinosaur, crunch cars and trucks into bouncing bits, and fill up your giant ROAR!",
-    categories: ["action", "animals"],
+    categories: ["dinosaurs", "cars", "action", "animals"],
     controls: "Drag, arrow keys or WASD"
   },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },

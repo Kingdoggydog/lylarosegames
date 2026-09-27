@@ -13,7 +13,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Unicorn Penalty Shoot-out | Unicorns, Sport | `games/unicorn-soccer/` |
 | Lenny's Banana Catch | Animals, Action | `games/lenny-banana-catch/` |
 | Glitter Getaway | Unicorns, Action, Animals | `games/glitter-getaway/` |
-| Chomper's Car Crunch | Action, Animals | `games/chompers-car-crunch/` |
+| Chomper's Car Crunch | Dinosaurs, Cars, Action, Animals | `games/chompers-car-crunch/` |
 
 ## Category pages (for Google)
 
@@ -25,6 +25,8 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Flying | `flying-games/` |
 | Animals | `animal-games/` |
 | Action | `action-games/` |
+| Dinosaurs | `dinosaur-games/` |
+| Cars | `car-games/` |
 
 ## Adding a new game
 
