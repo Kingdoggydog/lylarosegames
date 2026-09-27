@@ -1,0 +1,136 @@
+# Makes the gently-moving card pictures (games/<folder>/thumb-anim.svg) from each game's thumb.jpg.
+# Hub tool - run from the site folder:  python tools/moving-thumbs.py
+# Each game below lists its moving extras, placed on an 800 x 600 grid over its thumb.jpg.
+# If a game's thumb.jpg changes, re-check the positions for that game, then run this again.
+import base64, os
+U=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'games') + os.sep
+
+CSS = '''
+  .b{animation:bob var(--d,3s) ease-in-out infinite;animation-delay:var(--l,0s)}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--y,-3px))}}
+  .s{transform-box:fill-box;transform-origin:center;animation:sway var(--d,3s) ease-in-out infinite;animation-delay:var(--l,0s)}
+  @keyframes sway{0%,100%{transform:rotate(calc(var(--r,4deg) * -1))}50%{transform:rotate(var(--r,4deg))}}
+  .sp{transform-box:fill-box;transform-origin:center;opacity:0;animation:tw var(--d,2.8s) ease-in-out infinite;animation-delay:var(--l,0s)}
+  @keyframes tw{0%,100%{opacity:0;transform:scale(.3) rotate(0)}50%{opacity:1;transform:scale(1) rotate(45deg)}}
+  .pl{transform-box:fill-box;transform-origin:center;animation:pulse var(--d,2.4s) ease-in-out infinite;animation-delay:var(--l,0s)}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(var(--k,1.05))}}
+  .halo{transform-box:fill-box;transform-origin:center;animation:glow 4s ease-in-out infinite}
+  @keyframes glow{0%,100%{opacity:.35;transform:scale(.95)}50%{opacity:.9;transform:scale(1.12)}}
+  .puff{fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:puff 3.6s ease-out infinite;animation-delay:var(--l,0s)}
+  @keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.35)}15%{opacity:.95}100%{opacity:0;transform:translate(-70px,-120px) scale(1.6)}}
+  .ht{opacity:0;transform-box:fill-box;transform-origin:center;animation:heart 3.2s ease-out infinite;animation-delay:var(--l,0s)}
+  @keyframes heart{0%{opacity:0;transform:translateY(0) scale(.5)}20%{opacity:1}100%{opacity:0;transform:translateY(-60px) scale(1.1)}}
+  .spin{transform-box:fill-box;transform-origin:center;animation:spin var(--d,6s) linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .blur{transform-box:fill-box;transform-origin:center;animation:blur .25s linear infinite}
+  @keyframes blur{0%,100%{transform:scaleX(1);opacity:.75}50%{transform:scaleX(.35);opacity:.45}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht{opacity:0}}
+'''
+STAR='M0 -{a} L{b} -{b} L{a} 0 L{b} {b} L0 {a} L-{b} {b} L-{a} 0 L-{b} -{b}Z'
+def star(x,y,size=14,delay=0,colour='#FFD43B',dur=2.8):
+    a=size; b=round(size*.28,1)
+    return f'<path class="sp" style="--l:{delay}s;--d:{dur}s" transform="translate({x} {y})" d="{STAR.format(a=a,b=b)}" fill="{colour}" stroke="#fff" stroke-width="2"/>'
+
+class Pic:
+    def __init__(s, game, note):
+        s.game=game; s.note=note; s.defs=[]; s.layers=[]; s.n=0
+    def clip(s, shape):
+        s.n+=1; cid=f'c{s.n}'; s.defs.append(f'<clipPath id="{cid}">{shape}</clipPath>'); return cid
+    def region(s, cls, shape, style, pivot=None):
+        cid=s.clip(shape)
+        # a fill-box-less group: rotate/scale around given pivot using transform-origin in px
+        extra = f';transform-origin:{pivot[0]}px {pivot[1]}px;transform-box:view-box' if pivot else ''
+        s.layers.append(f'<g clip-path="url(#{cid})"><g class="{cls}" style="{style}{extra}"><use href="#pic"/></g></g>')
+    def rect(s,x,y,w,h,rx=6): return f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}"/>'
+    def ell(s,cx,cy,rx,ry): return f'<ellipse cx="{cx}" cy="{cy}" rx="{rx}" ry="{ry}"/>'
+    def bob(s,x,y,w,h,dy=-3,dur=3,delay=0): s.region('b', s.rect(x,y,w,h), f'--y:{dy}px;--d:{dur}s;--l:{delay}s')
+    def sway_ell(s,cx,cy,rx,ry,deg=6,dur=2.6,delay=0): s.region('s', s.ell(cx,cy,rx,ry), f'--r:{deg}deg;--d:{dur}s;--l:{delay}s', pivot=(cx,cy))
+    def sway_rect(s,x,y,w,h,px,py,deg=3,dur=3,delay=0): s.region('s', s.rect(x,y,w,h), f'--r:{deg}deg;--d:{dur}s;--l:{delay}s', pivot=(px,py))
+    def pulse(s,x,y,w,h,k=1.05,dur=2.4,delay=0): s.region('pl', s.rect(x,y,w,h), f'--k:{k};--d:{dur}s;--l:{delay}s', pivot=(x+w/2,y+h/2))
+    def spin_circle(s,cx,cy,r,dur=6): s.region('spin', f'<circle cx="{cx}" cy="{cy}" r="{r}"/>', f'--d:{dur}s', pivot=(cx,cy))
+    def add(s,svg): s.layers.append(svg)
+    def halo(s,cx,cy,r):
+        s.defs.append('<radialGradient id="rays"><stop offset=".55" stop-color="#FFF3B0" stop-opacity="0"/><stop offset=".72" stop-color="#FFF3B0" stop-opacity=".9"/><stop offset="1" stop-color="#FFF3B0" stop-opacity="0"/></radialGradient>')
+        s.add(f'<circle class="halo" cx="{cx}" cy="{cy}" r="{r}" fill="url(#rays)"/>')
+    def hearts(s,x,y,delays=(0,1.6)):
+        for d in delays: s.add(f'<path class="ht" style="--l:{d}s" transform="translate({x} {y}) scale(.9)" d="M0 6 C-10 -4 -14 -12 -7 -15 C-3 -17 0 -13 0 -11 C0 -13 3 -17 7 -15 C14 -12 10 -4 0 6Z" fill="#FF6FA3" stroke="#fff" stroke-width="1.5"/>')
+    def star(s,*a,**k): s.add(star(*a,**k))
+    def save(s):
+        jpg=base64.b64encode(open(U+s.game+os.sep+'thumb.jpg','rb').read()).decode()
+        svg=('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 600" width="800" height="600">\n'
+             f'<!-- Gently moving card picture for the home page: the game picture (same as thumb.jpg) plus {s.note}. Made by the hub chat. -->\n'
+             f'<style>{CSS}</style>\n<defs><image id="pic" width="800" height="600" href="data:image/jpeg;base64,{jpg}"/>{"".join(s.defs)}</defs>\n'
+             '<use href="#pic"/>\n' + '\n'.join(s.layers) + '\n</svg>\n')
+        open(U+s.game+os.sep+'thumb-anim.svg','w', encoding='utf-8').write(svg); return len(svg)
+
+# ---------------- each game ----------------
+p=Pic('chompers-choo-choo','steam puffs, a glowing sun, sparkles and a little engine chug')
+p.halo(672,113,78)
+p.bob(388,348,212,104,dy=-1.5,dur=.45)
+for d in (0,1.2,2.4): p.add(f'<circle class="puff" style="--l:{d}s" cx="562" cy="342" r="16"/>')
+p.star(160,190,15); p.star(640,160,12,.9); p.star(430,150,10,1.8)
+print('choo', p.save())
+
+p=Pic('glitter-sky','Rainbow bobbing as she flies, a floating sandwich, a bouncing cloud and twinkles')
+p.bob(470,70,100,100,dy=-5,dur=2.6,delay=.4)
+p.bob(465,330,290,220,dy=-3,dur=3.2,delay=.8)
+p.pulse(445,350,110,55,k=1.08,dur=1.6)
+p.bob(60,160,345,210,dy=-5,dur=2.4)
+p.star(700,130,12); p.star(90,440,13,.9); p.star(240,560,11,1.6); p.star(420,300,10,2.1)
+print('sky', p.save())
+
+p=Pic('unicorn-soccer','a spinning ball, a hopping crowd, sparkles on the rainbow shot and a swishing tail')
+p.bob(0,0,800,98,dy=-2,dur=.8)
+p.spin_circle(192,148,21,dur=3)
+p.sway_rect(620,440,110,150,625,455,deg=4,dur=2.2)
+p.star(230,180,12); p.star(280,300,10,.7); p.star(345,440,11,1.4); p.star(610,150,10,2)
+print('soccer', p.save())
+
+p=Pic('lenny-banana-catch','swinging monkeys, wobbling bananas, a glinting banana and Lenny bouncing')
+for i,(x) in enumerate((20,195,375,550)): p.bob(x,40,75,120,dy=-3,dur=2.6,delay=i*.5)
+p.sway_ell(168,275,34,22,deg=10,dur=1.6)
+p.sway_ell(540,195,34,22,deg=10,dur=1.8,delay=.5)
+p.sway_ell(375,428,28,16,deg=10,dur=1.5,delay=.9)
+p.bob(300,445,130,140,dy=-3,dur=1.8)
+p.star(560,175,12); p.star(185,258,9,1.1)
+print('banana', p.save())
+
+p=Pic('glitter-getaway','Starlight bobbing mid-jump, bobbing glitter gems, a glowing sun and twinkles')
+p.halo(650,120,58)
+p.bob(262,225,150,150,dy=-5,dur=2.2)
+for i,x in enumerate((512,560,605,650)): p.bob(x,418,40,50,dy=-4,dur=1.8,delay=i*.3)
+p.bob(425,390,45,50,dy=-4,dur=1.8,delay=1.2)
+p.pulse(120,332,160,66,k=1.05,dur=2.6)
+p.star(470,240,12); p.star(700,380,11,1); p.star(330,200,9,1.8)
+print('getaway', p.save())
+
+p=Pic('chompers-car-crunch','a pulsing CRUNCH!, Chomper stomping, a wobbling car and flying sparkles')
+p.pulse(170,180,310,120,k=1.06,dur=1.2)
+p.bob(65,300,160,135,dy=-3,dur=.9)
+p.sway_rect(180,120,95,80,227,160,deg=4,dur=1.1)
+p.sway_rect(620,415,85,105,662,470,deg=3,dur=1.3,delay=.4)
+p.star(300,330,12,colour='#FFD43B'); p.star(245,395,10,.6,colour='#FF8FB1'); p.star(330,390,9,1.2,colour='#7FD4FF')
+print('crunch', p.save())
+
+p=Pic('whirlybird-rescue','Whirly hovering with a spinning rotor, a floating balloon, a flapping bird and a bouncing cloud')
+p.bob(570,0,150,285,dy=-4,dur=2.2)
+p.add('<ellipse class="blur" cx="645" cy="57" rx="62" ry="5" fill="#fff" style="animation-name:blur"/>')
+p.bob(30,35,125,170,dy=-5,dur=3)
+p.bob(450,70,60,35,dy=-3,dur=.9)
+p.bob(435,265,120,80,dy=-3,dur=3.4,delay=.6)
+p.star(200,270,10); p.star(740,215,10,1.1)
+print('whirly', p.save())
+
+p=Pic('blossoms-easter-eggs','wobbling Easter eggs, rising hearts, bouncing clouds and a glowing sun')
+p.halo(748,50,52)
+for i,(cx,cy) in enumerate(((158,225),(287,183),(480,225),(367,315),(463,450))): p.sway_ell(cx,cy,26,30,deg=9,dur=1.8,delay=i*.35)
+p.sway_ell(543,145,26,40,deg=6,dur=1.2)
+for i,x in enumerate((60,260,460,660)): p.bob(x,60,80,55,dy=-3,dur=3,delay=i*.6)
+p.hearts(97,335,(0,1.6)); p.hearts(705,335,(.8,2.4)); p.hearts(400,440,(.4,2))
+print('blossom', p.save())
+
+p=Pic('lenny-memory-match','Lenny bobbing and waving, glowing matched cards and confetti sparkles')
+p.bob(35,140,190,185,dy=-4,dur=2)
+p.pulse(272,15,160,145,k=1.03,dur=1.6); p.pulse(437,15,160,145,k=1.03,dur=1.6,delay=.8)
+p.star(425,20,11); p.star(600,300,10,.9); p.star(270,440,10,1.7); p.star(750,180,9,1.2)
+print('memory', p.save())

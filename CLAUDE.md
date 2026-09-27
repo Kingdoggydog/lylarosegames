@@ -39,6 +39,7 @@ README.md           plain-English guide + table of all games
 games/<folder>/     one folder per game, fully self-contained
   index.html        the game
   thumb.jpg|svg     card picture (4:3, around 800 x 600)
+  thumb-anim.svg    optional gently-moving card picture (made by the hub from thumb.jpg - see below)
   share.jpg         share picture, 1200 x 630 (game picture + logo + name label)
 ```
 
@@ -94,3 +95,10 @@ Analytics, Search Console, the home page design, `home.js`, `styles.css`, `site.
 - Google Analytics ID is `G-EM2WKCXBEL`, set in `site.js`, which switches it on for every page. Never paste Google's tag into game pages.
 - The ONE exception: the home page `index.html` has Google's tag written directly in its `<head>` - Search Console uses it to verify ownership. Do not remove it. `site.js` notices it and skips, so visits aren't counted twice. If the ID ever changes, change it in both places.
 - `robots.txt` points search engines at `sitemap.xml`. Keep the sitemap up to date whenever a game or category page is added.
+
+## Moving card pictures (hub only)
+
+- Most games have `thumb-anim.svg`: the card picture (a copy of thumb.jpg) with small moving extras on top - steam, sparkles, a bobbing character. `games-data.js` points at it with `thumbAnim: "thumb-anim.svg"`. Google and share previews still use thumb.jpg.
+- Keep the movement subtle (Andy's choice). They stay still for anyone whose device asks for less motion.
+- **If a game chat changes a game's thumb.jpg, it must delete that game's `thumbAnim` line in games-data.js** (otherwise the old picture keeps showing). The hub remakes the moving version with `tools/moving-thumbs.py`.
+
