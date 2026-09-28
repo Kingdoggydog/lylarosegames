@@ -3,6 +3,8 @@
 # Each game below lists its moving extras, placed on an 800 x 600 grid over its thumb.jpg.
 # If a game's thumb.jpg changes, re-check the positions for that game, then run this again.
 import base64, os
+import sys
+ONLY=sys.argv[1:]   # e.g. python tools/moving-thumbs.py chompers-car-wash  (nothing = remake all)
 U=os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'games') + os.sep
 
 CSS = '''
@@ -26,7 +28,9 @@ CSS = '''
   @keyframes blur{0%,100%{transform:scaleX(1);opacity:.75}50%{transform:scaleX(.35);opacity:.45}}
   .dust{fill:#fff;opacity:0;transform-box:fill-box;transform-origin:center;animation:dust 1.2s ease-out infinite;animation-delay:var(--l,0s)}
   @keyframes dust{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:.85}100%{opacity:0;transform:translate(-55px,-8px) scale(1.3)}}
-  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust{opacity:0}}
+  .bub{opacity:0;animation:bub var(--d,3s) ease-out infinite;animation-delay:var(--l,0s)}
+  @keyframes bub{0%{opacity:0;transform:translate(0,0)}15%{opacity:.95}100%{opacity:0;transform:translate(var(--x,10px),-110px)}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust,.bub{opacity:0}}
 '''
 STAR='M0 -{a} L{b} -{b} L{a} 0 L{b} {b} L0 {a} L-{b} {b} L-{a} 0 L-{b} -{b}Z'
 def star(x,y,size=14,delay=0,colour='#FFD43B',dur=2.8):
@@ -58,6 +62,7 @@ class Pic:
         for d in delays: s.add(f'<path class="ht" style="--l:{d}s" transform="translate({x} {y}) scale(.9)" d="M0 6 C-10 -4 -14 -12 -7 -15 C-3 -17 0 -13 0 -11 C0 -13 3 -17 7 -15 C14 -12 10 -4 0 6Z" fill="#FF6FA3" stroke="#fff" stroke-width="1.5"/>')
     def star(s,*a,**k): s.add(star(*a,**k))
     def save(s):
+        if ONLY and s.game not in ONLY: return 0
         jpg=base64.b64encode(open(U+s.game+os.sep+'thumb.jpg','rb').read()).decode()
         svg=('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 600" width="800" height="600">\n'
              f'<!-- Gently moving card picture for the home page: the game picture (same as thumb.jpg) plus {s.note}. Made by the hub chat. -->\n'
@@ -149,3 +154,12 @@ for d in (.2,.6,1): p.add(f'<ellipse class="dust" style="--l:{d}s" cx="440" cy="
 p.pulse(719,397,46,40,k=1.1,dur=1.4); p.star(690,425,9,.5,colour='#FFF3B0')
 p.star(230,370,10); p.star(560,330,11,.9); p.star(760,150,10,1.7)
 print('race', p.save())
+
+p=Pic('chompers-car-wash','a scrubbing sponge, rising bubbles, a bouncy soapy car, a pulsing sign and sparkles')
+p.pulse(95,108,332,72,k=1.03,dur=2.4)
+p.sway_ell(221,290,52,42,deg=9,dur=.7)
+p.bob(62,318,405,200,dy=-2,dur=1.1)
+for i,(x,y,r,dx) in enumerate(((120,330,9,-8),(170,300,7,6),(230,340,10,-4),(150,420,8,10),(260,300,6,-10),(200,470,9,5))):
+    p.add(f'<circle class="bub" style="--l:{i*0.5}s;--d:{2.6+i%3*0.4}s;--x:{dx}px" cx="{x}" cy="{y}" r="{r}" fill="#FFFFFFB0" stroke="#9FD3F0" stroke-width="2"/>')
+p.star(310,320,11); p.star(470,300,10,.9); p.star(700,330,9,1.6)
+print('carwash', p.save())

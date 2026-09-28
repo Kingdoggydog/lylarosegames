@@ -158,6 +158,7 @@ const games = [
     emoji: "🧽",
     colour: "#FFD9B8",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Help Chomper scrub the mud off cars, spray away the bubbles and dry them with a fluffy towel - then paint them and add stickers!",
     categories: ["cars", "dinosaurs"],
     controls: "Drag, or arrow keys and Space"
