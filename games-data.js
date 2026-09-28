@@ -152,6 +152,16 @@ const games = [
     categories: ["unicorns", "sport", "action"],
     controls: "Tap or Space, Jump button or ↑"
   },
+  {
+    title: "Chomper's Car Wash",
+    folder: "chompers-car-wash",
+    emoji: "🧽",
+    colour: "#FFD9B8",
+    thumb: "thumb.jpg",
+    blurb: "Help Chomper scrub the mud off cars, spray away the bubbles and dry them with a fluffy towel - then paint them and add stickers!",
+    categories: ["cars", "dinosaurs"],
+    controls: "Drag, or arrow keys and Space"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

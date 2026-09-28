@@ -1,0 +1,1704 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chomper's Car Wash - Free Car Washing Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg1:#D6EEFF;
+    --bg2:#FDE2EC;
+    --purple:#7B4FD6;
+    --purple-d:#5A2FA0;
+    --pink:#FF4F9A;
+    --gold:#FFC23D;
+    --ink:#2F2350;
+    --card:#FFFFFFD9;
+    --tb:84px;   /* toolbar size (set by the game to fit the screen) */
+    --bs:64px;   /* tool button size */
+    --ph:64px;   /* paint pot row height */
+    --pb:56px;   /* paint pot size */
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--bg1) 0%,var(--bg2) 100%);
+    background-color:var(--bg1);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1200px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  /* the bar along the top: back link, title, cars washed and sound buttons */
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+  .back{order:1}
+  .snd{order:2;margin-left:auto;display:flex;gap:6px}
+  h1{order:3;flex-basis:100%;font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(24px,5.5vw,38px);margin:0;line-height:1;color:var(--purple);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .stats{order:4;display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .pill svg{width:26px;height:16px;display:block}
+  .cars{display:inline-flex;gap:2px}
+  .pill.bump{animation:bump .5s ease-out}
+  @keyframes bump{40%{transform:scale(1.25)}}
+  @media (min-width:1100px){
+    h1{order:2;flex:1 1 auto;min-width:0;font-size:clamp(24px,2.6vw,38px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .stats{order:3}
+    .snd{order:4;margin-left:0}
+  }
+  /* short screens: everything on one row, no title - the game gets the space */
+  @media (max-height:520px){
+    h1{display:none}
+    .stats{order:2;margin-right:auto}
+    .snd{margin-left:0}
+    .pill{font-size:13px;padding:5px 9px}
+  }
+  /* the car wash fills whatever space is left over */
+  .stage{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
+  .board{position:relative;width:100cqw;height:100cqh;border-radius:18px;overflow:hidden;background:#CFE6F2;box-shadow:0 10px 30px #5A2FA033;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+
+  /* the tool buttons: a column down the right (sideways screens) or a row along the bottom (upright screens) */
+  .tools{position:absolute;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;pointer-events:none}
+  .board.wide .tools{top:0;bottom:0;right:0;width:var(--tb);flex-direction:column;padding:6px 4px}
+  .board.tall .tools{left:0;right:0;bottom:0;height:var(--tb);flex-direction:row;padding:4px 6px}
+  .grp{display:flex;flex-direction:inherit;align-items:center;justify-content:center;gap:inherit}
+  .tool,.pot{pointer-events:auto;width:var(--bs);height:var(--bs);min-width:0;min-height:0;padding:0;border-radius:50%;background:#fff;box-shadow:0 4px 0 #C9B8F0;display:grid;place-items:center;position:relative;touch-action:manipulation;transition:transform .15s,opacity .2s}
+  .tool svg,.pot svg{width:74%;height:74%;display:block;pointer-events:none}
+  .tool:active,.pot:active{transform:translateY(3px);box-shadow:0 1px 0 #C9B8F0}
+  .tool.on{background:#FFF3C4;box-shadow:0 0 0 4px var(--gold),0 4px 0 #D9901A}
+  .tool.next{animation:nudge .55s ease-in-out infinite alternate;box-shadow:0 0 0 4px var(--pink),0 4px 0 #C9306F}
+  .tool:disabled{opacity:.35;cursor:default;animation:none}
+  .tool.done::after{content:"";position:absolute;right:-2px;top:-2px;width:22%;height:22%;border-radius:50%;background:#51CF66 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10'%3E%3Cpath d='M2 5.2 4.2 7.3 8 2.8' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/80% no-repeat;border:2px solid #fff}
+  .tool.go{background:#51CF66;box-shadow:0 4px 0 #2F9E44}
+  .tool.go.next{box-shadow:0 0 0 4px var(--pink),0 4px 0 #2F9E44}
+  @keyframes nudge{to{transform:scale(1.12)}}
+  /* paint pots: a row along the floor under the car */
+  .pots{position:absolute;z-index:2;left:0;display:flex;align-items:center;justify-content:center;gap:6px;height:var(--ph);box-sizing:border-box;padding:4px;pointer-events:none}
+  .board.wide .pots{bottom:0;right:var(--tb)}
+  .board.tall .pots{right:0;bottom:var(--tb)}
+  .pot{width:var(--pb);height:var(--pb);border-radius:16px;background:#FFFFFFE6}
+  .pot[aria-pressed="true"]{box-shadow:0 0 0 4px var(--gold),0 4px 0 #D9901A}
+  .pots.pop .pot{animation:potin .4s ease-out backwards}
+  .pots.pop .pot:nth-child(2){animation-delay:.05s} .pots.pop .pot:nth-child(3){animation-delay:.1s}
+  .pots.pop .pot:nth-child(4){animation-delay:.15s} .pots.pop .pot:nth-child(5){animation-delay:.2s} .pots.pop .pot:nth-child(6){animation-delay:.25s}
+  @keyframes potin{from{transform:translateY(40px) scale(.5);opacity:0}}
+  /* the big pointing hand that shows what to do next */
+  .hand{position:absolute;z-index:3;left:0;top:0;width:58px;height:76px;pointer-events:none;transform-origin:29px 2px;filter:drop-shadow(0 3px 3px #2F235040)}
+  .hand svg{width:100%;height:100%;display:block}
+  @media (prefers-reduced-motion: reduce){ .tool.next{animation:none;outline:4px solid var(--purple)} .pots.pop .pot{animation:none} }
+
+  .overlay{position:absolute;inset:0;z-index:4;display:flex;align-items:center;justify-content:center;background:#2F2350A6;padding:12px;cursor:default}
+  .panel{background:#fff;border-radius:18px;padding:14px 16px;text-align:center;max-width:390px;width:100%;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:8px}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--purple);line-height:1.05}
+  .panel p{margin:0;font-size:15px}
+  .panel .washedrow{font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+  .panel .washedrow svg{width:30px;height:18px}
+  .panel .key{font-size:14px;display:grid;grid-template-columns:auto auto;justify-content:center;gap:2px 10px;text-align:left}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--purple);color:#fff;font-size:17px;min-height:48px;min-width:48px}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
+  #ovBtn{background:var(--pink);box-shadow:0 5px 0 #C9306F;font-size:20px}
+  #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C9306F}
+  .back{font-weight:800;color:var(--purple-d);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  /* short screens: a more compact start panel so the Play button always fits */
+  @media (max-height:520px){
+    .panel{padding:10px 14px;gap:6px;max-width:520px}
+    .panel h2{font-size:25px}
+    .panel p{font-size:14px}
+    .panel .key{display:none}
+  }
+  /* PHONES ONLY: the car wash fills the whole screen; buttons and the car counter float over it */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:0;background:#CFE6F2}
+    .wrap{display:block;max-width:none;height:100%}
+    h1{display:none}
+    .stage{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);display:block}
+    .board{width:100%;height:100%;border-radius:0;box-shadow:none}
+    /* back, music and sound: small round buttons in the top-left corner (the tools use the right side) */
+    .bar{display:block}
+    .back,#music,#sound{position:fixed;z-index:5;top:calc(4px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;justify-content:center;align-items:center;display:inline-flex;background:#FFFFFFB3;box-shadow:0 2px 6px #2F235026;font-size:0;line-height:1}
+    .back{left:calc(4px + env(safe-area-inset-left,0px))}
+    .back::before{content:"←";content:"←" / "";font-size:22px;font-weight:800}
+    #music{left:calc(48px + env(safe-area-inset-left,0px))}
+    #sound{left:calc(92px + env(safe-area-inset-left,0px));font-size:20px}
+    #music::before{content:"🎵";content:"🎵" / "";font-size:20px}
+    #music[aria-label="Music off"]::before{opacity:.4}
+    #music[aria-label="Music off"]::after{content:"";position:absolute;left:10px;right:10px;top:50%;height:3px;border-radius:2px;background:#C92A2A;transform:rotate(-40deg)}
+    /* cars washed: a little see-through bubble next to the buttons */
+    .stats{position:fixed;z-index:4;top:calc(8px + env(safe-area-inset-top,0px));left:calc(138px + env(safe-area-inset-left,0px));pointer-events:none}
+    .pill{font-size:13px;padding:4px 9px;background:#FFFFFFA6;line-height:1.3}
+    .pill svg{width:22px;height:14px}
+    .wrap:has(#overlay:not([hidden])) .stats{display:none}
+    .overlay{padding:50px 8px 8px}
+    @media (orientation: landscape) { .overlay{padding:48px 8px 6px} }
+  }
+</style>
+<meta name="description" content="Chomper's Car Wash - a free car washing game for kids. Help Chomper the friendly purple dinosaur scrub the mud off cars, spray the bubbles away, dry them with a fluffy towel, then paint them and add stickers!">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/chompers-car-wash/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Chomper's Car Wash - Free Car Washing Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Chomper's Car Wash - a free car washing game for kids. Help Chomper the friendly purple dinosaur scrub the mud off cars, spray the bubbles away, dry them with a fluffy towel, then paint them and add stickers!">
+<meta property="og:url" content="https://lylarosegames.com/games/chompers-car-wash/">
+<meta property="og:image" content="https://lylarosegames.com/games/chompers-car-wash/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Chomper's Car Wash - free car washing game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: drag on the car (or arrow keys + Space) to scrub, spray and dry -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Chomper's Car Wash",
+   "url": "https://lylarosegames.com/games/chompers-car-wash/",
+   "description": "Chomper's Car Wash - a free car washing game for kids. Help Chomper the friendly purple dinosaur scrub the mud off cars, spray the bubbles away, dry them with a fluffy towel, then paint them and add stickers!",
+   "image": "https://lylarosegames.com/games/chompers-car-wash/share.jpg",
+   "genre": [
+    "Cars",
+    "Dinosaurs"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Car games",
+     "item": "https://lylarosegames.com/car-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Chomper's Car Wash",
+     "item": "https://lylarosegames.com/games/chompers-car-wash/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="back" href="../../">← All games</a>
+    <h1>Chomper's Car Wash</h1>
+    <div class="stats">
+      <span class="pill" id="washed" aria-label="Cars washed: 0"><span class="cars" id="carIcons"></span><span id="washN">0</span></span>
+    </div>
+    <div class="snd">
+      <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+      <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage">
+  <div class="board wide" id="board">
+    <canvas id="c"></canvas>
+
+    <div class="tools" id="tools">
+      <div class="grp" id="washTools">
+        <button class="tool" id="t-sponge" data-tool="sponge" aria-label="Soapy sponge">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><circle cx="18" cy="15" r="7" fill="#fff" stroke="#74C0FC" stroke-width="2.5"/><circle cx="31" cy="11" r="5" fill="#fff" stroke="#74C0FC" stroke-width="2.5"/><circle cx="44" cy="15" r="6" fill="#fff" stroke="#74C0FC" stroke-width="2.5"/><rect x="7" y="22" width="50" height="32" rx="10" fill="#FFD43B" stroke="#2F2350" stroke-width="4"/><rect x="9" y="40" width="46" height="12" rx="5" fill="#FFB700" opacity=".55"/><circle cx="20" cy="32" r="3.2" fill="#E0A100"/><circle cx="33" cy="36" r="2.6" fill="#E0A100"/><circle cx="45" cy="30" r="3" fill="#E0A100"/><circle cx="27" cy="46" r="2.4" fill="#E0A100"/><circle cx="44" cy="45" r="2.8" fill="#E0A100"/></svg>
+        </button>
+        <button class="tool" id="t-hose" data-tool="hose" aria-label="Water hose">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M8 16 Q2 30 12 36" fill="none" stroke="#2F2350" stroke-width="9" stroke-linecap="round"/><path d="M8 16 Q2 30 12 36" fill="none" stroke="#51CF66" stroke-width="4.5" stroke-linecap="round"/><path d="M12 10 H34 L44 5 V27 L34 22 H12 Z" fill="#40C057" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/><rect x="16" y="22" width="8" height="12" rx="3" fill="#2F9E44" stroke="#2F2350" stroke-width="3"/><path d="M47 30 Q44 40 47 44 Q50 40 47 30Z M56 34 Q53 44 56 48 Q59 44 56 34Z M50 46 Q47 56 50 60 Q53 56 50 46Z" fill="#4DABF7" stroke="#1C7ED6" stroke-width="1.5"/></svg>
+        </button>
+        <button class="tool" id="t-towel" data-tool="towel" aria-label="Fluffy towel">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M10 14 H54 V50 Q50 54 46 50 Q42 54 38 50 Q34 54 30 50 Q26 54 22 50 Q18 54 14 50 Q10 54 10 50 Z" fill="#FF8FC7" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/><rect x="10" y="22" width="44" height="5" fill="#fff" opacity=".85"/><rect x="10" y="40" width="44" height="5" fill="#fff" opacity=".85"/><path d="M10 14 H54 V20 H10Z" fill="#E64980" stroke="#2F2350" stroke-width="3"/></svg>
+        </button>
+      </div>
+      <div class="grp" id="stickTools" hidden>
+        <button class="tool" data-sticker="star" aria-label="Star sticker">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 6 39.6 23.5 58.5 25.3 44.2 37.9 48.4 56.5 32 46.8 15.6 56.5 19.8 37.9 5.5 25.3 24.4 23.5Z" fill="#FFD43B" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/></svg>
+        </button>
+        <button class="tool" data-sticker="heart" aria-label="Heart sticker">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 56 C10 40 4 30 8 20 C12 10 26 8 32 20 C38 8 52 10 56 20 C60 30 54 40 32 56Z" fill="#FF4F9A" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/><ellipse cx="20" cy="22" rx="5" ry="3.5" fill="#fff" opacity=".7"/></svg>
+        </button>
+        <button class="tool" data-sticker="flame" aria-label="Flame sticker">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 58 C16 58 10 46 14 34 C17 26 22 24 22 16 C28 20 30 26 29 30 C33 24 36 16 34 6 C46 14 54 28 50 42 C48 52 42 58 32 58Z" fill="#FF922B" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/><path d="M32 54 C24 54 21 47 24 41 C26 37 29 36 29 32 C34 36 36 40 35 44 C38 42 40 40 40 36 C44 42 42 54 32 54Z" fill="#FFE066"/></svg>
+        </button>
+        <button class="tool" data-sticker="foot" aria-label="Dinosaur footprint sticker">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="40" rx="15" ry="16" fill="#9775FA" stroke="#2F2350" stroke-width="4"/><ellipse cx="16" cy="18" rx="6" ry="9" transform="rotate(-25 16 18)" fill="#9775FA" stroke="#2F2350" stroke-width="4"/><ellipse cx="32" cy="11" rx="6" ry="9" fill="#9775FA" stroke="#2F2350" stroke-width="4"/><ellipse cx="48" cy="18" rx="6" ry="9" transform="rotate(25 48 18)" fill="#9775FA" stroke="#2F2350" stroke-width="4"/></svg>
+        </button>
+        <button class="tool go" id="goBtn" aria-label="All done - drive away">
+          <svg viewBox="0 0 64 64" aria-hidden="true"><path d="M14 26 H34 V14 L54 32 L34 50 V38 H14 Z" fill="#fff" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="pots" id="pots" role="group" aria-label="Paint colours" hidden></div>
+
+    <div class="hand" id="hand" hidden aria-hidden="true">
+      <svg viewBox="0 0 58 76"><g stroke="#2F2350" stroke-width="6" stroke-linejoin="round"><rect x="22" y="3" width="14" height="42" rx="7"/><rect x="8" y="32" width="42" height="36" rx="13"/><circle cx="41" cy="36" r="7"/><circle cx="48" cy="44" r="6"/><ellipse cx="11" cy="47" rx="6" ry="10" transform="rotate(-25 11 47)"/><rect x="13" y="64" width="32" height="10" rx="4"/></g><g><rect x="22" y="3" width="14" height="42" rx="7" fill="#fff"/><rect x="8" y="32" width="42" height="36" rx="13" fill="#fff"/><circle cx="41" cy="36" r="7" fill="#fff"/><circle cx="48" cy="44" r="6" fill="#fff"/><ellipse cx="11" cy="47" rx="6" ry="10" transform="rotate(-25 11 47)" fill="#fff"/><rect x="13" y="64" width="32" height="10" rx="4" fill="#B197FC"/><path d="M25 12 v10" stroke="#E6DAFF" stroke-width="3" stroke-linecap="round"/></g></svg>
+    </div>
+
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2>Chomper's Car Wash</h2>
+        <p>Muddy cars need a wash! Scrub with the sponge, spray with the hose and dry with the fluffy towel. Then pick a shiny new colour and add stickers!</p>
+        <p class="washedrow" id="ovCars" hidden></p>
+        <button id="ovBtn">Let's wash! ▶</button>
+        <div class="key" id="ovKey"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const $ = id => document.getElementById(id);
+  const cvs = $('c'), ctx = cvs.getContext('2d');
+  const board = $('board'), overlay = $('overlay'), ovBtn = $('ovBtn'), ovKey = $('ovKey'), ovCars = $('ovCars');
+  const washTools = $('washTools'), stickTools = $('stickTools'), potsEl = $('pots'), handEl = $('hand'), goBtn = $('goBtn');
+  const toolBtns = {sponge: $('t-sponge'), hose: $('t-hose'), towel: $('t-towel')};
+  const soundBtn = $('sound'), musicBtn = $('music'), washedEl = $('washed'), carIconsEl = $('carIcons'), washNEl = $('washN');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const PHONE = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  const FONT = '"Chewy","Comic Sans MS",cursive';
+  const TAU = Math.PI*2;
+  const O = '#2F2350';                      // outline colour
+  const KEY = 'lrg-chompers-car-wash-';
+
+  const rand = (a, b) => a + Math.random()*(b - a);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = u => 1 - Math.pow(1 - clamp(u, 0, 1), 3);
+  function shade(hex, f){
+    const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = n >> 8 & 255, b = n & 255;
+    if(f < 0){ r *= 1 + f; g *= 1 + f; b *= 1 + f; } else { r += (255 - r)*f; g += (255 - g)*f; b += (255 - b)*f; }
+    return 'rgb(' + (r|0) + ',' + (g|0) + ',' + (b|0) + ')';
+  }
+  function rr(g, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    g.beginPath(); g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function ell(g, x, y, rx, ry, rot){ g.beginPath(); g.ellipse(x, y, Math.max(0.1, rx), Math.max(0.1, ry), rot || 0, 0, TAU); }
+  function line(g, x1, y1, x2, y2){ g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
+  function poly(g, pts){ g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); }
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  // ===== THE CARS (drawn side-on, facing right, wheels on the ground at y = 0) =====
+  const TYPES = [
+    {id: 'red',      col: '#FF5A5F', eye: [32, -130, 15],  mouth: [158, -50], honk: [466, 587]},
+    {id: 'van',      col: '#FFD43B', eye: [112, -150, 16], mouth: [190, -56], honk: [330, 415]},
+    {id: 'blue',     col: '#4DA3FF', eye: [46, -132, 15],  mouth: [196, -52], honk: [392, 494]},
+    {id: 'icecream', col: '#FF9ACB', eye: [112, -150, 16], mouth: [190, -56], honk: 'tune'},
+    {id: 'tow',      col: '#FF922B', eye: [118, -146, 16], mouth: [194, -56], honk: [294, 370]},
+    {id: 'bus',      col: '#FFC21A', eye: [206, -168, 15], mouth: [222, -58], honk: [220, 277]}
+  ];
+  const PAINTS = [
+    {col: '#FF5A5F', name: 'Red'}, {col: '#FFD43B', name: 'Yellow'}, {col: '#51CF66', name: 'Green'},
+    {col: '#4DA3FF', name: 'Blue'}, {col: '#B197FC', name: 'Purple'}, {col: '#FF8FC7', name: 'Pink'}
+  ];
+  const GLASS = '#C5ECFF';
+
+  function body(g, col, path){
+    path(); g.fillStyle = col; g.fill();
+    // a darker skirt along the bottom and a light shine along the top
+    g.save(); path(); g.clip();
+    g.fillStyle = shade(col, -0.16); g.fillRect(-300, -58, 600, 60);
+    g.restore();
+    path(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+  }
+  function win(g, pts){
+    poly(g, pts); g.fillStyle = GLASS; g.fill();
+    g.save(); poly(g, pts); g.clip();
+    const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    const x0 = Math.min(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+    g.fillStyle = 'rgba(255,255,255,0.75)';
+    g.beginPath(); g.moveTo(x0 + 8, y1); g.lineTo(x0 + 22, y0); g.lineTo(x0 + 34, y0); g.lineTo(x0 + 20, y1); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.45)';
+    g.beginPath(); g.moveTo(x0 + 28, y1); g.lineTo(x0 + 40, y0); g.lineTo(x0 + 45, y0); g.lineTo(x0 + 33, y1); g.closePath(); g.fill();
+    g.restore();
+    poly(g, pts); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+  }
+  function wheel(g, x, r, path){
+    // a dark wheel arch cut into the body, then the wheel
+    if(path){ g.save(); path(); g.clip(); g.fillStyle = '#3B3355'; ell(g, x, -r, r + 8, r + 8); g.fill(); g.restore(); }
+    g.fillStyle = '#3A3450'; ell(g, x, -r, r, r); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+    g.fillStyle = '#E9ECF5'; ell(g, x, -r, r*0.52, r*0.52); g.fill(); g.lineWidth = 3; g.stroke();
+    g.fillStyle = '#ADB5C7'; for(let i = 0; i < 5; i++){ const a = i*TAU/5; ell(g, x + Math.cos(a)*r*0.3, -r + Math.sin(a)*r*0.3, 2.4, 2.4); g.fill(); }
+  }
+  function light(g, x, y, rx, ry, col){ g.fillStyle = col; ell(g, x, y, rx, ry); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke(); }
+  function bumper(g, x, y, w, h){ g.fillStyle = '#DDE3EE'; rr(g, x, y, w, h, h/2); g.fill(); g.lineWidth = 3.5; g.strokeStyle = O; g.stroke(); }
+
+  function drawCar(g, t, col){
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    const dark = shade(col, -0.2);
+    if(t === 'red'){
+      const P = () => { g.beginPath(); g.moveTo(-160, -24); g.lineTo(-167, -62); g.quadraticCurveTo(-172, -100, -148, -108); g.lineTo(-118, -152); g.quadraticCurveTo(-108, -168, -86, -168); g.lineTo(28, -168); g.quadraticCurveTo(48, -168, 60, -154); g.lineTo(98, -106); g.lineTo(150, -98); g.quadraticCurveTo(178, -93, 178, -62); g.lineTo(174, -24); g.closePath(); };
+      body(g, col, P);
+      win(g, [[-146, -104], [-112, -152], [-42, -154], [-42, -104]]);
+      win(g, [[-28, -104], [-28, -154], [30, -154], [44, -150], [80, -104]]);
+      g.strokeStyle = O; g.lineWidth = 3; line(g, -35, -100, -35, -34); g.strokeStyle = dark; g.lineWidth = 5; line(g, -20, -86, -2, -86);
+      light(g, 166, -76, 9, 8, '#FFF3B0'); g.fillStyle = '#FF3B3B'; rr(g, -170, -94, 10, 18, 4); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      bumper(g, 150, -40, 32, 14); bumper(g, -172, -40, 30, 14);
+      wheel(g, -100, 31, P); wheel(g, 106, 31, P);
+    } else if(t === 'blue'){
+      const P = () => { g.beginPath(); g.moveTo(-198, -26); g.lineTo(-204, -66); g.quadraticCurveTo(-206, -100, -176, -104); g.lineTo(-116, -108); g.lineTo(-82, -160); g.quadraticCurveTo(-74, -170, -58, -170); g.lineTo(48, -170); g.quadraticCurveTo(62, -170, 72, -160); g.lineTo(116, -110); g.lineTo(186, -100); g.quadraticCurveTo(212, -96, 212, -66); g.lineTo(206, -26); g.closePath(); };
+      body(g, col, P);
+      g.fillStyle = 'rgba(255,255,255,0.85)'; g.save(); P(); g.clip(); g.fillRect(-220, -84, 440, 9); g.restore();
+      win(g, [[-106, -110], [-74, -158], [-12, -158], [-12, -110]]);
+      win(g, [[2, -110], [2, -158], [50, -158], [62, -154], [100, -110]]);
+      g.strokeStyle = O; g.lineWidth = 3; line(g, -5, -104, -5, -32); line(g, -110, -104, -112, -32);
+      g.strokeStyle = dark; g.lineWidth = 5; line(g, 14, -94, 32, -94); line(g, -96, -94, -78, -94);
+      light(g, 200, -80, 10, 8, '#FFF3B0'); g.fillStyle = '#FF3B3B'; rr(g, -208, -96, 11, 18, 4); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      bumper(g, 186, -42, 32, 14); bumper(g, -212, -42, 32, 14);
+      wheel(g, -128, 31, P); wheel(g, 130, 31, P);
+    } else if(t === 'van' || t === 'icecream'){
+      const P = () => { g.beginPath(); g.moveTo(-198, -26); g.lineTo(-200, -186); g.quadraticCurveTo(-200, -206, -180, -206); g.lineTo(78, -206); g.quadraticCurveTo(96, -206, 104, -194); g.lineTo(170, -118); g.quadraticCurveTo(204, -112, 204, -84); g.lineTo(202, -26); g.closePath(); };
+      if(t === 'icecream'){
+        // a giant ice cream on the roof
+        g.fillStyle = '#F4B860'; g.lineWidth = 4.5; g.strokeStyle = O;
+        g.beginPath(); g.moveTo(-94, -236); g.lineTo(-42, -236); g.lineTo(-68, -202); g.closePath(); g.fill(); g.stroke();
+        g.strokeStyle = '#C98A2E'; g.lineWidth = 2; line(g, -84, -232, -62, -210); line(g, -70, -234, -54, -214); line(g, -52, -234, -74, -210);
+        g.lineWidth = 4.5; g.strokeStyle = O;
+        g.fillStyle = '#A6F0D5'; ell(g, -80, -246, 18, 15); g.fill(); g.stroke();
+        g.fillStyle = '#FF8FC7'; ell(g, -58, -250, 19, 16); g.fill(); g.stroke();
+        g.fillStyle = '#FFF4E0'; ell(g, -68, -268, 15, 13); g.fill(); g.stroke();
+        g.fillStyle = '#E03131'; ell(g, -66, -284, 6, 6); g.fill(); g.lineWidth = 3; g.stroke();
+        [[-84, -248, '#FF6B6B'], [-56, -254, '#4DABF7'], [-72, -268, '#FCC419'], [-62, -242, '#9775FA']].forEach(([x, y, c]) => { g.fillStyle = c; rr(g, x - 3, y - 1.5, 7, 3, 1.5); g.fill(); });
+      }
+      body(g, col, P);
+      if(t === 'icecream'){
+        // white top half, a serving hatch with a stripy awning
+        g.save(); P(); g.clip(); g.fillStyle = '#FFF8F0'; g.fillRect(-210, -210, 420, 88); g.restore();
+        P(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+        g.fillStyle = '#FFE8A3'; rr(g, -176, -176, 150, 50, 8); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+        g.fillStyle = '#F4B860'; poly(g, [[-150, -150], [-136, -150], [-143, -134]]); g.fill();
+        g.fillStyle = '#FF8FC7'; ell(g, -143, -154, 8, 7); g.fill();
+        g.fillStyle = '#F4B860'; poly(g, [[-70, -150], [-56, -150], [-63, -134]]); g.fill();
+        g.fillStyle = '#A6F0D5'; ell(g, -63, -154, 8, 7); g.fill();
+        for(let i = 0; i < 6; i++){ g.fillStyle = i % 2 ? '#fff' : '#FF4F9A'; g.beginPath(); g.moveTo(-184 + i*28, -192); g.lineTo(-156 + i*28, -192); g.lineTo(-156 + i*28, -184); g.quadraticCurveTo(-170 + i*28, -172, -184 + i*28, -184); g.closePath(); g.fill(); }
+        g.strokeStyle = O; g.lineWidth = 3.5; rr(g, -186, -196, 170, 10, 3); g.stroke();
+      } else {
+        g.fillStyle = dark; g.save(); P(); g.clip(); g.fillRect(-210, -104, 420, 16); g.restore();
+        P(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+        win(g, [[-182, -186], [-110, -186], [-110, -134], [-182, -134]]);
+        g.strokeStyle = O; g.lineWidth = 3; line(g, -30, -196, -30, -32); line(g, 56, -196, 56, -32);
+        g.strokeStyle = dark; g.lineWidth = 6; line(g, -46, -118, -46, -94);
+      }
+      win(g, [[64, -190], [96, -190], [160, -118], [64, -118]]);
+      light(g, 196, -94, 9, 10, '#FFF3B0'); g.fillStyle = '#FF3B3B'; rr(g, -204, -110, 10, 22, 4); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      g.strokeStyle = shade(col, -0.35); g.lineWidth = 5; line(g, 70, -100, 88, -100);
+      bumper(g, 180, -42, 30, 14); bumper(g, -210, -42, 30, 14);
+      wheel(g, -122, 33, P); wheel(g, 128, 33, P);
+    } else if(t === 'tow'){
+      const Cab = () => { g.beginPath(); g.moveTo(34, -26); g.lineTo(34, -178); g.quadraticCurveTo(34, -194, 50, -194); g.lineTo(104, -194); g.quadraticCurveTo(118, -194, 124, -182); g.lineTo(174, -116); g.quadraticCurveTo(206, -110, 206, -82); g.lineTo(204, -26); g.closePath(); };
+      const Bed = () => { g.beginPath(); rr(g, -206, -100, 250, 74, 10); };
+      // the crane arm and hook (behind the bed)
+      g.lineCap = 'round';
+      g.strokeStyle = O; g.lineWidth = 20; line(g, -40, -104, -160, -186);
+      g.strokeStyle = '#ADB5C7'; g.lineWidth = 12; line(g, -40, -104, -160, -186);
+      g.strokeStyle = O; g.lineWidth = 3; line(g, -164, -184, -190, -122);
+      g.lineWidth = 5; g.strokeStyle = O; g.beginPath(); g.arc(-186, -112, 10, -Math.PI*0.4, Math.PI*1.1); g.stroke();
+      g.strokeStyle = '#FFD43B'; g.lineWidth = 2.5; g.beginPath(); g.arc(-186, -112, 10, -Math.PI*0.4, Math.PI*1.1); g.stroke();
+      g.fillStyle = '#FFD43B'; ell(g, -40, -104, 9, 9); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      body(g, '#ADB5C7', Bed);
+      g.fillStyle = col; g.save(); Bed(); g.clip(); g.fillRect(-210, -80, 260, 18); g.restore();
+      Bed(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+      body(g, col, Cab);
+      win(g, [[54, -178], [104, -178], [160, -118], [54, -118]]);
+      // flashing roof light
+      g.fillStyle = '#FFA94D'; rr(g, 58, -210, 34, 16, 6); g.fill(); g.lineWidth = 3.5; g.strokeStyle = O; g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.7)'; rr(g, 64, -206, 10, 6, 3); g.fill();
+      light(g, 198, -92, 9, 10, '#FFF3B0'); g.fillStyle = '#FF3B3B'; rr(g, -210, -94, 10, 18, 4); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      g.strokeStyle = shade(col, -0.35); g.lineWidth = 5; line(g, 60, -100, 78, -100);
+      bumper(g, 180, -42, 30, 14);
+      wheel(g, -140, 31, Bed); wheel(g, -70, 31, Bed); wheel(g, 136, 31, Cab);
+    } else if(t === 'bus'){
+      const P = () => { g.beginPath(); g.moveTo(-236, -28); g.lineTo(-236, -196); g.quadraticCurveTo(-236, -218, -212, -218); g.lineTo(206, -218); g.quadraticCurveTo(230, -218, 232, -194); g.lineTo(238, -96); g.quadraticCurveTo(240, -70, 234, -28); g.closePath(); };
+      body(g, col, P);
+      g.save(); P(); g.clip(); g.fillStyle = O; g.fillRect(-240, -128, 480, 7); g.fillRect(-240, -104, 480, 7); g.restore();
+      for(let i = 0; i < 5; i++) win(g, [[-216 + i*68, -198], [-162 + i*68, -198], [-162 + i*68, -146], [-216 + i*68, -146]]);
+      // the door, and the big front windscreen
+      g.fillStyle = shade(col, -0.08); rr(g, 128, -200, 52, 168, 6); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+      win(g, [[134, -194], [174, -194], [174, -136], [134, -136]]);
+      win(g, [[188, -198], [218, -198], [226, -136], [188, -136]]);
+      light(g, 230, -64, 7, 10, '#FFF3B0'); g.fillStyle = '#FF3B3B'; rr(g, -242, -80, 10, 20, 4); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+      g.fillStyle = '#FF3B3B'; ell(g, -200, -226, 6, 5); g.fill(); ell(g, 196, -226, 6, 5); g.fill();
+      bumper(g, 214, -42, 30, 14); bumper(g, -246, -42, 30, 14);
+      wheel(g, -150, 34, P); wheel(g, 152, 34, P);
+    }
+  }
+
+  // ===== THE CAR'S LAYERS (the clean car, the mud, the foam and the water drops) =====
+  // Each layer is its own little picture of the car, so rubbing just wipes the top layer away.
+  const BX0 = -262, BY0 = -296, BW = 524, BH = 312, R = 1.5;
+  const MW = Math.round(BW*R), MH = Math.round(BH*R);
+  function mk(){ const c = document.createElement('canvas'); c.width = MW; c.height = MH; return c; }
+  const Lc = {car: mk(), car2: mk(), mask: mk(), dirt: mk(), foam: mk(), wet: mk(), fx: mk()};
+  const G = {}; Object.keys(Lc).forEach(k => { G[k] = Lc[k].getContext('2d'); });
+  function local(g){ g.setTransform(R, 0, 0, R, -BX0*R, -BY0*R); }
+  function wipe(g){ g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'source-over'; g.clearRect(0, 0, MW, MH); local(g); }
+  function clipToCar(g){ g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.globalCompositeOperation = 'destination-in'; g.drawImage(Lc.mask, 0, 0); g.restore(); }
+  let maskA = null;
+  function insideAt(x, y){
+    if(!maskA) return false;
+    const px = ((x - BX0)*R)|0, py = ((y - BY0)*R)|0;
+    if(px < 0 || py < 0 || px >= MW || py >= MH) return false;
+    return maskA[(py*MW + px)*4 + 3] > 60;
+  }
+  // a grid of little squares over the car, to work out how much has been cleaned
+  const CELL = 13, GW = Math.ceil(BW/CELL), GH = Math.ceil(BH/CELL);
+  const cellIn = new Uint8Array(GW*GH), cellDone = new Uint8Array(GW*GH);
+  let nIn = 1, nDone = 0;
+  function setupCells(){
+    nIn = 0;
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++){
+      const x = BX0 + (i + 0.5)*CELL, y = BY0 + (j + 0.5)*CELL;
+      const v = insideAt(x, y) ? 1 : 0; cellIn[j*GW + i] = v; nIn += v;
+    }
+    nIn = Math.max(1, nIn);
+  }
+  function resetCells(){ cellDone.fill(0); nDone = 0; }
+  function markCells(x, y, r){
+    const i0 = Math.max(0, Math.floor((x - r - BX0)/CELL)), i1 = Math.min(GW - 1, Math.floor((x + r - BX0)/CELL));
+    const j0 = Math.max(0, Math.floor((y - r - BY0)/CELL)), j1 = Math.min(GH - 1, Math.floor((y + r - BY0)/CELL));
+    let got = 0;
+    for(let j = j0; j <= j1; j++) for(let i = i0; i <= i1; i++){
+      const k = j*GW + i; if(!cellIn[k] || cellDone[k]) continue;
+      const cx = BX0 + (i + 0.5)*CELL - x, cy = BY0 + (j + 0.5)*CELL - y;
+      if(cx*cx + cy*cy <= r*r){ cellDone[k] = 1; nDone++; got++; }
+    }
+    return got;
+  }
+  const progress = () => nDone/nIn;
+  function eraseAt(g, x, y, r){
+    g.save(); g.globalCompositeOperation = 'destination-out';
+    const gr = g.createRadialGradient(x, y, r*0.35, x, y, r);
+    gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.restore();
+  }
+  function bubble(g, x, y, r){
+    g.fillStyle = 'rgba(255,255,255,0.96)'; ell(g, x, y, r, r); g.fill();
+    g.strokeStyle = 'rgba(116,192,252,0.85)'; g.lineWidth = 1.6; g.stroke();
+    g.fillStyle = 'rgba(165,216,255,0.6)'; ell(g, x + r*0.25, y + r*0.3, r*0.45, r*0.3); g.fill();
+    g.fillStyle = '#fff'; ell(g, x - r*0.35, y - r*0.35, r*0.22, r*0.22); g.fill();
+  }
+  function foamAt(x, y, r){
+    const g = G.foam;
+    g.fillStyle = 'rgba(255,255,255,0.8)'; ell(g, x + rand(-6, 6), y + rand(-6, 6), r*0.5, r*0.42); g.fill();
+    for(let i = 0; i < 3; i++){ const a = rand(0, TAU), d = rand(0, r*0.75); bubble(g, x + Math.cos(a)*d, y + Math.sin(a)*d, rand(4, 12)); }
+  }
+  function dropAt(g, x, y, s){
+    g.fillStyle = 'rgba(140,208,255,0.8)'; g.beginPath(); g.moveTo(x, y - s*1.5); g.quadraticCurveTo(x + s, y - s*0.2, x + s*0.85, y + s*0.35);
+    g.arc(x, y + s*0.35, s*0.85, 0, Math.PI); g.quadraticCurveTo(x - s, y - s*0.2, x, y - s*1.5); g.fill();
+    g.strokeStyle = 'rgba(28,126,214,0.55)'; g.lineWidth = 1.3; g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.95)'; ell(g, x - s*0.3, y, s*0.22, s*0.3); g.fill();
+  }
+  let foamDirty = false, wetDirty = false;
+
+  function makeMud(){
+    const g = G.dirt; wipe(g);
+    // an all-over muddy film...
+    g.fillStyle = 'rgba(125,82,40,0.5)'; g.fillRect(BX0, BY0, BW, BH);
+    clipToCar(g);
+    // ...big mud splats with drips...
+    const inside = [];
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++) if(cellIn[j*GW + i]) inside.push([BX0 + (i + 0.5)*CELL, BY0 + (j + 0.5)*CELL]);
+    const n = 22;
+    for(let s = 0; s < n; s++){
+      const [cx, cy] = pick(inside), col = pick(['#7A4A22', '#8B5A2B', '#6B3F1D', '#946338']);
+      g.fillStyle = col;
+      const big = rand(14, 30);
+      ell(g, cx, cy, big, big*rand(0.7, 1)); g.fill();
+      for(let k = 0; k < 6; k++){ const a = rand(0, TAU), d = big*rand(0.6, 1.2); ell(g, cx + Math.cos(a)*d, cy + Math.sin(a)*d, big*rand(0.25, 0.5), big*rand(0.25, 0.45)); g.fill(); }
+      for(let k = 0; k < 2; k++){ const dx = cx + rand(-big*0.6, big*0.6); rr(g, dx - 4, cy, 8, big*rand(0.8, 1.8), 4); g.fill(); ell(g, dx, cy + big*1.6, 5.5, 5.5); g.fill(); }
+      for(let k = 0; k < 7; k++){ const a = rand(0, TAU), d = big*rand(1.4, 2.3); ell(g, cx + Math.cos(a)*d, cy + Math.sin(a)*d, rand(2, 4.5), rand(2, 4.5)); g.fill(); }
+    }
+    // ...and a thick muddy band along the bottom, splashed up from puddles
+    g.fillStyle = 'rgba(107,63,29,0.75)';
+    for(let x = BX0; x < BX0 + BW; x += 14){ ell(g, x, -12, 14, rand(22, 42)); g.fill(); }
+    clipToCar(g);
+  }
+  function makeWet(){
+    const g = G.wet; wipe(g);
+    g.fillStyle = 'rgba(150,212,255,0.3)'; g.fillRect(BX0, BY0, BW, BH);
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++){
+      if(!cellIn[j*GW + i]) continue;
+      if(Math.random() < 0.55) dropAt(g, BX0 + (i + Math.random())*CELL, BY0 + (j + Math.random())*CELL, rand(3, 6.5));
+    }
+    clipToCar(g);
+  }
+  function paintCarLayer(g, col){ wipe(g); drawCar(g, car.t.id, col); }
+
+  // ===== SAVED STUFF =====
+  let washedCount = load(KEY + 'count', 0)|0;
+  let washedCols = load(KEY + 'cols', []); if(!Array.isArray(washedCols)) washedCols = [];
+  let muted = load(KEY + 'muted', false);
+  let musicOn = load(KEY + 'music', true);
+  let typeIdx = load(KEY + 'next', 0)|0;
+
+  // ===== GAME STATE =====
+  let CW = 800, CH = 500, PX = 1;
+  let tall = false, phone = false, k = 1, carX = 300, groundY = 400, tbSize = 84, topPad = 10, playW = 700;
+  let started = false, clock = 0;
+  let stage = 'intro', stageT = 0, tool = null, need = null, finishing = 0, idleT = 0, everScrubbed = false;
+  let car = null;
+  const fades = {dirt: 1, foam: 1, wet: 1};
+  let wetIn = 1;                 // the water drops fading in after the rinse
+  let parts = [], words = [], ambient = [];
+  let sticker = null;            // the sticker picked in the "make it fancy" part
+  const aim = {x: 0, y: 0, down: false, seen: false, kb: false, lastX: 0, lastY: 0, moved: 0};
+  const keys = new Set();
+  let scrubSnd = 0, giggleAt = 0, shakeAt = 0, lastHitT = 0, goReadyT = 0;
+  const ch = {x: 0, y: 0, cs: 1, face: -1, blinkT: 2, blink: 0, giggleT: 0, shakeT: 0, danceT: 0, thumbT: 0, roarT: 0, handX: 0, handY: 0, stool: 0};
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf, spray = null;
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.3 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  const now = () => actx ? actx.currentTime : 0;
+  const sfx = {
+    scrub(){ if(!audio()) return; noise(now(), 0.13, 'bandpass', rand(1800, 2800), 2.5, 0.07, 0.02); tone(rand(500, 800), 0.06, 'sine', 0.05, rand(1000, 1400), 0.03); },
+    squeak(){ const f = rand(1300, 1900); tone(f, 0.09, 'sine', 0.06, f*1.35); tone(f*1.3, 0.07, 'sine', 0.04, f*1.05, 0.08); },
+    pop(){ const f = rand(700, 1100); tone(f, 0.05, 'sine', 0.08, f*2); },
+    splash(){ if(audio()) { noise(now(), 0.35, 'lowpass', 1800, 0.7, 0.1, 0.01, null, 500); tone(rand(300, 420), 0.12, 'sine', 0.06, 900); } },
+    swish(){ if(audio()) noise(now(), 0.22, 'bandpass', rand(700, 1000), 0.8, 0.07, 0.08); },
+    ding(){ tone(1319, 0.7, 'sine', 0.14); tone(1760, 0.9, 'sine', 0.09, null, 0.12); tone(2637, 0.5, 'sine', 0.03, null, 0.12); },
+    boing(){ if(!audio()) return; const t = now(); const o = actx.createOscillator(), g = actx.createGain(), l = actx.createOscillator(), lg = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(520, t + 0.18); o.frequency.exponentialRampToValueAtTime(380, t + 0.5);
+      l.frequency.value = 14; lg.gain.value = 40; l.connect(lg).connect(o.frequency);
+      g.gain.setValueAtTime(0.18, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      o.connect(g).connect(sfxBus); o.start(t); o.stop(t + 0.57); l.start(t); l.stop(t + 0.57); },
+    giggle(){ [880, 740, 988, 784, 1047].forEach((f, i) => tone(f, 0.08, 'triangle', 0.09, f*0.85, i*0.085)); },
+    shake(){ if(!audio()) return; noise(now(), 0.5, 'bandpass', 900, 1.5, 0.08, 0.03); [0, 0.1, 0.2, 0.3].forEach(d => tone(rand(500, 700), 0.05, 'sine', 0.04, 300, d)); },
+    roar(){ if(!audio()) return; const t = now();
+      const o = actx.createOscillator(), g = actx.createGain(), lp = actx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(150, t); o.frequency.linearRampToValueAtTime(260, t + 0.25); o.frequency.exponentialRampToValueAtTime(170, t + 0.8);
+      lp.type = 'lowpass'; lp.frequency.value = 1000; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.08); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.85);
+      o.connect(lp).connect(g).connect(sfxBus); o.start(t); o.stop(t + 0.9);
+      noise(t, 0.7, 'bandpass', 700, 1, 0.05, 0.1); },
+    jingle(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.6 : 0.2, 'triangle', 0.14, null, i*0.1)); [1568, 2093, 2637].forEach((f, i) => tone(f, 0.4, 'sine', 0.05, null, 0.7 + i*0.08)); },
+    paint(){ if(!audio()) return; noise(now(), 0.4, 'lowpass', 900, 1, 0.12, 0.02, null, 250); tone(420, 0.25, 'sine', 0.1, 140); tone(620, 0.15, 'sine', 0.06, 300, 0.1); },
+    sticker(){ tone(900, 0.06, 'square', 0.04, 1800); tone(1568, 0.25, 'sine', 0.09, null, 0.05); },
+    leaf(){ if(audio()) noise(now(), 0.3, 'highpass', 3000, 0.7, 0.03, 0.05); tone(1200, 0.2, 'sine', 0.03, 700); },
+    tap(){ tone(660, 0.08, 'triangle', 0.1); },
+    vroom(){ if(!audio()) return; const t = now(); const o = actx.createOscillator(), g = actx.createGain(), lp = actx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(190, t + 0.9); lp.type = 'lowpass'; lp.frequency.value = 700;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      o.connect(lp).connect(g).connect(sfxBus); o.start(t); o.stop(t + 1.15); },
+    brakes(){ tone(1500, 0.25, 'sine', 0.04, 1300); },
+    thanks(){ tone(784, 0.14, 'triangle', 0.12); tone(1047, 0.3, 'triangle', 0.12, null, 0.13); },
+    honk(h){
+      if(!audio()) return;
+      if(h === 'tune'){ [784, 659, 784, 880, 784, 659, 523].forEach((f, i) => { tone(f, 0.16, 'sine', 0.12, null, i*0.14); tone(f*2, 0.1, 'sine', 0.03, null, i*0.14); }); return; }
+      [0, 0.28].forEach(d => {
+        const t = actx.currentTime + d, g = actx.createGain(), lp = actx.createBiquadFilter();
+        lp.type = 'lowpass'; lp.frequency.value = 1500;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.13, t + 0.02); g.gain.setValueAtTime(0.13, t + 0.16); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        lp.connect(g).connect(sfxBus);
+        h.forEach(f => { const o = actx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f*1.03, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.05); o.connect(lp); o.start(t); o.stop(t + 0.24); });
+      });
+    }
+  };
+  // the hose: a steady "shhhh" while spraying
+  function sprayOn(){
+    if(!audio() || spray) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = 'bandpass'; fl.frequency.value = 2600; fl.Q.value = 0.6;
+    const g = actx.createGain(); g.gain.setValueAtTime(0.0001, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.09, actx.currentTime + 0.08);
+    src.connect(fl).connect(g).connect(sfxBus); src.start();
+    spray = {src, g};
+  }
+  function sprayOff(){
+    if(!spray || !actx) { spray = null; return; }
+    const s = spray; spray = null;
+    try { s.g.gain.cancelScheduledValues(actx.currentTime); s.g.gain.setValueAtTime(Math.max(0.0001, s.g.gain.value), actx.currentTime); s.g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.12); s.src.stop(actx.currentTime + 0.15); } catch(e){}
+  }
+
+  // ----- background music: a gentle, bubbly tune that loops -----
+  const ROOTS = [48, 53, 55, 48, 45, 53, 55, 48];   // C, F, G, C, Am, F, G, C
+  const MELODY = [
+    76,0,79,0,76,74,72,0,   77,0,81,0,79,77,76,0,
+    74,0,77,0,76,74,72,74,  76,0,79,0,76,0,0,0,
+    72,0,76,0,79,0,81,79,   77,0,76,0,74,0,72,0,
+    74,0,76,77,79,0,76,74,  72,0,0,0,79,0,72,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let bpm = 100, mNext = 0, mStep = 0, mTimer = null;
+  const stepLen = () => 60/bpm/2;
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = ROOTS[bar], d = t - actx.currentTime, S = stepLen();
+    if(beat === 0 || beat === 4) tone(hz(root - 12 + (beat === 4 ? 7 : 0)), S*1.8, 'triangle', 0.26, null, d, musicBus);
+    if(beat === 2 || beat === 6) [0, root === 45 ? 3 : 4, 7].forEach(n => tone(hz(root + 12 + n), 0.18, 'sine', 0.035, null, d, musicBus));
+    const m = MELODY[i];
+    if(m){ tone(hz(m), S*1.6, 'sine', 0.1, null, d, musicBus); tone(hz(m + 12), 0.08, 'triangle', 0.025, null, d, musicBus); }
+    if(beat % 2 === 1) noise(t, 0.04, 'highpass', 7000, 0.7, 0.018, 0.003, musicBus);
+    if(beat === 0) tone(90, 0.12, 'sine', 0.18, 45, d, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){ playStep(mStep, mNext); mNext += stepLen(); mStep = (mStep + 1) % 64; }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  document.addEventListener('visibilitychange', () => {
+    aim.down = false; keys.clear(); sprayOff();
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+  addEventListener('blur', () => { aim.down = false; keys.clear(); sprayOff(); });
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.cancelScheduledValues(actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.3 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save(KEY + 'muted', muted); wake(); startMusic(); setSoundBtn(); soundBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save(KEY + 'music', musicOn); wake(); startMusic(); setSoundBtn(); musicBtn.blur(); });
+  setSoundBtn();
+
+  // ===== CARS WASHED COUNTER =====
+  const carSvg = col => '<svg viewBox="0 0 26 16" aria-hidden="true"><path d="M2 12.5V8.5Q2 6.5 4 6.3L8 6 10.5 2.5H17L20 6H22.5Q24.5 6.2 24.5 8.5V12.5Z" fill="' + col + '" stroke="#2F2350" stroke-width="1.6" stroke-linejoin="round"/><path d="M11.3 3.8H16.2L18.2 6H10.2Z" fill="#C5ECFF"/><circle cx="7.5" cy="12.8" r="2.4" fill="#2F2350"/><circle cx="19" cy="12.8" r="2.4" fill="#2F2350"/><path d="M4 4.5l1-1M22 3l.6-1.2M24 5l1.2-.3" stroke="#FFC23D" stroke-width="1.3" stroke-linecap="round"/></svg>';
+  function updateCounter(bump){
+    const cols = washedCols.slice(-(phone ? 4 : 6));
+    carIconsEl.innerHTML = cols.length ? cols.map(carSvg).join('') : carSvg('#FFFFFF');
+    washNEl.textContent = washedCount;
+    washedEl.setAttribute('aria-label', 'Cars washed: ' + washedCount);
+    if(bump){ washedEl.classList.remove('bump'); void washedEl.offsetWidth; washedEl.classList.add('bump'); }
+    if(washedCount > 0){ ovCars.hidden = false; ovCars.innerHTML = 'Cars washed: ' + washedCols.slice(-6).map(carSvg).join('') + ' ' + washedCount; }
+  }
+
+  // ===== PAINT POTS =====
+  PAINTS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.className = 'pot'; b.type = 'button'; b.setAttribute('aria-label', p.name + ' paint'); b.setAttribute('aria-pressed', 'false');
+    b.innerHTML = '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M13 22H51L47 54Q46 58 42 58H22Q18 58 17 54Z" fill="#E9ECF5" stroke="#2F2350" stroke-width="4" stroke-linejoin="round"/><path d="M15 34H49L48 42H16Z" fill="' + p.col + '"/><ellipse cx="32" cy="22" rx="19" ry="6.5" fill="' + p.col + '" stroke="#2F2350" stroke-width="4"/><path d="M20 24Q21 34 24 34Q27 34 26 25Z" fill="' + p.col + '" stroke="#2F2350" stroke-width="2.5"/><ellipse cx="26" cy="20.5" rx="6" ry="2" fill="#fff" opacity=".6"/></svg>';
+    b.addEventListener('click', () => { wake(); startMusic(); repaint(p.col); b.blur(); });
+    potsEl.appendChild(b);
+  });
+  function markPot(){ [...potsEl.children].forEach((b, i) => b.setAttribute('aria-pressed', car && PAINTS[i].col === car.col ? 'true' : 'false')); }
+
+  // ===== A NEW CAR =====
+  function newCar(peek){
+    const t = TYPES[typeIdx % TYPES.length];
+    if(!peek){ typeIdx = (typeIdx + 1) % TYPES.length; save(KEY + 'next', typeIdx); }
+    car = {t, col: t.col, off: 0, bounce: 0, tickleT: 0, blinkT: 2, blink: 0, happy: false, paintT: 0, newCol: null, stickers: [], dents: [], leaves: [], wob: 0, sweepT: 0, talkT: 0};
+    // its silhouette, for keeping mud on the car and checking where you rub
+    wipe(G.mask); drawCar(G.mask, t.id, '#000000');
+    G.mask.setTransform(1, 0, 0, 1, 0, 0); maskA = G.mask.getImageData(0, 0, MW, MH).data; local(G.mask);
+    setupCells();
+    paintCarLayer(G.car, car.col);
+    makeMud();
+    wipe(G.foam); wipe(G.wet);
+    fades.dirt = fades.foam = fades.wet = 1; wetIn = 1;
+    // a few silly dents and some leaves stuck on
+    const spots = [];
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++){ const x = BX0 + (i + 0.5)*CELL, y = BY0 + (j + 0.5)*CELL; if(cellIn[j*GW + i] && y > -150 && y < -60 && insideAt(x + 26, y) && insideAt(x - 26, y) && insideAt(x, y - 20) && insideAt(x, y + 20)) spots.push([x, y]); }
+    for(let d = 0; d < 3 && spots.length; d++){
+      const s = pick(spots);
+      if(car.dents.every(o => Math.hypot(o.x - s[0], o.y - s[1]) > 80)) car.dents.push({x: s[0], y: s[1], r: rand(14, 20), rot: rand(-0.5, 0.5), popT: 0});
+    }
+    const tops = [];
+    for(let i = 0; i < GW; i++) for(let j = 0; j < GH; j++){ if(cellIn[j*GW + i]){ tops.push([BX0 + (i + 0.5)*CELL, BY0 + (j + 0.5)*CELL + 4]); break; } }
+    for(let n = 0; n < 4; n++){ const s = pick(tops.filter(p => Math.abs(p[0]) < 200)); if(s) car.leaves.push({x: s[0] + rand(-10, 10), y: s[1] + rand(0, 16), rot: rand(-1.2, 1.2), col: pick(['#69DB7C', '#94D82D', '#FFA94D', '#F59F00']), s: rand(0.8, 1.2), gone: false}); }
+    stage = 'arrive'; stageT = 0; tool = null; need = null; finishing = 0; sticker = null;
+    setTools();
+    showStyle(false);
+  }
+
+  // ===== THE STAGES =====
+  // arrive -> soap -> rinse -> dry -> shine -> style -> leave -> (next car)
+  const STAGE_TOOL = {soap: 'sponge', rinse: 'hose', dry: 'towel'};
+  const TOOL_R = {sponge: 42, hose: 46, towel: 46};
+  function setTools(){
+    const order = ['soap', 'rinse', 'dry'];
+    const si = order.indexOf(stage);
+    Object.entries(toolBtns).forEach(([name, b], i) => {
+      const cur = STAGE_TOOL[stage] === name;
+      b.disabled = !cur;
+      b.classList.toggle('on', cur && tool === name);
+      b.classList.toggle('next', cur && need === name);
+      b.classList.toggle('done', (si > i) || ['shine', 'style', 'leave'].includes(stage));
+      b.setAttribute('aria-pressed', cur && tool === name ? 'true' : 'false');
+    });
+  }
+  function startWash(st){
+    stage = st; stageT = 0; finishing = 0; idleT = 0;
+    resetCells();
+    if(st === 'soap'){ tool = 'sponge'; need = null; }
+    else { tool = null; need = STAGE_TOOL[st]; }
+    setTools();
+  }
+  function pickTool(name){
+    if(STAGE_TOOL[stage] !== name || tool === name) return;
+    tool = name; need = null; idleT = 0; setTools();
+    sfx.tap();
+    if(name === 'hose') sfx.splash();
+    if(name === 'towel') sfx.swish();
+  }
+  Object.entries(toolBtns).forEach(([name, b]) => b.addEventListener('click', () => { wake(); startMusic(); pickTool(name); b.blur(); }));
+
+  function finishWash(){
+    finishing = 0.001;
+    sfx.ding();
+    popWord({soap: 'Squeaky!', rinse: 'Splashy!', dry: 'Sparkly!'}[stage], carX + car.off, groundY - 250*k, '#2FB344');
+    const cx = carX + car.off, cy = groundY - 120*k;
+    for(let i = 0; i < (reduced ? 6 : 16); i++) parts.push({kind: 'spark', x: cx + rand(-220, 220)*k, y: cy + rand(-60, 80)*k, vx: 0, vy: rand(-30, -10), life: 0, max: rand(0.6, 1.1), r: rand(6, 12)*k, col: pick(['#FFD43B', '#fff', '#74C0FC'])});
+    sprayOff();
+    if(stage === 'soap'){
+      car.dents.forEach((d, i) => { if(!d.popT) setTimeout(() => popDent(d), 120*i); });
+      car.leaves.forEach(l => { if(!l.gone) flyLeaf(l); });
+      ch.giggleT = 1;
+    }
+    if(stage === 'rinse'){ car.leaves.forEach(l => { if(!l.gone) flyLeaf(l); }); ch.shakeT = 0.9; makeWet(); wetIn = 0; }
+  }
+  function afterFinish(){
+    // the leftover bits melt away, then on to the next job
+    if(stage === 'soap'){ wipe(G.dirt); fades.dirt = 1; startWash('rinse'); }
+    else if(stage === 'rinse'){ wipe(G.dirt); wipe(G.foam); fades.dirt = fades.foam = 1; wetIn = 1; startWash('dry'); }
+    else if(stage === 'dry'){ wipe(G.wet); fades.wet = 1; startShine(); }
+  }
+  function startShine(){
+    stage = 'shine'; stageT = 0; tool = null; need = null; idleT = 0; setTools();
+    car.happy = true; car.sweepT = 0;
+    ch.danceT = 2.6; ch.roarT = 0.9;
+    sfx.jingle(); setTimeout(() => sfx.roar(), 450);
+    const cx = carX + car.off;
+    for(let i = 0; i < (reduced ? 12 : 40); i++) parts.push({kind: 'conf', x: cx + rand(-60, 60)*k, y: groundY - 180*k, vx: rand(-260, 260)*k, vy: rand(-420, -160)*k, life: 0, max: rand(1.4, 2.2), r: rand(4, 7)*k, rot: rand(0, TAU), vr: rand(-8, 8), col: pick(['#FF6B6B', '#FFD43B', '#69DB7C', '#4DABF7', '#B197FC', '#FF8FC7'])});
+  }
+  function showStyle(on){
+    washTools.hidden = on; stickTools.hidden = !on;
+    potsEl.hidden = !on;
+    if(on){ potsEl.classList.remove('pop'); void potsEl.offsetWidth; potsEl.classList.add('pop'); markPot(); }
+    stickTools.querySelectorAll('[data-sticker]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sticker === sticker ? 'true' : 'false'));
+    goBtn.classList.remove('next');
+  }
+  function startStyle(){ stage = 'style'; stageT = 0; goReadyT = 0; idleT = 0; showStyle(true); }
+  function drive(){
+    if(stage !== 'style') return;
+    stage = 'leave'; stageT = 0; sticker = null;
+    showStyle(false); setTools();
+    car.talkT = 1.9; sfx.thanks();
+    ch.thumbT = 2.4;
+    setTimeout(() => sfx.honk(car.t.honk), 500);
+  }
+  goBtn.addEventListener('click', () => { wake(); startMusic(); drive(); goBtn.blur(); });
+
+  // ===== STICKERS AND PAINT =====
+  stickTools.querySelectorAll('[data-sticker]').forEach(b => b.addEventListener('click', () => {
+    wake(); startMusic();
+    if(stage !== 'style') return;
+    sticker = b.dataset.sticker;
+    stickTools.querySelectorAll('[data-sticker]').forEach(o => o.setAttribute('aria-pressed', o === b ? 'true' : 'false'));
+    // stick one on straight away, somewhere on the side of the car
+    const spots = [];
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++){ const x = BX0 + (i + 0.5)*CELL, y = BY0 + (j + 0.5)*CELL; if(cellIn[j*GW + i] && y < -50 && insideAt(x + 18, y) && insideAt(x - 18, y) && insideAt(x, y - 18) && insideAt(x, y + 18)) spots.push([x, y]); }
+    const free = spots.filter(s => car.stickers.every(o => Math.hypot(o.x - s[0], o.y - s[1]) > 40));
+    const s = pick(free.length ? free : spots);
+    if(s) addSticker(sticker, s[0], s[1]);
+    idleT = 0; b.blur();
+  }));
+  function addSticker(kind, x, y){
+    car.stickers.push({kind, x, y, rot: rand(-0.4, 0.4), s: rand(0.9, 1.15), t: 0});
+    if(car.stickers.length > 30) car.stickers.shift();
+    sfx.sticker();
+    const p = toScreen(x, y);
+    for(let i = 0; i < 8; i++) parts.push({kind: 'spark', x: p.x, y: p.y, vx: rand(-120, 120)*k, vy: rand(-120, 60)*k, life: 0, max: 0.5, r: rand(4, 8)*k, col: pick(['#FFD43B', '#fff', '#FF8FC7'])});
+  }
+  function repaint(col){
+    if(stage !== 'style' || car.paintT > 0) return;
+    if(col === car.col){ sfx.tap(); return; }
+    car.newCol = col; car.paintT = 0.001;
+    paintCarLayer(G.car2, col);
+    sfx.paint(); ch.giggleT = 0.8;
+    idleT = 0;
+  }
+
+  // ===== BRUSHING (scrubbing, spraying and drying) =====
+  function toLocal(x, y){ return {x: (x - carX - car.off)/k, y: (y - groundY - car.bounce)/k}; }
+  function toScreen(x, y){ return {x: carX + car.off + x*k, y: groundY + car.bounce + y*k}; }
+  function nearCar(x, y, r){
+    const p = toLocal(x, y);
+    if(insideAt(p.x, p.y)) return true;
+    for(let a = 0; a < 8; a++) if(insideAt(p.x + Math.cos(a*TAU/8)*r, p.y + Math.sin(a*TAU/8)*r)) return true;
+    return false;
+  }
+  function brushAt(x, y){
+    // x, y are car units
+    const r = TOOL_R[tool];
+    let got = 0;
+    if(tool === 'sponge'){
+      eraseAt(G.dirt, x, y, r);
+      if(insideAt(x, y) || insideAt(x, y + 20) || insideAt(x, y - 20)){ foamAt(x, y, r); foamDirty = true; }
+      got = markCells(x, y, r);
+      car.dents.forEach(d => { if(!d.popT && Math.hypot(d.x - x, d.y - y) < r + d.r*0.5) popDent(d); });
+    } else if(tool === 'hose'){
+      eraseAt(G.foam, x, y, r); eraseAt(G.dirt, x, y, r*0.9);
+      if(Math.random() < 0.5 && insideAt(x, y)){ const a = rand(0, TAU), d = rand(0, r); dropAt(G.wet, x + Math.cos(a)*d, y + Math.sin(a)*d, rand(3, 6)); wetDirty = true; }
+      got = markCells(x, y, r);
+    } else if(tool === 'towel'){
+      eraseAt(G.wet, x, y, r);
+      got = markCells(x, y, r);
+    }
+    car.leaves.forEach(l => { if(!l.gone && Math.hypot(l.x - x, l.y - y) < r + 10 && (tool === 'sponge' || tool === 'hose')) flyLeaf(l); });
+    return got;
+  }
+  function popDent(d){
+    if(d.popT) return;
+    d.popT = 0.001; sfx.boing();
+    const p = toScreen(d.x, d.y);
+    popWord('BOING!', p.x, p.y - 20*k, '#7B4FD6');
+    for(let i = 0; i < 6; i++) parts.push({kind: 'spark', x: p.x, y: p.y, vx: rand(-140, 140)*k, vy: rand(-160, 20)*k, life: 0, max: 0.6, r: rand(5, 9)*k, col: pick(['#FFD43B', '#fff'])});
+  }
+  function flyLeaf(l){
+    l.gone = true; sfx.leaf();
+    const p = toScreen(l.x, l.y);
+    parts.push({kind: 'leaf', x: p.x, y: p.y, vx: rand(-80, 80)*k, vy: rand(-220, -120)*k, life: 0, max: 2.4, r: 16*k*l.s, rot: l.rot, vr: rand(-5, 5), col: l.col});
+  }
+  function stroke(ax, ay, bx, by){
+    // move the tool from one spot to another on the screen, brushing all the way
+    const a = toLocal(ax, ay), b = toLocal(bx, by);
+    const dist = Math.hypot(b.x - a.x, b.y - a.y), steps = Math.max(1, Math.ceil(dist/7));
+    let got = 0;
+    for(let i = 1; i <= steps; i++) got += brushAt(a.x + (b.x - a.x)*i/steps, a.y + (b.y - a.y)*i/steps);
+    return {got, dist};
+  }
+  function toolActive(){ return tool && STAGE_TOOL[stage] === tool && !finishing; }
+  function workAt(x, y, moved, dt){
+    // called every frame while the finger (or Space) is held down
+    let got = 0;
+    if(tool === 'hose'){
+      // the hose keeps spraying even if you hold still
+      for(let i = 0; i < 3; i++){ const a = toLocal(x + rand(-10, 10)*k, y + rand(-10, 10)*k); got += brushAt(a.x, a.y); }
+      sprayOn();
+      if(nearCar(x, y, 30) && Math.random() < dt*30) parts.push({kind: 'splash', x: x + rand(-14, 14)*k, y: y + rand(-8, 8)*k, vx: rand(-200, 200)*k, vy: rand(-280, -80)*k, life: 0, max: rand(0.4, 0.7), r: rand(3, 6)*k});
+      if(clock > shakeAt){ shakeAt = clock + rand(2.6, 4); ch.shakeT = 0.8; sfx.shake(); }
+    } else {
+      // sponge and towel: a little wiggle even when held still, and a proper scrub when moving
+      if(moved < 1){ const a = toLocal(x + rand(-8, 8)*k, y + rand(-8, 8)*k); got += brushAt(a.x, a.y); }
+    }
+    const over = nearCar(x, y, 20);
+    if(over && (moved > 2 || tool === 'hose')){
+      everScrubbed = true; idleT = 0;
+      car.tickleT = 0.4;
+      if(clock > scrubSnd){
+        if(tool === 'sponge'){ sfx.scrub(); if(Math.random() < 0.35) sfx.squeak(); scrubSnd = clock + 0.11; }
+        else if(tool === 'towel'){ sfx.swish(); if(Math.random() < 0.25) sfx.squeak(); scrubSnd = clock + 0.16; }
+      }
+      if(tool === 'sponge' && Math.random() < 0.5 && !reduced) parts.push({kind: 'bubble', x: x + rand(-30, 30)*k, y: y + rand(-20, 10)*k, vx: rand(-20, 20), vy: rand(-70, -30)*k, life: 0, max: rand(1.2, 2.4), r: rand(4, 11)*k});
+      if(tool === 'towel' && Math.random() < 0.3) parts.push({kind: 'spark', x: x + rand(-30, 30)*k, y: y + rand(-20, 20)*k, vx: 0, vy: -30, life: 0, max: 0.5, r: rand(4, 7)*k, col: '#fff'});
+      if(tool === 'sponge' && clock > giggleAt){ giggleAt = clock + rand(2.2, 3.6); ch.giggleT = 0.9; sfx.giggle(); }
+    }
+    // spraying Chomper makes him shake it off
+    if(tool === 'hose' && Math.abs(x - ch.x) < 55*ch.cs && y < ch.y && y > ch.y - 125*ch.cs && clock > shakeAt - 1.8){ shakeAt = clock + 2.5; ch.shakeT = 0.9; ch.giggleT = 0.7; sfx.shake(); setTimeout(() => sfx.giggle(), 300); }
+    void got;
+  }
+
+  // ===== WORDS AND BITS FLYING ABOUT =====
+  function popWord(text, x, y, col){
+    words.push({text, x, y, t: 0, col: col || '#FF4F9A'});
+  }
+
+  // ===== LAYOUT (works out where everything goes for this screen shape) =====
+  function layout(){
+    const w = CW, h = CH;
+    tall = w/h < 1.02;
+    phone = PHONE.matches;
+    board.classList.toggle('tall', tall); board.classList.toggle('wide', !tall);
+    topPad = phone ? 50 : 12;
+    let ph, pb, bs;
+    if(tall){
+      tbSize = clamp(h*0.11, 66, 104);
+      bs = Math.min(tbSize - 10, (w - 20)/5 - 8, 92);
+      ph = clamp(h*0.09, 58, 92); pb = Math.min(ph - 8, (w - 16)/6 - 7, 84);
+      playW = w;
+      groundY = h - tbSize - ph + 2;
+      // the car goes near the bottom; Chomper stands on a step stool behind it
+      k = Math.min(w*0.93/500, (groundY - topPad)/420);
+      carX = w/2;
+      ch.face = -1;
+      ch.stool = 1;
+      const feet = groundY - 150*k;
+      ch.cs = clamp(Math.min((feet - topPad - 20)/118, k*1.9), 0.5, 3);
+      ch.x = Math.min(w - 8 - 94*ch.cs, carX + 150*k);
+      ch.y = feet;
+    } else {
+      tbSize = clamp(w*0.09, 66, 106);
+      bs = Math.min(tbSize - 10, (h - 14)/5 - 7, 94);
+      ph = clamp(h*0.17, 58, 96); pb = Math.min(ph - 8, (w - tbSize)/6 - 8, 86);
+      playW = w - tbSize;
+      groundY = h - ph + 4;
+      k = Math.min(playW*0.64/510, (groundY - topPad - 10)/290);
+      carX = Math.max(playW*0.4, 250*k + 8);
+      ch.face = -1; ch.stool = 0;
+      const room = playW - (carX + 240*k);
+      ch.cs = clamp(Math.min(k*1.65, (groundY - topPad)/150, room/110), 0.45, 3);
+      ch.x = Math.min(carX + 240*k + room*0.5, playW - 94*ch.cs + 24);
+      ch.y = groundY - 18*k;
+    }
+    board.style.setProperty('--tb', Math.round(tbSize) + 'px');
+    board.style.setProperty('--bs', Math.round(bs) + 'px');
+    board.style.setProperty('--ph', Math.round(ph) + 'px');
+    board.style.setProperty('--pb', Math.round(pb) + 'px');
+    drawBackground();
+    updateCounter(false);
+  }
+
+  // ===== THE BACKGROUND (drawn once for each screen size) =====
+  const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
+  function drawBackground(){
+    bg.width = cvs.width; bg.height = cvs.height;
+    const g = bgc; g.setTransform(PX, 0, 0, PX, 0, 0);
+    const w = CW, h = CH, s = k;
+    // sky
+    const sky = g.createLinearGradient(0, 0, 0, groundY);
+    sky.addColorStop(0, '#8FD3FF'); sky.addColorStop(1, '#E3F5FF');
+    g.fillStyle = sky; g.fillRect(0, 0, w, h);
+    // fluffy clouds
+    g.fillStyle = 'rgba(255,255,255,0.9)';
+    [[0.12, 0.08, 1], [0.62, 0.05, 0.8], [0.9, 0.14, 0.9]].forEach(([cx, cy, cs]) => {
+      const x = cx*w, y = topPad + cy*h, r = 26*cs*Math.max(0.7, s);
+      ell(g, x, y, r*1.4, r*0.8); g.fill(); ell(g, x - r, y + r*0.2, r, r*0.6); g.fill(); ell(g, x + r*1.1, y + r*0.25, r*0.9, r*0.55); g.fill();
+    });
+    // the car wash building
+    const roofY = tall ? Math.min(groundY - 330*s, ch.y - 118*ch.cs - 60*s) : Math.max(topPad + 30*s, groundY - 330*s);
+    const wallTop = roofY + 34*s;
+    g.fillStyle = '#FFE9F3'; g.fillRect(0, wallTop, w, groundY - wallTop);
+    g.strokeStyle = '#F8D3E5'; g.lineWidth = 2;
+    for(let y = wallTop + 26*s; y < groundY; y += 26*s) line(g, 0, y, w, y);
+    for(let row = 0, y = wallTop; y < groundY; y += 26*s, row++) for(let x = (row % 2)*26*s; x < w; x += 52*s) line(g, x, y, x, y + 26*s);
+    // stripy awning
+    const aw = 34*s;
+    g.fillStyle = '#9775FA'; g.fillRect(0, roofY, w, aw*0.55);
+    for(let i = 0, x = 0; x < w + aw; x += aw, i++){
+      g.fillStyle = i % 2 ? '#fff' : '#B197FC';
+      g.beginPath(); g.moveTo(x, roofY + aw*0.5); g.lineTo(x + aw, roofY + aw*0.5); g.lineTo(x + aw, roofY + aw*0.75); g.arc(x + aw/2, roofY + aw*0.75, aw/2, 0, Math.PI); g.closePath(); g.fill();
+    }
+    g.strokeStyle = O; g.lineWidth = 3; line(g, 0, roofY + aw*0.5, w, roofY + aw*0.5);
+    // the washing bay behind the car
+    const bx0 = carX - 290*s, bx1 = carX + 290*s, by0 = wallTop + 34*s;
+    g.fillStyle = '#E6DAFF'; rr(g, bx0, by0, bx1 - bx0, groundY - by0 + 20, 26*s); g.fill();
+    g.strokeStyle = '#C9B8F0'; g.lineWidth = 6*s; rr(g, bx0, by0, bx1 - bx0, groundY - by0 + 20, 26*s); g.stroke();
+    // big spinny brushes each side of the bay
+    [bx0 + 26*s, bx1 - 26*s].forEach(x => {
+      const top = by0 + 18*s, bh = groundY - top - 10*s;
+      g.fillStyle = '#74C0FC'; rr(g, x - 18*s, top, 36*s, bh, 16*s); g.fill();
+      g.save(); rr(g, x - 18*s, top, 36*s, bh, 16*s); g.clip();
+      g.fillStyle = '#A5D8FF'; for(let y = top; y < top + bh; y += 22*s){ g.beginPath(); g.moveTo(x - 18*s, y); g.lineTo(x + 18*s, y + 11*s); g.lineTo(x + 18*s, y + 19*s); g.lineTo(x - 18*s, y + 8*s); g.closePath(); g.fill(); }
+      g.restore();
+      g.strokeStyle = O; g.lineWidth = 3; rr(g, x - 18*s, top, 36*s, bh, 16*s); g.stroke();
+      g.fillStyle = '#ADB5C7'; rr(g, x - 6*s, top - 16*s, 12*s, 18*s, 3*s); g.fill(); g.stroke();
+    });
+    // the sign on the roof
+    const sw = Math.min(w*0.8, 300*s), sh = 58*s, sx = (tall ? w/2 : carX) - sw/2, sy = roofY - sh*0.75;
+    if(sy > (phone ? 46 : 2) || tall){
+      g.fillStyle = '#FF8FC7'; rr(g, sx, sy, sw, sh, 18*s); g.fill(); g.strokeStyle = O; g.lineWidth = 4; g.stroke();
+      g.fillStyle = '#fff'; g.font = Math.round(34*s) + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineWidth = 6*s; g.strokeStyle = '#C2255C'; g.strokeText('CAR WASH', sx + sw/2, sy + sh/2 + 2*s); g.fillText('CAR WASH', sx + sw/2, sy + sh/2 + 2*s);
+      [[sx + 8*s, sy + 6*s, 10], [sx + sw - 10*s, sy + 4*s, 12], [sx + sw - 30*s, sy - 8*s, 7], [sx + 24*s, sy - 6*s, 6]].forEach(([x, y, r]) => bubble(g, x, y, r*s));
+    }
+    // the floor, with puddles and a drain
+    const fy = groundY - 16*s;
+    const fl = g.createLinearGradient(0, fy, 0, h);
+    fl.addColorStop(0, '#BFD8E6'); fl.addColorStop(1, '#D5E9F3');
+    g.fillStyle = fl; g.fillRect(0, fy, w, h - fy);
+    g.fillStyle = '#A9C7D8'; g.fillRect(0, fy, w, 4);
+    g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 2;
+    for(let x = -40; x < w + 40; x += 70*s){ g.beginPath(); g.moveTo(x, fy + 4); g.lineTo(x - 40*s, h); g.stroke(); }
+    g.fillStyle = 'rgba(165,216,255,0.8)';
+    [[carX - 170*s, groundY + 16*s, 60], [carX + 190*s, groundY + 26*s, 44], [w*0.08, groundY + 30*s, 40]].forEach(([x, y, r]) => { ell(g, x, y, r*s, r*s*0.22); g.fill(); });
+    g.fillStyle = 'rgba(255,255,255,0.7)';
+    [[carX - 190*s, groundY + 13*s], [carX + 176*s, groundY + 23*s]].forEach(([x, y]) => { ell(g, x, y, 14*s, 3*s); g.fill(); });
+    g.fillStyle = '#8CA3B3'; rr(g, carX - 36*s, groundY + 10*s, 72*s, 14*s, 5*s); g.fill();
+    g.strokeStyle = '#6B8394'; g.lineWidth = 2; for(let i = 1; i < 6; i++) line(g, carX - 36*s + i*12*s, groundY + 12*s, carX - 36*s + i*12*s, groundY + 22*s);
+  }
+
+  // ===== DRAWING CHOMPER (a cute purple dinosaur - facing right, feet at 0,0) =====
+  const PU = '#A47BF0', PD = '#8A60DC', TUM = '#EEE2FF', PL = '#FF9ACB', OC = '#5A2FA0';
+  function leg(x, lift, col){
+    ctx.lineWidth = 4; ctx.strokeStyle = OC; ctx.fillStyle = col;
+    rr(ctx, x - 7, -26 - lift, 14, 24, 6); ctx.stroke(); ctx.fill();
+    ell(ctx, x + 5, -4 - lift, 13, 6.5); ctx.stroke(); ctx.fill();
+    ctx.fillStyle = '#F6EEFF';
+    [8, 12.5, 17].forEach(dx => { ell(ctx, x + dx, -4 - lift, 2.2, 2.2); ctx.fill(); });
+    ell(ctx, x + 1, -26 - lift*0.4, 13, 14); ctx.stroke(); ctx.fillStyle = col; ctx.fill();
+  }
+  function drawStool(){
+    if(!ch.stool) return;
+    const s = ch.cs, x = ch.x, y = ch.y, w = 62*s;
+    ctx.fillStyle = '#4DABF7'; ctx.strokeStyle = O; ctx.lineWidth = 4;
+    [-0.75, 0.75].forEach(f => { rr(ctx, x + f*w - 7*s, y, 14*s, groundY - y - 4, 5*s); ctx.fill(); ctx.stroke(); });
+    ctx.fillStyle = '#74C0FC'; rr(ctx, x - w*0.8, y + (groundY - y)*0.5, w*1.6, 10*s, 4*s); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFD43B'; rr(ctx, x - w, y - 2, w*2, 16*s, 6*s); ctx.fill(); ctx.stroke();
+  }
+  function drawChomper(){
+    const c = ch, S = 1.1;
+    const dance = c.danceT > 0 ? c.danceT : 0;
+    const shake = c.shakeT > 0 ? Math.sin(clock*55)*4*Math.min(1, c.shakeT*2) : 0;
+    const hop = dance ? -Math.abs(Math.sin(clock*9))*14 : 0;
+    ctx.save(); ctx.translate(c.x + shake*c.cs, c.y + hop*c.cs);
+    ctx.fillStyle = 'rgba(50,25,80,0.2)'; ell(ctx, 0, 2 - hop*c.cs, 44*c.cs, 12*c.cs); ctx.fill();
+    ctx.scale(c.face*S*c.cs, S*c.cs);
+    if(dance) ctx.rotate(Math.sin(clock*9)*0.12);
+    let sy = 1; if(c.giggleT > 0) sy = 1 + Math.sin(clock*30)*0.03;
+    const roarU = c.roarT > 0 ? Math.sin(clamp(1 - c.roarT/0.9, 0, 1)*Math.PI) : 0;
+    ctx.scale(1 + 0.05*roarU, sy*(1 + 0.1*roarU));
+    const l1 = dance ? Math.max(0, Math.sin(clock*9))*10 : 0, l2 = dance ? Math.max(0, -Math.sin(clock*9))*10 : 0;
+    const bob = Math.sin(clock*2.4)*1.2;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    leg(-12, l2, PD);
+    ctx.save(); ctx.translate(0, bob);
+    const wag = Math.sin(clock*(dance ? 12 : 3))*(dance ? 9 : 5);
+    ctx.fillStyle = PL; ctx.strokeStyle = OC; ctx.lineWidth = 2.5;
+    [[-52, -38, 6], [-38, -50, 8], [-24, -62, 9], [-8, -70, 9], [6, -99, 7], [21, -102, 7]].forEach(([x, y, r]) => { ell(ctx, x, y, r, r); ctx.fill(); ctx.stroke(); });
+    const shapes = [
+      () => { ctx.beginPath(); ctx.moveTo(-20, -54); ctx.quadraticCurveTo(-58, -48, -80, -24 + wag); ctx.quadraticCurveTo(-56, -22, -16, -24); ctx.closePath(); },
+      () => ell(ctx, 0, -42, 30, 29),
+      () => ell(ctx, 18, -77, 28, 25),
+      () => ell(ctx, 40, -68, 21, 15)
+    ];
+    ctx.lineWidth = 6; ctx.strokeStyle = OC; shapes.forEach(f => { f(); ctx.stroke(); });
+    ctx.fillStyle = PU; shapes.forEach(f => { f(); ctx.fill(); });
+    ctx.fillStyle = TUM; ell(ctx, 10, -38, 17, 21); ctx.fill();
+    ctx.strokeStyle = 'rgba(164,123,240,0.35)'; ctx.lineWidth = 2;
+    [-46, -36, -26].forEach(y => { ctx.beginPath(); ctx.moveTo(1, y); ctx.quadraticCurveTo(10, y + 3, 20, y); ctx.stroke(); });
+    ctx.fillStyle = 'rgba(255,255,255,0.3)';
+    [[-15, -48, 4], [-7, -58, 3], [-40, -34, 3], [8, -92, 3]].forEach(([x, y, r]) => { ell(ctx, x, y, r, r); ctx.fill(); });
+    // a few bubbles stuck on Chomper while things are soapy
+    if(stage === 'soap' || stage === 'rinse'){ [[ -30, -70, 6], [12, -104, 5], [-50, -40, 4]].forEach(([x, y, r]) => bubble(ctx, x, y, r)); }
+    ctx.restore();
+    leg(8, l1, PU);
+    ctx.save(); ctx.translate(0, bob);
+    // tiny arm: thumbs up, waving, or reaching toward the car
+    let armA = 0.35;
+    if(c.thumbT > 0) armA = -1.35;
+    else if(c.giggleT > 0 || roarU > 0 || dance) armA = -0.7 + Math.sin(clock*22)*0.5;
+    else if(toolInHand()) armA = -0.15;
+    ctx.save(); ctx.translate(24, -46); ctx.rotate(armA);
+    ctx.strokeStyle = OC; ctx.lineWidth = 11; line(ctx, 0, 0, 13, 3);
+    ctx.strokeStyle = PU; ctx.lineWidth = 6.5; line(ctx, 0, 0, 13, 3);
+    if(c.thumbT > 0){
+      ctx.fillStyle = PU; ctx.strokeStyle = OC; ctx.lineWidth = 2.5;
+      ell(ctx, 17, 2, 6, 6); ctx.fill(); ctx.stroke();
+      ctx.save(); ctx.translate(17, 2); ctx.rotate(-armA - Math.PI/2);
+      rr(ctx, -2.8, -12, 5.6, 11, 2.8); ctx.fill(); ctx.stroke(); ctx.restore();
+    } else {
+      ctx.fillStyle = '#fff'; ell(ctx, 17, 1, 2.3, 2.3); ctx.fill(); ell(ctx, 16, 6, 2.3, 2.3); ctx.fill();
+    }
+    ctx.restore();
+    // where the hand is on the screen (so the tools can sit in it)
+    const hx = 24 + Math.cos(armA)*16, hy = -46 + bob + Math.sin(armA)*16;
+    c.handX = c.x + shake*c.cs + c.face*S*c.cs*hx; c.handY = c.y + hop*c.cs + S*c.cs*hy;
+    // eyes
+    const roaring = c.roarT > 0.2;
+    const happy = c.giggleT > 0 || roaring || dance || c.thumbT > 0;
+    [[13, -85], [31, -86]].forEach(([x, y]) => {
+      if(happy){
+        ctx.strokeStyle = '#2B1B45'; ctx.lineWidth = 3.4;
+        ctx.beginPath(); ctx.arc(x, y + 4, 6.5, Math.PI*1.15, Math.PI*1.85); ctx.stroke();
+      } else {
+        const ey = c.blink > 0 ? 0.15 : (c.shakeT > 0 ? 0.35 : 1);
+        ctx.fillStyle = '#fff'; ell(ctx, x, y, 8.5, 10.5*ey); ctx.fill();
+        ctx.strokeStyle = OC; ctx.lineWidth = 2.2; ctx.stroke();
+        if(ey > 0.5){
+          // looking at the car (or your finger)
+          const lx = aim.seen ? clamp((aim.x - c.x)*c.face/200, -1, 1)*2 : 2, ly = aim.seen ? clamp((aim.y - (c.y - 90*c.cs))/200, -1, 1)*2 : 1.5;
+          ctx.fillStyle = '#2B1B45'; ell(ctx, x + lx, y + ly, 5.3, 6.2); ctx.fill();
+          ctx.fillStyle = '#fff'; ell(ctx, x + lx + 1.8, y + ly - 3.5, 2.1, 2.1); ctx.fill(); ell(ctx, x + lx - 1.5, y + ly + 2.5, 1.1, 1.1); ctx.fill();
+        }
+      }
+    });
+    ctx.fillStyle = OC; ell(ctx, 53, -74, 1.9, 1.5); ctx.fill(); ell(ctx, 57.5, -71, 1.7, 1.3); ctx.fill();
+    ctx.fillStyle = 'rgba(255,120,180,0.55)'; ell(ctx, 40, -61, 6.5, 3.8); ctx.fill();
+    if(roaring || c.giggleT > 0){
+      const o = roaring ? clamp(roarU*1.3, 0.4, 1) : 0.45 + Math.abs(Math.sin(clock*24))*0.25;
+      ctx.fillStyle = '#5B1F4F'; ell(ctx, 46, -60, 11, 9*o); ctx.fill(); ctx.strokeStyle = OC; ctx.lineWidth = 2.5; ctx.stroke();
+      ctx.fillStyle = '#FF7FAE'; ell(ctx, 46, -60 + 4*o, 6.5, 3.2*o); ctx.fill();
+      ctx.fillStyle = '#fff'; ell(ctx, 40, -60 - 7*o, 2.2, 2.6); ctx.fill(); ell(ctx, 52, -60 - 7*o, 2.2, 2.6); ctx.fill();
+    } else {
+      ctx.fillStyle = '#6B2A63';
+      ctx.beginPath(); ctx.moveTo(32, -63); ctx.quadraticCurveTo(46, -49, 58, -62); ctx.quadraticCurveTo(46, -57, 32, -63); ctx.fill();
+      ctx.strokeStyle = OC; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(31, -63); ctx.quadraticCurveTo(46, -49, 59, -63); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(49, -58.5); ctx.lineTo(53, -59.5); ctx.lineTo(51.5, -55.5); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+    ctx.restore();
+  }
+
+  // ===== DRAWING THE TOOLS =====
+  const toolSize = () => Math.max(34, 64*k);
+  function toolInHand(){ return (tool && !(aim.down && aim.seen)) || (stage === 'soap' && !aim.down) || (stage === 'arrive'); }
+  function drawSponge(x, y, s, rot){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.lineJoin = 'round';
+    ctx.fillStyle = '#FFD43B'; rr(ctx, -s*0.6, -s*0.38, s*1.2, s*0.76, s*0.2); ctx.fill(); ctx.strokeStyle = O; ctx.lineWidth = Math.max(2.5, s*0.06); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,183,0,0.6)'; rr(ctx, -s*0.55, s*0.08, s*1.1, s*0.26, s*0.12); ctx.fill();
+    ctx.fillStyle = '#E0A100'; [[-0.3, -0.12, 0.07], [0.05, -0.05, 0.06], [0.33, -0.18, 0.065], [-0.1, 0.18, 0.05], [0.3, 0.16, 0.055]].forEach(([a, b, r]) => { ell(ctx, a*s, b*s, r*s, r*s); ctx.fill(); });
+    [[-0.38, -0.42, 0.13], [-0.1, -0.5, 0.1], [0.25, -0.44, 0.14], [0.5, -0.36, 0.08]].forEach(([a, b, r]) => bubble(ctx, a*s, b*s, r*s));
+    ctx.restore();
+  }
+  function drawTowel(x, y, s, rot){
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+    ctx.lineJoin = 'round';
+    const w = s*1.25, h = s*0.85;
+    ctx.fillStyle = '#FF8FC7'; ctx.beginPath(); ctx.moveTo(-w/2, -h/2); ctx.lineTo(w/2, -h/2); ctx.lineTo(w/2, h/2);
+    for(let i = 5; i >= 0; i--){ const xx = -w/2 + i*w/6; ctx.quadraticCurveTo(xx + w/12, h/2 + s*0.1, xx, h/2); }
+    ctx.closePath(); ctx.fill(); ctx.strokeStyle = O; ctx.lineWidth = Math.max(2.5, s*0.06); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(-w/2 + 2, -h*0.2, w - 4, h*0.12); ctx.fillRect(-w/2 + 2, h*0.18, w - 4, h*0.12);
+    ctx.fillStyle = '#E64980'; rr(ctx, -w/2, -h/2, w, h*0.2, 3); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+  function drawNozzle(x, y, s, spraying){
+    // the nozzle sits up and to the side of where the water lands
+    const nx = x + s*0.55, ny = y - s*0.95;
+    ctx.save(); ctx.translate(nx, ny); ctx.rotate(2.2);
+    ctx.lineJoin = 'round'; ctx.strokeStyle = O; ctx.lineWidth = Math.max(2.5, s*0.06);
+    ctx.fillStyle = '#40C057'; rr(ctx, -s*0.1, -s*0.13, s*0.62, s*0.26, s*0.08); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#2F9E44'; rr(ctx, s*0.5, -s*0.18, s*0.14, s*0.36, s*0.05); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFD43B'; rr(ctx, s*0.12, s*0.08, s*0.12, s*0.28, s*0.05); ctx.fill(); ctx.stroke();
+    ctx.restore();
+    return {tx: nx + Math.cos(2.2)*s*0.7 - Math.sin(2.2)*0, ty: ny + Math.sin(2.2)*s*0.7};
+  }
+  function drawHosePipe(fx, fy, tx, ty){
+    ctx.lineCap = 'round';
+    const mx = (fx + tx)/2, my = Math.max(fy, ty) + 60*k;
+    ctx.strokeStyle = O; ctx.lineWidth = Math.max(6, 11*k);
+    ctx.beginPath(); ctx.moveTo(fx, fy); ctx.quadraticCurveTo(mx, my, tx, ty); ctx.stroke();
+    ctx.strokeStyle = '#51CF66'; ctx.lineWidth = Math.max(3, 6*k); ctx.stroke();
+  }
+  function drawToolAtAim(){
+    if(!toolActive() || !aim.seen) return false;
+    const s = toolSize();
+    if(tool === 'sponge'){ drawSponge(aim.x, aim.y, s, aim.down ? Math.sin(clock*20)*0.15 : -0.1); }
+    else if(tool === 'towel'){ drawTowel(aim.x, aim.y, s, aim.down ? Math.sin(clock*16)*0.2 : 0.1); }
+    else if(tool === 'hose'){
+      const nx = aim.x + s*0.55, ny = aim.y - s*0.95;
+      drawHosePipe(ch.handX, ch.handY, nx - Math.cos(2.2)*s*0.1, ny - Math.sin(2.2)*s*0.1);
+      const tip = drawNozzle(aim.x, aim.y, s, aim.down);
+      if(aim.down){
+        // a fan of water from the nozzle to the spot
+        ctx.lineCap = 'round';
+        for(let i = 0; i < 5; i++){
+          const ox = rand(-12, 12)*k, oy = rand(-8, 8)*k;
+          ctx.strokeStyle = i % 2 ? 'rgba(165,216,255,0.9)' : 'rgba(77,171,247,0.75)'; ctx.lineWidth = Math.max(2, 5*k);
+          ctx.beginPath(); ctx.moveTo(tip.tx, tip.ty); ctx.quadraticCurveTo((tip.tx + aim.x)/2 + ox, (tip.ty + aim.y)/2 + oy - 10*k, aim.x + ox, aim.y + oy); ctx.stroke();
+        }
+        ctx.fillStyle = 'rgba(255,255,255,0.7)'; ell(ctx, aim.x, aim.y, 22*k, 12*k); ctx.fill();
+      }
+    }
+    return true;
+  }
+  function drawToolInHand(){
+    const t = tool || (stage === 'soap' || stage === 'arrive' ? 'sponge' : null);
+    if(!t || (toolActive() && aim.seen)) return;
+    const s = toolSize()*0.8, x = ch.handX + ch.face*s*0.25, y = ch.handY;
+    if(t === 'sponge') drawSponge(x, y, s, 0.2*ch.face);
+    else if(t === 'towel') drawTowel(x, y + s*0.2, s, -0.3*ch.face);
+    else if(t === 'hose'){
+      ctx.save(); ctx.translate(x, y); ctx.scale(ch.face, 1); ctx.rotate(0.3);
+      ctx.fillStyle = '#40C057'; ctx.strokeStyle = O; ctx.lineWidth = 3; rr(ctx, -s*0.1, -s*0.13, s*0.62, s*0.26, s*0.08); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#2F9E44'; rr(ctx, s*0.5, -s*0.18, s*0.14, s*0.36, s*0.05); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  // ===== DRAWING THE CAR ON THE SCREEN =====
+  function drawSticker(g, kind, s){
+    g.lineJoin = 'round'; g.strokeStyle = O; g.lineWidth = 3;
+    if(kind === 'star'){
+      g.beginPath(); for(let i = 0; i < 10; i++){ const r = i % 2 ? 8*s : 19*s, a = -Math.PI/2 + i*Math.PI/5; g.lineTo(Math.cos(a)*r, Math.sin(a)*r); } g.closePath();
+      g.fillStyle = '#FFD43B'; g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,0.7)'; ell(g, -4*s, -5*s, 3*s, 2*s); g.fill();
+    } else if(kind === 'heart'){
+      g.beginPath(); g.moveTo(0, 16*s); g.bezierCurveTo(-20*s, 2*s, -20*s, -16*s, -8*s, -16*s); g.bezierCurveTo(-3*s, -16*s, 0, -11*s, 0, -8*s); g.bezierCurveTo(0, -11*s, 3*s, -16*s, 8*s, -16*s); g.bezierCurveTo(20*s, -16*s, 20*s, 2*s, 0, 16*s); g.closePath();
+      g.fillStyle = '#FF4F9A'; g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,0.7)'; ell(g, -8*s, -8*s, 3.5*s, 2.4*s); g.fill();
+    } else if(kind === 'flame'){
+      g.beginPath(); g.moveTo(-26*s, 8*s); g.quadraticCurveTo(-10*s, -2*s, 4*s, -14*s); g.quadraticCurveTo(2*s, -4*s, 10*s, -8*s); g.quadraticCurveTo(22*s, -14*s, 26*s, -2*s); g.quadraticCurveTo(24*s, 12*s, 6*s, 14*s); g.quadraticCurveTo(-12*s, 16*s, -26*s, 8*s); g.closePath();
+      g.fillStyle = '#FF922B'; g.fill(); g.stroke();
+      g.beginPath(); g.moveTo(-14*s, 8*s); g.quadraticCurveTo(0, 0, 8*s, -6*s); g.quadraticCurveTo(8*s, 0, 14*s, -2*s); g.quadraticCurveTo(18*s, 8*s, 4*s, 10*s); g.closePath(); g.fillStyle = '#FFE066'; g.fill();
+    } else if(kind === 'foot'){
+      g.fillStyle = '#9775FA';
+      ell(g, 0, 5*s, 11*s, 12*s); g.fill(); g.stroke();
+      [[-12, -10, -0.45], [0, -16, 0], [12, -10, 0.45]].forEach(([x, y, r]) => { ell(g, x*s, y*s, 4.5*s, 7*s, r); g.fill(); g.stroke(); });
+    }
+  }
+  function drawCarOnScreen(){
+    const c = car;
+    const x = carX + c.off, y = groundY + c.bounce;
+    // shadow on the floor
+    ctx.fillStyle = 'rgba(40,40,80,0.18)'; ell(ctx, x, groundY + 2, 230*k, 12*k); ctx.fill();
+    ctx.save(); ctx.translate(x, y);
+    const wob = c.tickleT > 0 ? Math.sin(clock*40)*0.008 : 0;
+    ctx.rotate(wob + c.wob);
+    ctx.scale(k, k);
+    // the clean car underneath (with the new paint sweeping across)
+    ctx.drawImage(Lc.car, BX0, BY0, BW, BH);
+    if(c.paintT > 0){
+      const u = ease(c.paintT), px = BX0 + BW*u;
+      ctx.save(); ctx.beginPath(); ctx.rect(BX0, BY0, px - BX0, BH); ctx.clip(); ctx.drawImage(Lc.car2, BX0, BY0, BW, BH); ctx.restore();
+    }
+    // dents (they boing out when you scrub them)
+    c.dents.forEach(d => {
+      if(d.popT > 0.5) return;
+      const sc = d.popT ? 1 - d.popT*2 : 1;
+      ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.rot); ctx.scale(sc, sc);
+      ctx.fillStyle = 'rgba(40,20,60,0.28)'; ell(ctx, 0, 0, d.r, d.r*0.6); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.35)'; ell(ctx, 2, 3, d.r*0.7, d.r*0.35); ctx.fill();
+      ctx.strokeStyle = 'rgba(40,20,60,0.5)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(0, 0, d.r*0.9, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+      ctx.restore();
+    });
+    // mud, foam and water drops on top
+    ctx.globalAlpha = fades.dirt; ctx.drawImage(Lc.dirt, BX0, BY0, BW, BH);
+    ctx.globalAlpha = fades.foam; ctx.drawImage(Lc.foam, BX0, BY0, BW, BH);
+    ctx.globalAlpha = fades.wet*wetIn; ctx.drawImage(Lc.wet, BX0, BY0, BW, BH);
+    ctx.globalAlpha = 1;
+    // stickers
+    c.stickers.forEach(st => {
+      const pop = st.t < 0.3 ? 1 + Math.sin(st.t/0.3*Math.PI)*0.35 : 1;
+      ctx.save(); ctx.translate(st.x, st.y); ctx.rotate(st.rot); ctx.scale(st.s*pop, st.s*pop);
+      ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.85; ell(ctx, 0, 0, 22, 20); ctx.fill(); ctx.globalAlpha = 1;
+      drawSticker(ctx, st.kind, 0.85);
+      ctx.restore();
+    });
+    // leaves stuck on
+    c.leaves.forEach(l => { if(!l.gone) drawLeaf(ctx, l.x, l.y, 16*l.s, l.rot, l.col); });
+    // a shiny sweep across the clean car
+    if(c.happy){
+      const period = 2.6, u = ((c.sweepT % period)/period)*1.6 - 0.3;
+      const g = G.fx; wipe(g);
+      const sx = BX0 + BW*u;
+      const gr = g.createLinearGradient(sx - 60, 0, sx + 60, 0);
+      gr.addColorStop(0, 'rgba(255,255,255,0)'); gr.addColorStop(0.5, 'rgba(255,255,255,0.7)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = gr; g.fillRect(sx - 60, BY0, 120, BH);
+      clipToCar(g);
+      ctx.drawImage(Lc.fx, BX0, BY0, BW, BH);
+    }
+    drawFace();
+    ctx.restore();
+  }
+  function drawLeaf(g, x, y, s, rot, col){
+    g.save(); g.translate(x, y); g.rotate(rot);
+    g.fillStyle = col; g.strokeStyle = O; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(-s, 0); g.quadraticCurveTo(0, -s*0.8, s, 0); g.quadraticCurveTo(0, s*0.8, -s, 0); g.closePath(); g.fill(); g.stroke();
+    g.strokeStyle = shade(col.length === 7 ? col : '#69DB7C', -0.3); g.lineWidth = 1.5; line(g, -s*0.9, 0, s*0.8, 0);
+    g.restore();
+  }
+  function drawFace(){
+    const c = car, [ex, ey, es] = c.t.eye, [mx, my] = c.t.mouth;
+    const happy = c.happy || c.tickleT > 0 || stage === 'leave';
+    // the eye (in the front window) - it looks at your finger
+    if(happy){
+      ctx.strokeStyle = O; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.arc(ex, ey + es*0.4, es*0.75, Math.PI*1.1, Math.PI*1.9); ctx.stroke();
+    } else {
+      const bl = c.blink > 0 ? 0.12 : 1;
+      ctx.fillStyle = '#fff'; ell(ctx, ex, ey, es*0.8, es*bl); ctx.fill(); ctx.strokeStyle = O; ctx.lineWidth = 3; ctx.stroke();
+      if(bl > 0.5){
+        let lx = -3, ly = 2;
+        if(aim.seen){ const p = toLocal(aim.x, aim.y); const dx = p.x - ex, dy = p.y - ey, d = Math.hypot(dx, dy) || 1; lx = dx/d*es*0.3; ly = dy/d*es*0.35; }
+        ctx.fillStyle = '#2B1B45'; ell(ctx, ex + lx, ey + ly, es*0.45, es*0.52); ctx.fill();
+        ctx.fillStyle = '#fff'; ell(ctx, ex + lx + es*0.15, ey + ly - es*0.2, es*0.16, es*0.16); ctx.fill();
+      }
+    }
+    // rosy cheek and smile at the front
+    ctx.fillStyle = 'rgba(255,120,180,0.5)'; ell(ctx, mx - 16, my - 16, 8, 4.5); ctx.fill();
+    ctx.strokeStyle = O; ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+    if(c.tickleT > 0 || c.talkT > 0){
+      const o = c.talkT > 0 ? 0.6 + Math.abs(Math.sin(clock*14))*0.5 : 0.8 + Math.abs(Math.sin(clock*25))*0.4;
+      ctx.fillStyle = '#6B2A63'; ctx.beginPath(); ctx.moveTo(mx - 12, my - 6); ctx.quadraticCurveTo(mx, my + 10*o, mx + 10, my - 6); ctx.closePath(); ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(mx - 12, my - 6); ctx.quadraticCurveTo(mx, my + 5, mx + 10, my - 6); ctx.stroke();
+    }
+  }
+
+  // ===== THE POINTING HAND =====
+  let handOn = false;
+  function placeHand(x, y, flip, bob){
+    if(!handOn){ handEl.hidden = false; handOn = true; }
+    const t = 'translate(' + (x - 29).toFixed(1) + 'px,' + (y - 2 + (flip ? -bob : bob)).toFixed(1) + 'px)' + (flip ? ' rotate(180deg)' : '');
+    handEl.style.transform = t;
+  }
+  function hideHand(){ if(handOn){ handEl.hidden = true; handOn = false; } }
+  function updateHand(){
+    if(!overlay.hidden || !car){ hideHand(); return; }
+    const bob = reduced ? 0 : Math.abs(Math.sin(clock*5))*10;
+    const br = board.getBoundingClientRect();
+    const pointAt = el => {
+      const r = el.getBoundingClientRect();
+      const cx = r.left - br.left + r.width/2, cy = r.top - br.top + r.height/2;
+      if(tall || cy > CH*0.62) placeHand(cx, r.top - br.top - 4, true, bob);
+      else placeHand(cx, r.bottom - br.top + 4 - r.height*0.35, false, bob);
+    };
+    // time to pick the next tool
+    if(need && !finishing && stageT > 0.6){ pointAt(toolBtns[need]); return; }
+    // show how to scrub: the hand wiggles over the car
+    const wash = STAGE_TOOL[stage] && tool && !finishing;
+    if(wash && ((!everScrubbed && stageT > 0.4) || idleT > 5) && !aim.down){
+      const u = clock*1.3;
+      const lx = Math.sin(u)*150, ly = -95 + Math.sin(u*3.1)*28;
+      const p = toScreen(lx, ly);
+      placeHand(p.x, p.y, false, 0);
+      return;
+    }
+    // the paint pots and then the go button
+    if(stage === 'style'){
+      if(stageT > 1 && stageT < 3.2 && !car.stickers.length && car.col === car.t.col){ pointAt(potsEl.children[4]); return; }
+      if(idleT > 7){ pointAt(goBtn); return; }
+    }
+    hideHand();
+  }
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt; stageT += dt;
+    if(!car) return;
+    idleT += dt;
+    // keyboard: arrow keys move the tool, Space scrubs
+    const kx = (keys.has('ArrowRight') ? 1 : 0) - (keys.has('ArrowLeft') ? 1 : 0), ky = (keys.has('ArrowDown') ? 1 : 0) - (keys.has('ArrowUp') ? 1 : 0);
+    if(kx || ky){
+      if(!aim.kb){ aim.kb = true; aim.x = carX + car.off; aim.y = groundY - 100*k; }
+      aim.seen = true;
+      const sp = 380*Math.max(0.6, k)*dt;
+      aim.x = clamp(aim.x + kx*sp, 0, playW); aim.y = clamp(aim.y + ky*sp, 0, CH);
+    }
+    const kbDown = keys.has('Space');
+    if(kbDown && need && !finishing && stageT > 0.3) pickTool(need);
+    const pressing = aim.down || (kbDown && aim.kb);
+    const moved = Math.hypot(aim.x - aim.lastX, aim.y - aim.lastY);
+    if(pressing && toolActive()){
+      stroke(aim.lastX, aim.lastY, aim.x, aim.y);
+      workAt(aim.x, aim.y, moved, dt);
+    } else if(spray) sprayOff();
+    aim.lastX = aim.x; aim.lastY = aim.y;
+    if(foamDirty){ clipToCar(G.foam); foamDirty = false; }
+    if(wetDirty){ clipToCar(G.wet); wetDirty = false; }
+
+    // the stages
+    if(stage === 'arrive'){
+      const u = clamp(stageT/1.8, 0, 1);
+      car.off = -(carX + 290*k)*(1 - ease(u));
+      car.bounce = -Math.abs(Math.sin(stageT*14))*2*k*(1 - u);
+      if(stageT - dt < 0.25 && stageT >= 0.25){ sfx.honk(car.t.honk); popWord('HONK!', Math.max(70*Math.max(0.6, k), carX + car.off + 170*k), groundY - 230*k, '#FF922B'); }
+      if(stageT - dt < 1.5 && stageT >= 1.5) sfx.brakes();
+      if(stageT - dt < 0.2 && stageT >= 0.2) sfx.vroom();
+      if(u >= 1){ car.off = 0; car.wob = 0; startWash('soap'); }
+      else car.wob = u > 0.8 ? Math.sin((u - 0.8)*30)*0.02*(1 - u)*5 : 0;
+      if(Math.random() < dt*10 && !reduced) parts.push({kind: 'puff', x: carX + car.off - 230*k, y: groundY - 30*k, vx: rand(-60, -20), vy: rand(-30, -10), life: 0, max: 0.8, r: rand(8, 14)*k});
+    } else if(STAGE_TOOL[stage]){
+      if(!finishing && progress() >= 0.85) finishWash();
+      if(finishing){
+        finishing += dt;
+        const f = clamp(1 - finishing/0.6, 0, 1);
+        if(stage === 'soap') fades.dirt = f;
+        if(stage === 'rinse'){ fades.dirt = f; fades.foam = f; wetIn = 1 - f; }
+        if(stage === 'dry') fades.wet = f;
+        if(finishing > 0.75) afterFinish();
+      }
+    } else if(stage === 'shine'){
+      car.sweepT += dt;
+      if(stageT > 2.6) startStyle();
+    } else if(stage === 'style'){
+      car.sweepT += dt;
+      goReadyT += dt;
+      goBtn.classList.toggle('next', goReadyT > 4 || idleT > 6);
+    } else if(stage === 'leave'){
+      car.sweepT += dt;
+      if(stageT > 1.3){
+        const u = (stageT - 1.3)/1.5;
+        if(stageT - dt <= 1.3){ sfx.vroom(); }
+        car.off = (CW - carX + 300*k)*Math.pow(clamp(u, 0, 1), 2);
+        if(Math.random() < dt*14 && !reduced) parts.push({kind: 'puff', x: carX + car.off - 230*k, y: groundY - 30*k, vx: rand(-80, -30), vy: rand(-30, -10), life: 0, max: 0.8, r: rand(8, 14)*k});
+        if(u >= 1){
+          washedCount++; washedCols.push(car.col); washedCols = washedCols.slice(-8);
+          save(KEY + 'count', washedCount); save(KEY + 'cols', washedCols);
+          updateCounter(true); sfx.ding();
+          newCar();
+        }
+      }
+    }
+    // paint sweeping across
+    if(car.paintT > 0){
+      car.paintT += dt/0.7;
+      if(Math.random() < dt*40){ const p = toScreen(BX0 + BW*ease(car.paintT), rand(-200, -30)); if(nearCar(p.x, p.y, 10)) parts.push({kind: 'splat', x: p.x, y: p.y, vx: rand(-60, 60)*k, vy: rand(-120, 20)*k, life: 0, max: 0.6, r: rand(4, 8)*k, col: car.newCol}); }
+      if(car.paintT >= 1){
+        car.paintT = 0; car.col = car.newCol;
+        const t = Lc.car; Lc.car = Lc.car2; Lc.car2 = t; const tg = G.car; G.car = G.car2; G.car2 = tg;
+        markPot(); ch.thumbT = 1.2; sfx.sticker();
+      }
+    }
+    // the car's face and wiggles
+    car.tickleT = Math.max(0, car.tickleT - dt);
+    car.talkT = Math.max(0, car.talkT - dt);
+    car.blinkT -= dt; if(car.blinkT < 0){ car.blink = 0.14; car.blinkT = rand(2, 4.5); }
+    car.blink = Math.max(0, car.blink - dt);
+    car.dents.forEach(d => { if(d.popT) d.popT += dt; });
+    car.stickers.forEach(s => s.t += dt);
+    if(stage === 'leave' && stageT < 1.3) car.bounce = -Math.abs(Math.sin(stageT*10))*4*k;
+    else if(stage !== 'arrive') car.bounce = stage === 'shine' ? -Math.abs(Math.sin(stageT*8))*5*k : 0;
+    // twinkles on a shiny car
+    if(car.happy && stage !== 'leave' && Math.random() < dt*6){
+      const p = toScreen(rand(-220, 220), rand(-220, -30));
+      if(nearCar(p.x, p.y, 0)) parts.push({kind: 'spark', x: p.x, y: p.y, vx: 0, vy: 0, life: 0, max: rand(0.6, 1), r: rand(6, 12)*k, col: '#fff'});
+    }
+    // Chomper
+    ['giggleT', 'shakeT', 'danceT', 'thumbT', 'roarT'].forEach(n => { ch[n] = Math.max(0, ch[n] - dt); });
+    ch.blinkT -= dt; if(ch.blinkT < 0){ ch.blink = 0.14; ch.blinkT = rand(2, 5); } ch.blink = Math.max(0, ch.blink - dt);
+    if(ch.shakeT > 0 && Math.random() < dt*20) parts.push({kind: 'splash', x: ch.x + rand(-30, 30)*ch.cs, y: ch.y - rand(40, 110)*ch.cs, vx: rand(-220, 220)*ch.cs, vy: rand(-200, -60)*ch.cs, life: 0, max: 0.6, r: rand(3, 5)*ch.cs});
+    // floating bubbles in the background
+    if(!reduced && Math.random() < dt*1.2) ambient.push({x: rand(0, playW), y: CH + 10, r: rand(5, 14)*Math.max(0.6, k), vy: rand(-40, -20), w: rand(0, TAU)});
+    ambient.forEach(b => { b.y += b.vy*dt; b.w += dt*2; });
+    ambient = ambient.filter(b => b.y > -20);
+    // the flying bits
+    parts.forEach(p => {
+      p.life += dt;
+      if(p.kind === 'bubble'){ p.x += (p.vx + Math.sin(p.life*5)*20)*dt; p.y += p.vy*dt; }
+      else if(p.kind === 'leaf'){ p.vy += 300*k*dt; p.vx *= 0.99; p.x += (p.vx + Math.sin(p.life*4)*60*k)*dt; p.y += p.vy*dt; p.rot += p.vr*dt; }
+      else if(p.kind === 'conf'){ p.vy += 500*k*dt; p.vx *= 0.99; p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt; }
+      else if(p.kind === 'puff'){ p.x += p.vx*dt; p.y += p.vy*dt; p.r += 14*dt; }
+      else { p.vy += (p.kind === 'spark' ? 0 : 700*k)*dt; p.x += p.vx*dt; p.y += p.vy*dt; }
+    });
+    parts = parts.filter(p => p.life < p.max);
+    if(parts.length > 400) parts.splice(0, parts.length - 400);
+    words.forEach(w => w.t += dt);
+    words = words.filter(w => w.t < 1.1);
+    updateHand();
+  }
+
+  // ===== DRAW =====
+  function drawParts(){
+    parts.forEach(p => {
+      const u = p.life/p.max, a = 1 - u;
+      if(p.kind === 'bubble'){ ctx.globalAlpha = Math.min(1, a*2); bubble(ctx, p.x, p.y, p.r); }
+      else if(p.kind === 'splash'){ ctx.globalAlpha = a; ctx.fillStyle = '#74C0FC'; ell(ctx, p.x, p.y, p.r, p.r*1.3); ctx.fill(); ctx.fillStyle = '#fff'; ell(ctx, p.x - p.r*0.3, p.y - p.r*0.3, p.r*0.3, p.r*0.3); ctx.fill(); }
+      else if(p.kind === 'splat'){ ctx.globalAlpha = a; ctx.fillStyle = p.col; ell(ctx, p.x, p.y, p.r, p.r); ctx.fill(); }
+      else if(p.kind === 'spark'){ ctx.globalAlpha = Math.sin(u*Math.PI); drawTwinkle(p.x, p.y, p.r, p.col); }
+      else if(p.kind === 'leaf'){ ctx.globalAlpha = Math.min(1, a*3); drawLeaf(ctx, p.x, p.y, p.r, p.rot, p.col); }
+      else if(p.kind === 'conf'){ ctx.globalAlpha = Math.min(1, a*3); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col; ctx.fillRect(-p.r, -p.r*0.5, p.r*2, p.r); ctx.restore(); }
+      else if(p.kind === 'puff'){ ctx.globalAlpha = a*0.7; ctx.fillStyle = '#fff'; ell(ctx, p.x, p.y, p.r, p.r); ctx.fill(); }
+    });
+    ctx.globalAlpha = 1;
+  }
+  function drawTwinkle(x, y, r, col){
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r); ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r); ctx.fill();
+    if(col === '#fff'){ ctx.strokeStyle = 'rgba(255,212,59,0.8)'; ctx.lineWidth = 1.5; ctx.stroke(); }
+  }
+  function drawWords(){
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    words.forEach(w => {
+      const u = w.t/1.1, sc = w.t < 0.2 ? 0.5 + w.t/0.2*0.6 : 1.1 - (w.t - 0.2)*0.1;
+      ctx.globalAlpha = u > 0.75 ? (1 - u)/0.25 : 1;
+      const sz = Math.max(20, 40*k)*sc;
+      ctx.font = Math.round(sz) + 'px ' + FONT;
+      ctx.lineWidth = sz*0.2; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round';
+      ctx.strokeText(w.text, w.x, w.y - u*40*k); ctx.fillStyle = w.col; ctx.fillText(w.text, w.x, w.y - u*40*k);
+    });
+    ctx.globalAlpha = 1;
+  }
+  function drawThanks(){
+    if(stage !== 'leave' || stageT > 2.2 || !car) return;
+    const a = stageT < 0.15 ? stageT/0.15 : stageT > 1.9 ? (2.2 - stageT)/0.3 : 1;
+    const x = clamp(carX + car.off + 60*k, 90*Math.max(0.7, k), playW - 90*Math.max(0.7, k)), y = groundY - 280*k;
+    const sz = Math.max(20, 34*k), w = sz*5.4, h = sz*1.7;
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#fff'; ctx.strokeStyle = O; ctx.lineWidth = 3;
+    rr(ctx, x - w/2, y - h/2, w, h, h/2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - w*0.1, y + h/2 - 2); ctx.lineTo(x - w*0.02, y + h/2 + sz*0.6); ctx.lineTo(x + w*0.08, y + h/2 - 2); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.fillRect(x - w*0.1 + 2, y + h/2 - 4, w*0.18 - 4, 5);
+    ctx.font = Math.round(sz) + 'px ' + FONT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#FF4F9A'; ctx.fillText('Thank you!', x - sz*0.35, y + 2);
+    ctx.save(); ctx.translate(x + w*0.36, y); drawSticker(ctx, 'heart', sz/34*0.8); ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+  function draw(){
+    ctx.setTransform(PX, 0, 0, PX, 0, 0);
+    ctx.drawImage(bg, 0, 0, CW, CH);
+    // gentle bubbles floating up in the background
+    ambient.forEach(b => { ctx.globalAlpha = 0.6; bubble(ctx, b.x + Math.sin(b.w)*8, b.y, b.r); });
+    ctx.globalAlpha = 1;
+    drawStool();
+    drawChomper();
+    if(car) drawCarOnScreen();
+    if(car && !(toolActive() && aim.seen)) drawToolInHand();
+    drawParts();
+    if(car) drawToolAtAim();
+    drawWords();
+    drawThanks();
+  }
+
+  // ===== CONTROLS =====
+  function boardPos(e){ const r = board.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; }
+  function onChomper(p){ return Math.abs(p.x - ch.x) < 60*ch.cs && p.y < ch.y + 5 && p.y > ch.y - 125*ch.cs; }
+  board.addEventListener('pointerdown', e => {
+    if(!overlay.hidden || e.target.closest('button')) return;
+    const p = boardPos(e);
+    try { board.setPointerCapture(e.pointerId); } catch(err){}
+    e.preventDefault();
+    wake(); startMusic();
+    aim.kb = false; aim.x = aim.lastX = p.x; aim.y = aim.lastY = p.y; aim.seen = true; aim.down = true;
+    if(!car) return;
+    idleT = 0;
+    // a finger on the car when a new tool is waiting just picks it up
+    if(need && !finishing && nearCar(p.x, p.y, 30)){ pickTool(need); return; }
+    if(toolActive()) return;
+    if(stage === 'style' && nearCar(p.x, p.y, 0)){
+      const l = toLocal(p.x, p.y);
+      if(sticker) addSticker(sticker, l.x, l.y);
+      else { car.tickleT = 0.6; sfx.honk(car.t.honk); popWord('HONK!', p.x, p.y - 30*k, '#FF922B'); }
+      return;
+    }
+    if(onChomper(p)){ ch.giggleT = 0.9; ch.roarT = 0.9; sfx.roar(); return; }
+    if(nearCar(p.x, p.y, 0) && clock > lastHitT){ lastHitT = clock + 0.8; car.tickleT = 0.6; sfx.honk(car.t.honk); popWord('HONK!', p.x, p.y - 30*k, '#FF922B'); }
+  });
+  board.addEventListener('pointermove', e => {
+    if(e.target.closest && e.target.closest('button') && !aim.down) { if(e.pointerType === 'mouse') aim.seen = false; return; }
+    const p = boardPos(e);
+    aim.x = p.x; aim.y = p.y; aim.kb = false;
+    aim.seen = aim.down || e.pointerType === 'mouse';
+  });
+  const up = () => { aim.down = false; sprayOff(); if(!aim.kb && !matchMedia('(hover: hover)').matches) aim.seen = false; };
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => board.addEventListener(t, up));
+  board.addEventListener('pointerleave', e => { if(e.pointerType === 'mouse' && !aim.down) aim.seen = false; });
+  board.addEventListener('contextmenu', e => e.preventDefault());
+  addEventListener('keydown', e => {
+    if(!overlay.hidden){
+      if(e.code === 'Enter' || e.code === 'Space'){
+        const a = document.activeElement;
+        if(a && a.tagName === 'BUTTON' && overlay.contains(a)) return;
+        e.preventDefault(); ovBtn.click();
+      }
+      return;
+    }
+    const a = document.activeElement, onBtn = a && a.tagName === 'BUTTON';
+    if(e.code.startsWith('Arrow')){ keys.add(e.code); e.preventDefault(); wake(); }
+    else if(e.code === 'Space' || e.code === 'Enter'){
+      if(onBtn) return;             // let the focused button do its thing
+      e.preventDefault(); wake(); startMusic();
+      if(need){ if(!e.repeat) pickTool(need); }
+      else if(stage === 'style'){ if(!e.repeat) drive(); }
+      else if(e.code === 'Space'){ keys.add('Space'); if(!aim.kb){ aim.kb = true; aim.seen = true; aim.x = aim.lastX = carX + car.off; aim.y = aim.lastY = groundY - 100*k; } }
+    }
+  });
+  addEventListener('keyup', e => { keys.delete(e.code); if(e.code === 'Space') sprayOff(); });
+
+  // ===== START PANEL =====
+  function buildKey(){
+    const rows = [['👆 Drag on the car', 'scrub, spray and dry'], ['🧽 🚿 🧺 Tap a tool', 'when it wiggles'], ['⌨️ Arrow keys', 'move the tool'], ['⌨️ Space', 'scrub (or pick the next tool)']];
+    ovKey.innerHTML = rows.map(r => '<span>' + r[0] + '</span><span>' + r[1] + '</span>').join('');
+  }
+  ovBtn.addEventListener('click', () => {
+    wake(); startMusic();
+    overlay.hidden = true;
+    started = true;
+    newCar();
+    stageT = 0;
+  });
+
+  // ===== SIZE AND LOOP =====
+  function resize(){
+    const r = board.getBoundingClientRect(), dpr = Math.min(2.5, window.devicePixelRatio || 1);
+    if(r.width < 2 || r.height < 2) return;
+    CW = r.width; CH = r.height;
+    cvs.width = Math.round(r.width*dpr); cvs.height = Math.round(r.height*dpr);
+    PX = cvs.width/r.width;
+    layout();
+  }
+  addEventListener('resize', resize);
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawBackground(); });
+
+  let last = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t - last)/1000); last = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  resize();
+  newCar(true); stage = 'intro'; car.off = 0;
+  buildKey();
+  updateCounter(false);
+  setTimeout(() => { try { ovBtn.focus({preventScroll: true}); } catch(e){} }, 50);
+  requestAnimationFrame(loop);
+  /* end of game code */
+})();
+</script>
+</body>
+</html>
