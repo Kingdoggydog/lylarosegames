@@ -490,9 +490,18 @@
   let nIn = 1, nDone = 0;
   function setupCells(){
     nIn = 0;
+    const on = new Uint8Array(GW*GH);
+    for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++) on[j*GW + i] = insideAt(BX0 + (i + 0.5)*CELL, BY0 + (j + 0.5)*CELL) ? 1 : 0;
+    // a square only counts if most of its neighbours are car too - so thin bits (crane arms, hooks,
+    // lights) that are easy to miss never stop a car from being "clean enough"
     for(let j = 0; j < GH; j++) for(let i = 0; i < GW; i++){
-      const x = BX0 + (i + 0.5)*CELL, y = BY0 + (j + 0.5)*CELL;
-      const v = insideAt(x, y) ? 1 : 0; cellIn[j*GW + i] = v; nIn += v;
+      let v = 0;
+      if(on[j*GW + i]){
+        let n = 0;
+        for(let dj = -1; dj <= 1; dj++) for(let di = -1; di <= 1; di++){ const a = i + di, b = j + dj; if(a >= 0 && b >= 0 && a < GW && b < GH && on[b*GW + a]) n++; }
+        v = n >= 7 ? 1 : 0;
+      }
+      cellIn[j*GW + i] = v; nIn += v;
     }
     nIn = Math.max(1, nIn);
   }
@@ -1012,6 +1021,8 @@
       ch.x = Math.min(carX + 240*k + room*0.5, playW - 94*ch.cs + 24);
       ch.y = groundY - 18*k;
     }
+    if(!(k > 0.15)) k = 0.15;
+    if(!(ch.cs > 0.3)) ch.cs = 0.3;
     board.style.setProperty('--tb', Math.round(tbSize) + 'px');
     board.style.setProperty('--bs', Math.round(bs) + 'px');
     board.style.setProperty('--ph', Math.round(ph) + 'px');
@@ -1025,7 +1036,7 @@
   function drawBackground(){
     bg.width = cvs.width; bg.height = cvs.height;
     const g = bgc; g.setTransform(PX, 0, 0, PX, 0, 0);
-    const w = CW, h = CH, s = k;
+    const w = CW, h = CH, s = Math.max(0.15, k);
     // sky
     const sky = g.createLinearGradient(0, 0, 0, groundY);
     sky.addColorStop(0, '#8FD3FF'); sky.addColorStop(1, '#E3F5FF');
@@ -1461,7 +1472,9 @@
       else car.wob = u > 0.8 ? Math.sin((u - 0.8)*30)*0.02*(1 - u)*5 : 0;
       if(Math.random() < dt*10 && !reduced) parts.push({kind: 'puff', x: carX + car.off - 230*k, y: groundY - 30*k, vx: rand(-60, -20), vy: rand(-30, -10), life: 0, max: 0.8, r: rand(8, 14)*k});
     } else if(STAGE_TOOL[stage]){
-      if(!finishing && progress() >= 0.85) finishWash();
+      // normally 85% clean finishes the step; if a little one has been rubbing for a while, less will do
+      const goal = stageT > 25 ? 0.6 : stageT > 15 ? 0.72 : 0.85;
+      if(!finishing && progress() >= goal) finishWash();
       if(finishing){
         finishing += dt;
         const f = clamp(1 - finishing/0.6, 0, 1);
@@ -1684,11 +1697,12 @@
   if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { drawBackground(); });
 
   let last = performance.now();
+  let oops = 0;
   function loop(t){
-    const dt = Math.min(0.05, (t - last)/1000); last = t;
-    update(dt);
-    draw();
     requestAnimationFrame(loop);
+    const dt = Math.min(0.05, Math.max(0, (t - last)/1000)); last = t;
+    try { update(dt); draw(); }
+    catch(e){ if(oops++ < 3) console.error(e); }
   }
 
   resize();
