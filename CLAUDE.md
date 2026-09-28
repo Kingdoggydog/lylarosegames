@@ -64,6 +64,9 @@ games/<folder>/     one folder per game, fully self-contained
 
 ### Phones and iPads - every game must:
 
+- **On phones the game fills the whole screen** (like Glitter Sky Unicorn - Andy's choice, 28 Sep). Inside this phone-only media query:
+  `@media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) { ... }`
+  hide the big title and help text (they belong in the start panel), float the scores as small see-through pills in a corner, make "← All games" / pause / music / sound small round icon buttons (40px+) in a corner, and float action buttons (Jump, Toot...) over the game by the thumbs (56px+). Don't cover the key gameplay. iPads and computers keep the normal layout with the title.
 - Fit the screen with no page scrolling, on phone (upright and sideways) and iPad (both ways) as well as computers. Use `height:100dvh` on the body, and size the play area to the space left over (e.g. a `.stage` with `container-type:size` and a board of `width:min(100cqw, 100cqh * ratio)`) rather than by width alone.
 - Redraw the canvas when its box changes size (`ResizeObserver`), not only on window resize.
 - Keep clear of notches: pad with `env(safe-area-inset-*)`.

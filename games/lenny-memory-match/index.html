@@ -114,6 +114,51 @@
     #lenny{width:48px;height:48px}
     .bubble{font-size:14px}
   }
+
+  /* ===== PHONES ONLY: the cards fill the screen, everything else floats over the corners ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))}
+    .wrap{position:relative;display:block;max-width:none;height:100%}
+    h1{display:none}
+    /* the card table covers the whole screen; its padding keeps room for the floating bits */
+    .stage{position:absolute;inset:0;min-height:0;box-sizing:border-box;padding:50px 2px 48px}
+    .overlay{border-radius:14px;padding:50px 6px 8px}
+    /* back, music and sound: small floating buttons in the top corners */
+    .top{position:absolute;top:0;left:0;right:0;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+    .top > *{pointer-events:auto}
+    .snd{gap:6px}
+    .back-link,button.ghost{min-height:42px;min-width:42px;padding:0 9px;font-size:14px;background:#FFFFFFB3;box-shadow:0 2px 6px #1F5C3E26;border-radius:999px;justify-content:center}
+    .back-link{font-size:0;padding:0;width:42px}
+    .back-link::before{content:"←";content:"←" / "";font-size:21px;line-height:1}
+    /* level, pairs and tries: little see-through pills */
+    header{position:absolute;z-index:2;top:0;left:50px;right:118px;height:42px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+    .stats{gap:4px;justify-content:center}
+    .pill{font-size:12px;padding:3px 7px;background:#FFFFFFB3}
+    /* Lenny and his bubble: a small floating strip at the bottom */
+    .lennybar{position:absolute;z-index:2;left:0;right:0;bottom:0;height:44px;justify-content:center;pointer-events:none;flex-direction:row;align-items:center}
+    #lenny{width:42px;height:42px}
+    .bubble{font-size:13px;padding:5px 10px;background:#FFFFFFE6}
+    .bubble::before{left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:#FFFFFFE6}
+  /* phones on their side: floating bits go down the left and right edges instead */
+  @media (orientation: landscape) {
+    .stage{padding:2px 94px}
+    .overlay{padding:6px 94px}
+    .snd{flex-direction:column;align-items:flex-end}
+    header{left:0;right:auto;top:48px;width:90px;height:auto;display:block}
+    .stats{flex-direction:column;align-items:flex-start}
+    .lennybar{left:auto;right:0;width:90px;height:auto;flex-direction:column;align-items:flex-end;gap:6px}
+    .bubble{font-size:12px;padding:5px 8px;max-width:90px;box-sizing:border-box}
+    .bubble::before{left:auto;right:16px;top:auto;bottom:-8px;margin-top:0;border:8px solid transparent;border-bottom:0;border-top-color:#FFFFFFE6}
+    #lenny{order:2}
+    .panel{padding:10px 14px;gap:6px}
+    .panel h2{font-size:24px}
+    .panel p{font-size:13px}
+    .panel .starrow{font-size:30px}
+    .panel .big{font-size:16px}
+    .levels button{min-height:40px;padding:2px 6px;font-size:14px}
+    #ovBtn{min-height:44px;padding:8px 18px}
+  }
+  }
 </style>
 <meta name="description" content="Lenny's Memory Match - a free memory game for kids. Flip the cards, find the matching jungle pairs and help Lenny the Lemur remember where everything is!">
 <!-- ===== SEO for this game (Google + share previews) ===== -->
@@ -709,7 +754,11 @@
   // ===== FIT THE CARDS TO ANY SCREEN =====
   function layout(){
     const r = stage.getBoundingClientRect();
-    const W = r.width, H = r.height, n = cards.length;
+    // on phones the stage has padding to keep room for the floating buttons (zero everywhere else)
+    const cs = getComputedStyle(stage);
+    const W = r.width - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+    const H = r.height - (parseFloat(cs.paddingTop) || 0) - (parseFloat(cs.paddingBottom) || 0);
+    const n = cards.length;
     if(!W || !H || !n) return;
     const gap = Math.max(6, Math.min(14, Math.min(W, H)*0.022));
     let bestFit = null;
@@ -728,7 +777,7 @@
     grid.style.gridAutoRows = Math.floor(bestFit.h) + 'px';
     grid.style.setProperty('--fs', Math.floor(Math.min(bestFit.w, bestFit.h)*0.56) + 'px');
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    fx.width = Math.round(W*dpr); fx.height = Math.round(H*dpr);
+    fx.width = Math.round(r.width*dpr); fx.height = Math.round(r.height*dpr);
     fctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   new ResizeObserver(layout).observe(stage);

@@ -82,6 +82,40 @@
     .controls{grid-column:1;grid-row:3;align-self:end;gap:8px}
     .stage{grid-column:2;grid-row:1 / 4;min-height:0}
   }
+  /* PHONES ONLY: the game is as big as the screen allows, with small see-through bubbles and buttons floating over it */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{
+      background:linear-gradient(180deg,#BFE6F5 0%,#F7DDEB 72%,#7CCB7E 72%,#7CCB7E 83%,#EBCB9C 83%);
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    /* --bw is the width of the game on screen, so the floating bits can sit over its corners */
+    .wrap{display:block;position:relative;max-width:none;height:100%;container-type:size;--bw:min(100cqw,100cqh*1.82);--gx:calc((100cqw - var(--bw))/2)}
+    .stage{position:absolute;inset:0;min-height:0}
+    /* the game world can be drawn anywhere from 560 to 820 wide (by 450 tall), so use all of it */
+    .board{width:min(100cqw,100cqh*1.82);height:min(100cqh,100cqw*0.8036);border-radius:0;box-shadow:none}
+    h1,.sub,.help{display:none}
+    .back{position:absolute;z-index:3;left:calc(var(--gx) + 6px);top:6px;font-size:0;min-width:44px;min-height:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;background:#FFFFFFB3;box-shadow:0 2px 6px #0002}
+    .back::before{content:"←";font-size:22px;line-height:1}
+    .controls{position:absolute;z-index:3;right:calc(var(--gx) + 6px);top:6px;gap:4px;flex-wrap:nowrap}
+    .controls button.ghost{min-width:44px;min-height:44px;padding:4px 6px;font-size:14px;border-radius:999px;background:#FFFFFFB3;box-shadow:0 2px 6px #0002}
+    header{position:absolute;z-index:2;right:calc(var(--gx) + 6px);top:56px;display:block;pointer-events:none}
+    .stats{flex-direction:row;gap:4px;justify-content:flex-end}
+    .pill{font-size:12px;padding:3px 8px;background:#FFFFFFB3;box-shadow:0 1px 4px #0002}
+  }
+  /* phone upright: the sideways game sits in the middle, the buttons and bubbles float in the sky above it */
+  @media (max-width: 600px) and (orientation: portrait) {
+    body{background:linear-gradient(180deg,#BFE6F5 50%,#EBCB9C 50%)}
+    header{left:6px;right:6px}
+    .stats{justify-content:center}
+  }
+  /* phone on its side: bubbles and buttons over the game's top corners, keep them off the panel */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .back{top:62px}
+    .overlay{padding:8px 58px}
+    .panel{max-width:440px;padding:10px 16px;gap:6px}
+    /* the score bubbles step aside while a start/finish panel is up (the panel shows the scores) */
+    .wrap:has(#overlay:not([hidden])) header{visibility:hidden}
+  }
 </style>
 <meta name="description" content="Glitter Getaway - a free unicorn running game for kids. Jump over logs, collect glitter and gallop to the rainbow bridge before cheeky Lenny the Lemur pinches your sparkles.">
 <!-- ===== SEO for this game (Google + share previews) ===== -->

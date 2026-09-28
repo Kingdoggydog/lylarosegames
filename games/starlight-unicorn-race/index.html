@@ -110,6 +110,40 @@
     .stage{grid-column:2;grid-row:1 / 4;min-height:0}
   }
   @media (orientation:landscape) and (max-height:360px){ h1{font-size:20px} .pill{font-size:13px;padding:4px 9px} .stats{gap:4px} }
+
+  /* ===== PHONES ONLY: the race fills the screen, everything else floats ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+    .wrap{position:relative;display:block;max-width:none;height:100%}
+    h1,.sub,.help{display:none}
+    /* the race takes the whole screen (as big as its shape allows, centred) */
+    .stage{position:absolute;inset:0;min-height:0;box-sizing:border-box;padding:48px 0}
+    .board{border-radius:14px}
+    .overlay{z-index:2}
+    /* race name, time and best: small see-through pills over the top right of the race, just under the progress bar
+       (--bl/--bt/--bw/--bh are the race's position, set by resize()) */
+    header{position:absolute;z-index:1;display:block;top:calc(var(--bt,0px) + var(--bh,300px)*0.125);right:calc(100% - var(--bl,0px) - var(--bw,300px) + 6px);max-width:calc(var(--bw,300px)*0.68);pointer-events:none}
+    .stats{gap:4px;justify-content:flex-end;flex-direction:row;flex-wrap:wrap;align-items:center}
+    .pill{font-size:11px;padding:2px 7px;background:#FFFFFFB3}
+    /* back, pause, music and sound: small round floating buttons in the corners */
+    .controls{display:block}
+    .back,.controls button.ghost{position:absolute;z-index:5;box-sizing:border-box;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border-radius:50%;margin:3px;display:grid;place-items:center;background:#FFFFFFB3;box-shadow:0 2px 6px #2E6E6126;font-size:18px;line-height:1}
+    .back{top:0;left:0;font-size:0}
+    .back::before{content:"←";content:"←" / "";font-size:21px}
+    #pause{top:0;left:48px}
+    #music{top:0;right:48px;font-size:0}
+    #music::before{content:"🎵";content:"🎵" / "";font-size:18px}
+    #music[aria-label="Music off"]{opacity:.6}
+    #music[aria-label="Music off"]::after{content:"";position:absolute;left:9px;right:9px;top:50%;height:3px;margin-top:-1.5px;background:var(--ink);border-radius:2px;transform:rotate(-45deg)}
+    #sound{top:0;right:0}
+  /* phones on their side: buttons go down the spare strips either side of the race */
+  @media (orientation: landscape) {
+    .stage{padding:0 48px}
+    #pause{top:48px;left:0}
+    #music{top:0;right:0}
+    #sound{top:48px;right:0}
+  }
+  }
 </style>
 <meta name="description" content="Starlight's Unicorn Race - a free unicorn racing game for kids. Tap to gallop, jump the hurdles and race Lenny, Blossom and Chomper for the gold medal with a rainbow boost from Rainbow.">
 <!-- ===== SEO for this game (Google + share previews) ===== -->
@@ -1992,6 +2026,10 @@
   function resize(){
     const r = board.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     if(!r.width || !r.height) return;
+    // tell the page where the race sits (only used by the phone layout, to float the score pills over it)
+    const wr = board.parentNode.parentNode.getBoundingClientRect(), ws = board.parentNode.parentNode.style;
+    ws.setProperty('--bl', (r.left - wr.left) + 'px'); ws.setProperty('--bt', (r.top - wr.top) + 'px');
+    ws.setProperty('--bw', r.width + 'px'); ws.setProperty('--bh', r.height + 'px');
     W = Math.round(clamp(H*r.width/r.height, 600, 800));
     SX = Math.round(W*0.3);
     if(star && (state === 'menu' || state === 'count')) camD = star.d - SX;

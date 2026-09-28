@@ -54,6 +54,8 @@
   #kick:active{transform:translateY(3px);box-shadow:0 3px 0 #C23A78}
   #kick:disabled{opacity:.6;cursor:default}
   .help{font-size:13px;margin:0;flex:1 1 220px}
+  /* the help line sits under the controls in the page column: it must not grow and squash the pitch */
+  .wrap > .help{flex:none}
   .back{align-self:flex-start;font-weight:800;color:var(--hedge);text-decoration:none;background:var(--card);padding:6px 12px;border-radius:999px;font-size:14px}
   .back:hover{text-decoration:underline}
   /* phones and small screens: tuck away the extra words to make room for the pitch */
@@ -67,6 +69,31 @@
     .controls{grid-column:1;grid-row:3;align-self:end;flex-wrap:wrap}
     #kick{flex:1 1 100%;font-size:20px;padding:22px 16px}
     .stage{grid-column:2;grid-row:1 / 4;height:100%;aspect-ratio:4/3;min-height:0}
+  }
+  /* ===== PHONES ONLY: the stadium fills the whole screen, everything else floats over it ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+    header > div:first-child, .help{display:none}
+    /* the canvas covers the screen; the pitch is drawn as big as fits and the sky and grass carry on around it */
+    .stage{position:fixed;inset:0;z-index:0;min-height:0;height:auto;aspect-ratio:auto}
+    .board{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none;background:#5DB45F}
+    .overlay{padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+    .panel{max-height:100%;overflow:auto;box-sizing:border-box}
+    .back{position:fixed;z-index:3;top:calc(8px + env(safe-area-inset-top,0px));left:calc(8px + env(safe-area-inset-left,0px));
+      width:44px;height:44px;box-sizing:border-box;padding:0;display:grid;place-items:center;border-radius:50%;font-size:20px;box-shadow:0 2px 8px #1F4F4526}
+    .stats{position:fixed;z-index:3;top:calc(16px + env(safe-area-inset-top,0px));left:calc(60px + env(safe-area-inset-left,0px));right:calc(112px + env(safe-area-inset-right,0px));gap:6px}
+    .pill{font-size:12px;padding:5px 10px;background:#FFFFFFBF}
+    #music,#sound{position:fixed;z-index:3;top:calc(8px + env(safe-area-inset-top,0px));width:44px;height:44px;padding:0;border-radius:50%;font-size:20px;box-shadow:0 2px 8px #1F4F4526}
+    #sound{right:calc(8px + env(safe-area-inset-right,0px))}
+    #music{right:calc(58px + env(safe-area-inset-right,0px))}
+    #music[aria-label="Music off"]{opacity:.55}
+    #kick{position:fixed;z-index:3;right:calc(12px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
+      flex:none;min-width:170px;min-height:64px;padding:12px 18px;font-size:21px;background:#F2559BE6}
+    body:has(#overlay:not([hidden])) #kick{visibility:hidden}
+    /* sideways: the kick button sits in the grass beside the pitch */
+    @media (orientation: landscape) {
+      #kick{min-width:96px;width:min(160px, calc((100vw - 100vh*4/3)/2 - 18px - env(safe-area-inset-right,0px)));min-height:64px;padding:8px 10px;font-size:17px;line-height:1.15;white-space:normal}
+    }
   }
 </style>
 <meta name="description" content="Unicorn Penalty Shoot-out - a free soccer game for kids. Aim, kick and score past Lenny the Lemur.">
@@ -146,7 +173,7 @@
 </head>
 <body>
 <div class="wrap">
-  <a class="back" href="../../">← All games</a>
+  <a class="back" href="../../">←<span class="lbl"> All games</span></a>
   <header>
     <div>
       <h1>Unicorn Penalty Shoot-out</h1>
@@ -174,7 +201,7 @@
 
   <div class="controls">
     <button id="kick" disabled>Tap to aim ↔</button>
-    <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+    <button class="ghost" id="music" aria-label="Music on">🎵<span class="lbl"> On</span></button>
     <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
   </div>
   <p class="help">You can also tap the pitch, or press Space. Aim for the corners - but not too close to the posts! Lenny gets better the more you score.</p>
@@ -199,6 +226,9 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const W = 800, H = 600;
+  // the part of the picture to paint: exactly 0..W, 0..H except on phones, where the pitch fills the screen (see resize)
+  const phoneMQ = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  let X0 = 0, X1 = W, Y0 = 0, Y1 = H;
   // Simple 3D camera behind the penalty spot. x = left/right, y = height, z = distance out from the goal line (metres)
   const HOR = 190, F = 1400, CAMZ = 17, CAMH = 1.5;
   function P(x, y, z){ const D = CAMZ - z; return [400 + F*x/D, HOR + F*(CAMH - y)/D, F/D]; }
@@ -410,7 +440,7 @@
 
   function setSoundBtn(){
     soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
-    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    musicBtn.innerHTML = musicOn ? '🎵<span class="lbl"> On</span>' : '🎵<span class="lbl"> Off</span>'; // words hide on phones musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
     if(actx){
       master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
       musicBus.gain.cancelScheduledValues(actx.currentTime);
@@ -676,27 +706,30 @@
     // sky
     const sky = ctx.createLinearGradient(0, 0, 0, 60);
     sky.addColorStop(0, '#BFE6F5'); sky.addColorStop(1, '#E8F6FB');
-    ctx.fillStyle = sky; ctx.fillRect(0, 0, W, 60);
+    ctx.fillStyle = sky; ctx.fillRect(X0, Y0, X1 - X0, 60 - Y0);
     // stands
-    ctx.fillStyle = '#7C6FC4'; ctx.fillRect(0, 36, W, 150);
+    ctx.fillStyle = '#7C6FC4'; ctx.fillRect(X0, 36, X1 - X0, 150);
     ctx.fillStyle = '#6A5DB3';
-    for(let r = 0; r < 8; r++) ctx.fillRect(0, 40 + r*17, W, 3);
-    crowd.forEach(p => {
+    for(let r = 0; r < 8; r++) ctx.fillRect(X0, 40 + r*17, X1 - X0, 3);
+    // on phones the crowd repeats into the extra space either side (the crowd is 44 seats of 18.6 wide)
+    const CROWDW = 44*18.6, k0 = X0 < 0 ? Math.floor((X0 - 12)/CROWDW) : 0, k1 = X1 > W ? Math.ceil(X1/CROWDW) : 0;
+    for(let k = k0; k <= k1; k++) crowd.forEach(p => {
       const j = crowdJump > 0 && !reduced ? Math.abs(Math.sin(clock*12 + p.ph))*8*crowdJump : Math.sin(clock*2 + p.ph)*0.8;
       ctx.fillStyle = p.c;
-      ctx.beginPath(); ctx.arc(p.x, p.y - j, p.r, 0, Math.PI*2); ctx.fill();
-      ctx.fillRect(p.x - p.r, p.y - j + p.r*0.6, p.r*2, 8);
+      const x = p.x + k*CROWDW;
+      ctx.beginPath(); ctx.arc(x, p.y - j, p.r, 0, Math.PI*2); ctx.fill();
+      ctx.fillRect(x - p.r, p.y - j + p.r*0.6, p.r*2, 8);
     });
     // advertising board
-    ctx.fillStyle = '#F2559B'; ctx.fillRect(0, 176, W, 22);
+    ctx.fillStyle = '#F2559B'; ctx.fillRect(X0, 176, X1 - X0, 22);
     ctx.fillStyle = '#fff'; ctx.font = '15px "Chewy","Comic Sans MS",cursive'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for(let i = 0; i < 4; i++) ctx.fillText('★ LYLA ROSE CUP ★', 100 + i*200, 188);
+    for(let i = X0 < 0 ? Math.floor((X0 - 100)/200) : 0, i1 = X1 > W ? Math.ceil((X1 - 100)/200) : 3; i <= i1; i++) ctx.fillText('★ LYLA ROSE CUP ★', 100 + i*200, 188);
     // grass with mowing stripes
-    ctx.fillStyle = '#5DB45F'; ctx.fillRect(0, 198, W, H - 198);
+    ctx.fillStyle = '#5DB45F'; ctx.fillRect(X0, 198, X1 - X0, Y1 - 198);
     for(let z = -60; z < 17; z += 3){
       if(Math.round(z/3) % 2 === 0) continue;
-      const y1 = Math.max(198, P(0, 0, z)[1]), y2 = Math.min(H, P(0, 0, Math.min(z + 3, 16.9))[1]);
-      if(y2 > y1){ ctx.fillStyle = '#69C06B'; ctx.fillRect(0, y1, W, y2 - y1); }
+      const y1 = Math.max(198, P(0, 0, z)[1]), y2 = Math.min(Y1, P(0, 0, Math.min(z + 3, 16.9))[1]);
+      if(y2 > y1){ ctx.fillStyle = '#69C06B'; ctx.fillRect(X0, y1, X1 - X0, y2 - y1); }
     }
     // pitch lines
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';
@@ -1022,7 +1055,7 @@
   }
 
   function draw(){
-    ctx.clearRect(0, 0, W, H);
+    ctx.clearRect(X0, Y0, X1 - X0, Y1 - Y0);
     drawBackground();
     drawNet();
     const ballBehind = ball.z < 0.2;
@@ -1045,7 +1078,16 @@
   function resize(){
     const r = board.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
     cvs.width = Math.round(r.width*dpr); cvs.height = Math.round(r.height*dpr);
-    ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+    if(phoneMQ.matches && cvs.width > 0 && cvs.height > 0){
+      // phones: the pitch fills the whole screen. Draw the 800x600 picture as big as fits, in the middle,
+      // and let the sky, crowd and grass carry on into the spare space around it (X0..X1, Y0..Y1).
+      const k = Math.min(cvs.width/W, cvs.height/H), ox = (cvs.width - W*k)/2, oy = (cvs.height - H*k)/2;
+      ctx.setTransform(k, 0, 0, k, ox, oy);
+      X0 = -ox/k; X1 = W + ox/k; Y0 = -oy/k; Y1 = H + oy/k;
+    } else {
+      ctx.setTransform(cvs.width/W, 0, 0, cvs.height/H, 0, 0);
+      X0 = 0; X1 = W; Y0 = 0; Y1 = H;
+    }
   }
   addEventListener('resize', resize);
   // also redraw at the right size whenever the pitch itself changes size (turning the device, etc.)

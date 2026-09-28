@@ -70,6 +70,41 @@
     .stats{flex-direction:column;align-items:flex-start}
     .stage{grid-column:2;grid-row:1 / 3;min-height:0}
   }
+  /* PHONES ONLY: the jungle fills the whole screen, with small see-through bubbles and buttons floating over it */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{
+      background:#2E6E61;
+      padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    }
+    .wrap{display:block;position:relative;max-width:none;height:100%}
+    .stage{position:absolute;inset:0;min-height:0}
+    /* the jungle stretches to any phone shape (the game world grows to fit) */
+    .board{width:min(100cqw,100cqh*2.3);height:min(100cqh,100cqw*2);border-radius:0;box-shadow:none}
+    h1{display:none}
+    .top{position:absolute;z-index:3;top:6px;left:6px;right:6px;pointer-events:none;align-items:flex-start}
+    .top > *{pointer-events:auto}
+    .snd{gap:6px}
+    .back{font-size:0;min-height:44px;min-width:44px;padding:0;justify-content:center;background:#FFFFFFB3;box-shadow:0 2px 6px #0002}
+    .back::before{content:"←";font-size:22px;line-height:1}
+    button.ghost{min-height:44px;min-width:44px;padding:4px 8px;font-size:14px;background:#FFFFFFB3;border-radius:999px;box-shadow:0 2px 6px #0002}
+    header{position:absolute;z-index:2;top:6px;left:56px;right:112px;flex-direction:row;justify-content:center;pointer-events:none}
+    .stats{flex-direction:row;gap:4px;justify-content:center}
+    .pill{font-size:12px;padding:3px 8px;background:#FFFFFFB3;box-shadow:0 1px 4px #0002}
+    .pill.hurry{background:#FFE3E3E6}
+    .overlay{padding:54px 10px 10px}
+    .panel{padding:14px 16px;gap:7px}
+  }
+  /* phone on its side: a wider, flatter start panel so the Play button always fits */
+  @media (max-height: 500px) and (orientation: landscape) {
+    .overlay{padding:54px 60px 8px}
+    .panel{max-width:520px;padding:10px 16px;gap:5px}
+    .panel h2{font-size:24px}
+    .panel p{font-size:14px}
+    .panel .starrow{font-size:30px}
+    .panel .big{font-size:18px}
+    .panel .key{grid-template-columns:auto auto auto auto;font-size:13px}
+    #ovBtn{min-height:44px;padding:8px 18px}
+  }
 </style>
 <meta name="description" content="Lenny's Banana Catch - a free animal game for kids. Help Lenny the Lemur catch the bananas cheeky monkeys throw from the jungle trees, and dodge the coconuts!">
 <!-- ===== SEO for this game (Google + share previews) ===== -->
