@@ -163,6 +163,16 @@ const games = [
     categories: ["cars", "dinosaurs"],
     controls: "Drag, or arrow keys and Space"
   },
+  {
+    title: "Chomper's Digger",
+    folder: "chompers-digger",
+    emoji: "🚜",
+    colour: "#FFE8A3",
+    thumb: "thumb.jpg",
+    blurb: "Dig with Chomper's big yellow digger, fill up Tipper the dump truck, find buried treasure and dinosaur bones, then build a duck pond, a train tunnel and more!",
+    categories: ["diggers", "cars", "dinosaurs"],
+    controls: "Tap or drag, arrow keys and Space"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

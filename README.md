@@ -20,6 +20,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Lenny's Memory Match | Puzzles & Mazes, Animals | `games/lenny-memory-match/` |
 | Starlight's Unicorn Race | Unicorns, Sport, Action | `games/starlight-unicorn-race/` |
 | Chomper's Car Wash | Cars, Dinosaurs | `games/chompers-car-wash/` |
+| Chomper's Digger | Diggers & Trucks, Cars, Dinosaurs | `games/chompers-digger/` |
 
 ## Category pages (for Google)
 
