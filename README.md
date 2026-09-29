@@ -35,6 +35,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Dinosaurs | `dinosaur-games/` |
 | Cars | `car-games/` |
 | Trains | `train-games/` |
+| Diggers | `digger-games/` |
 
 ## For parents page
 

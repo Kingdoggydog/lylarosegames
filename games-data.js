@@ -23,6 +23,7 @@ const categories = [
   { id: "dinosaurs", slug: "dinosaur-games", title: "Dinosaurs",     heading: "Dinosaur games",      emoji: "🦖", colour: "#DDF3E4", about: "Stomp, roar and chomp with friendly dinosaurs." },
   { id: "cars",     slug: "car-games",     title: "Cars",            heading: "Car games",           emoji: "🚗", colour: "#FFD9B8", about: "Zoom, beep and crunch - games with cars and trucks." },
   { id: "trains",   slug: "train-games",   title: "Trains",          heading: "Train games",         emoji: "🚂", colour: "#D6EEFF", about: "All aboard! Toot, chug and choo-choo." },
+  { id: "diggers",  slug: "digger-games",  title: "Diggers",         heading: "Digger games",        emoji: "🚜", colour: "#FFE8A3", about: "Dig, scoop, tip and build with big friendly diggers and trucks." },
 ];
 
 // ===== GAMES =====
@@ -169,6 +170,7 @@ const games = [
     emoji: "🚜",
     colour: "#FFE8A3",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Dig with Chomper's big yellow digger, fill up Tipper the dump truck, find buried treasure and dinosaur bones, then build a duck pond, a train tunnel and more!",
     categories: ["diggers", "cars", "dinosaurs"],
     controls: "Tap or drag, arrow keys and Space"

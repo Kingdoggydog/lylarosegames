@@ -30,7 +30,9 @@ CSS = '''
   @keyframes dust{0%{opacity:0;transform:translate(0,0) scale(.4)}20%{opacity:.85}100%{opacity:0;transform:translate(-55px,-8px) scale(1.3)}}
   .bub{opacity:0;animation:bub var(--d,3s) ease-out infinite;animation-delay:var(--l,0s)}
   @keyframes bub{0%{opacity:0;transform:translate(0,0)}15%{opacity:.95}100%{opacity:0;transform:translate(var(--x,10px),-110px)}}
-  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust,.bub{opacity:0}}
+  .drop{opacity:0;animation:drop var(--d,1.6s) ease-in infinite;animation-delay:var(--l,0s)}
+  @keyframes drop{0%{opacity:0;transform:translate(0,0)}10%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(var(--x,0px),150px)}}
+  @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust,.bub,.drop{opacity:0}}
 '''
 STAR='M0 -{a} L{b} -{b} L{a} 0 L{b} {b} L0 {a} L-{b} {b} L-{a} 0 L-{b} -{b}Z'
 def star(x,y,size=14,delay=0,colour='#FFD43B',dur=2.8):
@@ -163,3 +165,14 @@ for i,(x,y,r,dx) in enumerate(((120,330,9,-8),(170,300,7,6),(230,340,10,-4),(150
     p.add(f'<circle class="bub" style="--l:{i*0.5}s;--d:{2.6+i%3*0.4}s;--x:{dx}px" cx="{x}" cy="{y}" r="{r}" fill="#FFFFFFB0" stroke="#9FD3F0" stroke-width="2"/>')
 p.star(310,320,11); p.star(470,300,10,.9); p.star(700,330,9,1.6)
 print('carwash', p.save())
+
+p=Pic('chompers-digger','a glowing dinosaur bone, a swinging digger bucket, falling dirt, Tipper idling, a glowing sun and sparkles')
+p.halo(712,50,58)
+p.pulse(312,165,98,68,k=1.07,dur=1.6)
+p.sway_rect(352,200,94,88,372,210,deg=3,dur=1.8)
+for i,(x,dx) in enumerate(((388,-6),(402,4),(395,-2))):
+    p.add(f'<circle class="drop" style="--l:{i*0.55}s;--x:{dx}px" cx="{x}" cy="290" r="{6-i}" fill="#7A4A2A"/>')
+p.bob(543,282,257,170,dy=-1.5,dur=.45)
+p.bob(30,48,110,45,dy=-3,dur=3.4); p.bob(350,12,90,38,dy=-3,dur=3,delay=.8); p.bob(535,95,75,32,dy=-2,dur=3.6,delay=.4)
+p.star(300,160,11); p.star(420,170,10,.8); p.star(355,250,8,1.5)
+print('digger', p.save())

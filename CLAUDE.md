@@ -20,13 +20,14 @@ styles.css          shared look for the home page and category pages
 site.js             loaded by EVERY page: Google Analytics, logo, and the mobile kit for games
 unicorn-games/      one folder per category page, for Google (unicorn-games, sport-games,
 sport-games/          puzzle-games, flying-games, animal-games, action-games,
-puzzle-games/         dinosaur-games, car-games, train-games). Each is a small index.html with its own
+puzzle-games/         dinosaur-games, car-games, train-games, digger-games). Each is a small index.html with its own
 flying-games/         Google title + description. The games on it come from games-data.js.
 animal-games/
 action-games/
 dinosaur-games/
 car-games/
 train-games/
+digger-games/
 for-parents/        the "For parents" page (safety, privacy, contact) - hand-written, linked from the footer.
                       If a game ever adds something that changes what it says (sign-ups, links out, chat,
                       collecting details), update this page too - or better, don't add it.
