@@ -174,3 +174,109 @@
   .filters a.favs{background:#FFF6D6}
   .filters a.favs[aria-current="page"]{background:var(--gold);color:var(--ink);box-shadow:0 6px 16px #FFC23D66}
   @media (prefers-reduced-motion: reduce){.fav.pop{animation:none}}
+
+  /* ===== Home page makeover (30 Sep): logo, promise, "New game!" banner, tighter game tiles ===== */
+  .wrap{max-width:1100px}
+  .brandrow{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:6px}
+  .brandrow .brand{margin:0}
+  .logo{width:clamp(56px,9vw,84px);height:auto;border-radius:22%;box-shadow:0 8px 20px #F2559B40;animation:logo-bob 3.2s ease-in-out infinite}
+  @keyframes logo-bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+  .promise{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;margin:4px 0 0}
+  .promise span{background:#FFFFFFCC;border-radius:999px;padding:4px 12px;font-size:14px;font-weight:800;color:var(--ink)}
+  /* smaller category buttons on bigger screens, so the games start higher up */
+  @media (min-width:641px){
+    .filters{gap:8px;margin-top:6px}
+    .filters a{font-size:15px;padding:6px 14px;min-height:42px;gap:6px}
+  }
+  /* the "New game!" banner */
+  .hero-link{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);align-items:center;background:var(--card);border-radius:24px;overflow:hidden;
+    text-decoration:none;color:inherit;box-shadow:0 12px 30px #2E6E6126;transition:transform .15s ease,box-shadow .15s ease}
+  .hero-link:hover{transform:translateY(-3px);box-shadow:0 16px 36px #2E6E6133}
+  .hero-link:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+  .hero-pic{position:relative;aspect-ratio:1200/630;overflow:hidden}
+  .hero-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .hero-badge{position:absolute;left:14px;top:14px;background:var(--gold);color:var(--ink);font-weight:800;font-size:15px;padding:6px 14px;border-radius:999px;box-shadow:0 4px 12px #0000001f;animation:badge-wiggle 2.6s ease-in-out infinite}
+  @keyframes badge-wiggle{0%,86%,100%{transform:rotate(0)}90%{transform:rotate(-6deg)}95%{transform:rotate(5deg)}}
+  .hero-text{padding:22px 26px;display:flex;flex-direction:column;gap:8px}
+  .hero-kicker{margin:0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--pink)}
+  .hero-text h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,3.4vw,40px);line-height:1.05;margin:0;color:var(--ink)}
+  .hero-blurb{margin:0;font-size:16px;color:var(--muted)}
+  .hero-play{margin-top:6px;font-size:20px;padding:12px 26px;box-shadow:0 6px 0 #C23A78}
+  /* game tiles: 4 across on computers, short descriptions */
+  .grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+  .game h3{font-size:25px}
+  .game .body > p:first-of-type{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  /* phones: big picture tiles, two across - picture, name and Play only */
+  @media (max-width:640px){
+    .brandrow{gap:10px}
+    .brand{font-size:clamp(38px,11vw,52px)}
+    .tag{font-size:15px}
+    .promise span{font-size:12.5px;padding:3px 10px}
+    .hero-link{grid-template-columns:1fr;border-radius:20px}
+    .hero-text{padding:12px 16px 16px;gap:6px}
+    .hero-kicker{display:none}
+    .hero-text h2{font-size:26px}
+    .hero-blurb{font-size:14px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .hero-play{align-self:stretch;text-align:center;font-size:19px}
+    .section-head .badge{width:44px;height:44px;font-size:24px;border-radius:14px}
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .card:hover{transform:none}
+    .game{border-radius:18px}
+    .body{padding:10px 12px 12px;gap:6px}
+    .game h3{font-size:19px;line-height:1.08}
+    .game .body > p, .meta{display:none}
+    .play{font-size:15px;padding:8px 14px;border-radius:12px}
+    .share{right:10px;bottom:10px;min-height:40px;min-width:40px;padding:4px 8px;justify-content:center;border-radius:12px}
+    .share span{display:none}
+    .share-menu{right:6px;bottom:56px}
+    .fav{width:40px;height:40px;top:7px;right:7px}
+    .fav svg{width:22px;height:22px}
+    .soon .art{font-size:48px}
+  }
+  @media (prefers-reduced-motion: reduce){.logo,.hero-badge{animation:none}.hero-link,.hero-link:hover{transition:none;transform:none}}
+  /* tighter top so the games show on the first screen */
+  header{gap:4px}
+  .brand{font-size:clamp(40px,7vw,68px)}
+  .wrap{gap:22px}
+  @media (min-width:641px){
+    .hero-link{grid-template-columns:minmax(0,440px) minmax(0,1fr)}
+    .hero-text{padding:16px 24px}
+    .hero-blurb{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .hero-play{align-self:flex-start;font-size:18px;padding:10px 22px}
+  }
+  @media (max-width:640px){
+    .wrap{gap:16px}
+    .brand{font-size:clamp(34px,10vw,46px)}
+    .tag{font-size:14px}
+    .promise{flex-wrap:nowrap;gap:5px}
+    .promise span{font-size:11.5px;padding:3px 8px;white-space:nowrap}
+    .hero-link{position:relative}
+    .hero-text{position:absolute;right:10px;bottom:10px;padding:0}
+    .hero-text h2,.hero-blurb,.hero-kicker{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+    .hero-play{font-size:17px;padding:9px 18px;box-shadow:0 4px 0 #C23A78,0 6px 16px #0000002e}
+    .section-head h2{font-size:28px}
+    .section-head p{font-size:13px}
+  }
+  @media (max-width:640px){ .game .body > p:first-of-type{display:none} }
+
+  /* "Keep playing" row (last games opened on this device) */
+  .recent{display:flex;flex-direction:column;gap:10px}
+  .recent-title{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:26px;margin:0;color:var(--ink);line-height:1}
+  .recent-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+  .recent-tile{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:8px;text-decoration:none;color:var(--ink);
+    box-shadow:0 6px 16px #2E6E611f;transition:transform .12s ease}
+  .recent-tile:hover{transform:translateY(-2px)}
+  .recent-tile:focus-visible{outline:4px solid var(--gold);outline-offset:2px}
+  .recent-pic{flex:none;width:64px;aspect-ratio:4/3;border-radius:10px;overflow:hidden;position:relative}
+  .recent-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .recent-name{font-weight:800;font-size:15px;line-height:1.15}
+  @media (max-width:640px){
+    .recent-title{font-size:22px}
+    .recent-row{display:flex;overflow-x:auto;gap:10px;margin-inline:-16px;padding:2px 16px 8px;scrollbar-width:none;scroll-snap-type:x proximity}
+    .recent-row::-webkit-scrollbar{display:none}
+    .recent-tile{flex:none;width:150px;flex-direction:column;align-items:stretch;gap:6px;padding:6px 6px 8px;scroll-snap-align:start}
+    .recent-pic{width:100%}
+    .recent-name{font-size:14px;padding:0 4px}
+  }
+  @media (prefers-reduced-motion: reduce){.recent-tile{transition:none}}
+

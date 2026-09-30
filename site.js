@@ -48,6 +48,19 @@ const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
   add({ tag: "meta", name: "apple-mobile-web-app-title", content: "Lyla Rose" });
 })();
 
+// ----- "Keep playing": remember the last few games opened on this device (for the home page row).
+//       Saved only in this browser - never sent anywhere.
+(function () {
+  const m = location.pathname.match(/\/games\/([^/]+)\//);
+  if (!m) return;
+  try {
+    const KEY = "lr-recent";
+    const list = JSON.parse(localStorage.getItem(KEY) || "[]").filter(f => f !== m[1]);
+    list.unshift(m[1]);
+    localStorage.setItem(KEY, JSON.stringify(list.slice(0, 8)));
+  } catch (e) {}
+})();
+
 /* =====================================================================
    MOBILE KIT - switched on automatically for every game page
    (anything inside the games folder). Makes games behave like apps on

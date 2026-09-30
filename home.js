@@ -29,6 +29,15 @@
   const gameUrl = g => ROOT + 'games/' + g.folder + '/';
   const thumbUrl = g => g.thumb ? ROOT + 'games/' + g.folder + '/' + g.thumb : ROOT + 'brand/og-image.jpg';
 
+  // ----- Logo next to the site name (category pages get it added here; the home page has it written in)
+  (function () {
+    const brand = document.querySelector('header .brand');
+    if (!brand || document.querySelector('header .logo')) return;
+    const row = document.createElement('div'); row.className = 'brandrow';
+    const logo = document.createElement('img'); logo.className = 'logo'; logo.src = ROOT + 'brand/icon.svg'; logo.alt = ''; logo.width = 80; logo.height = 80;
+    brand.replaceWith(row); row.append(logo, brand);
+  })();
+
   const filtersEl = document.getElementById('filters');
   const gridEl = document.getElementById('grid');
   const headEl = document.getElementById('heading');
@@ -143,6 +152,49 @@
     m.querySelector('a, button').focus();
   }
 
+  // ----- "New game!" banner at the top of the home page: always the newest game in games-data.js
+  let heroEl = document.getElementById('hero');
+  function fillHero() {
+    const g = games[games.length - 1];
+    if (!heroEl || !g) return;
+    heroEl.replaceChildren();
+    const a = el('a', 'hero-link'); a.href = gameUrl(g);
+    const pic = el('div', 'hero-pic'); pic.style.background = g.colour;
+    const img = el('img'); img.src = ROOT + 'games/' + g.folder + '/share.jpg'; img.alt = ''; img.width = 1200; img.height = 630;
+    pic.append(img, el('span', 'hero-badge', '✨ New game!'));
+    const txt = el('div', 'hero-text');
+    txt.append(el('p', 'hero-kicker', 'Just added'), el('h2', null, g.title), el('p', 'hero-blurb', g.blurb), el('span', 'play hero-play', 'Play now ▶'));
+    a.append(pic, txt);
+    a.addEventListener('click', () => { if (window.gtag) gtag('event', 'select_content', { content_type: 'hero', item_id: g.folder }); });
+    heroEl.append(a);
+  }
+  fillHero();
+
+  // ----- "Keep playing" row: the last games opened on this device (site.js remembers them)
+  const recentEl = document.getElementById('recent');
+  function fillRecent() {
+    if (!recentEl) return false;
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem('lr-recent') || '[]'); } catch (e) {}
+    const recent = list.map(f => games.find(g => g.folder === f)).filter(Boolean).slice(0, 4);
+    recentEl.replaceChildren();
+    if (!recent.length) return false;
+    recentEl.append(el('h2', 'recent-title', '🕹️ Keep playing'));
+    const row = el('div', 'recent-row');
+    recent.forEach(g => {
+      const a = el('a', 'recent-tile'); a.href = gameUrl(g);
+      const pic = el('div', 'recent-pic'); pic.style.background = g.colour;
+      const img = el('img'); img.src = thumbUrl(g); img.alt = ''; img.loading = 'lazy';
+      pic.append(img);
+      a.append(pic, el('span', 'recent-name', g.title));
+      a.addEventListener('click', () => { if (window.gtag) gtag('event', 'select_content', { content_type: 'keep_playing', item_id: g.folder }); });
+      row.append(a);
+    });
+    recentEl.append(row);
+    return true;
+  }
+  const hasRecent = fillRecent();
+
   function emptyFavCard() {
     const d = el('div', 'game soon');
     const art = el('div', 'art', '⭐'); art.setAttribute('aria-hidden', 'true');
@@ -229,6 +281,8 @@
     const txt = el('div'); txt.append(el(headingTag, null, c.heading || c.title), el('p', null, c.about));
     headEl.append(badge, txt);
 
+    if (heroEl) heroEl.hidden = c.id !== 'all';
+    if (recentEl) recentEl.hidden = c.id !== 'all' || !hasRecent;
     gridEl.replaceChildren();
     newestFirst.filter(g => inCat(g, c.id)).forEach(g => gridEl.append(gameCard(g)));
     if (c.id === 'favourites') { if (!favs.length) gridEl.append(emptyFavCard()); }

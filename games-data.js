@@ -181,6 +181,7 @@ const games = [
     emoji: "🦄",
     colour: "#EDE3FF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Flick the sparkly ball with Starlight's and Rainbow's magic unicorn horns! Bounce off cotton candy clouds, light up the glitter stars and bop cheeky Lenny for a banana.",
     categories: ["unicorns", "action"],
     controls: "Tap left or right, ← → or Z and M"
