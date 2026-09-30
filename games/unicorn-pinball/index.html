@@ -383,8 +383,8 @@
     // the two unicorn horns (flippers). "a" is the angle as if it were the left one: down is positive.
     const keepF = flips;
     flips = [
-      {side: 0, who: 'starlight', x: 162.5, y: b - 160, L: 112, r0: 11, r1: 6, rest: 0.52, up: -0.44, a: 0.52, A: 0.52, W: 0, held: false, blink: 0, sparkT: 0, whinT: 0, nod: 0},
-      {side: 1, who: 'rainbow', x: MX(162.5), y: b - 160, L: 112, r0: 11, r1: 6, rest: 0.52, up: -0.44, a: 0.52, A: Math.PI - 0.52, W: 0, held: false, blink: 0, sparkT: 0, whinT: 0, nod: 0}
+      {side: 0, who: 'starlight', x: 162.5, y: b - 160, L: 106, r0: 11, r1: 6, rest: 0.52, up: -0.44, a: 0.52, A: 0.52, W: 0, held: false, blink: 0, sparkT: 0, whinT: 0, nod: 0},
+      {side: 1, who: 'rainbow', x: MX(162.5), y: b - 160, L: 106, r0: 11, r1: 6, rest: 0.52, up: -0.44, a: 0.52, A: Math.PI - 0.52, W: 0, held: false, blink: 0, sparkT: 0, whinT: 0, nod: 0}
     ];
     if(keepF.length) flips.forEach((f, i) => { f.held = keepF[i].held; });
     bridges = [
