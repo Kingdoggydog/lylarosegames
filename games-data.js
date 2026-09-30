@@ -175,6 +175,16 @@ const games = [
     categories: ["diggers", "cars", "dinosaurs"],
     controls: "Tap or drag, arrow keys and Space"
   },
+  {
+    title: "Unicorn Pinball",
+    folder: "unicorn-pinball",
+    emoji: "🦄",
+    colour: "#EDE3FF",
+    thumb: "thumb.jpg",
+    blurb: "Flick the sparkly ball with Starlight's and Rainbow's magic unicorn horns! Bounce off cotton candy clouds, light up the glitter stars and bop cheeky Lenny for a banana.",
+    categories: ["unicorns", "action"],
+    controls: "Tap left or right, ← → or Z and M"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

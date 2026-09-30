@@ -21,6 +21,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Starlight's Unicorn Race | Unicorns, Sport, Action | `games/starlight-unicorn-race/` |
 | Chomper's Car Wash | Cars, Dinosaurs | `games/chompers-car-wash/` |
 | Chomper's Digger | Diggers & Trucks, Cars, Dinosaurs | `games/chompers-digger/` |
+| Unicorn Pinball | Unicorns, Action | `games/unicorn-pinball/` |
 
 ## Category pages (for Google)
 
