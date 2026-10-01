@@ -186,3 +186,10 @@ p.pulse(248,356,38,38,k=1.1,dur=1.6); p.pulse(488,356,38,38,k=1.1,dur=1.6,delay=
 p.bob(315,0,85,68,dy=-4,dur=2.2)
 p.star(560,60,11); p.star(250,440,10,.7); p.star(540,250,9,1.3); p.star(70,340,10,1.9); p.star(740,300,10,1.1)
 print('pinball', p.save())
+
+p=Pic('blossoms-jigsaw','a floating jigsaw piece, Blossom hopping, fluttering butterflies and sparkles')
+p.bob(30,15,112,160,dy=-6,dur=2.6)
+p.bob(14,458,74,138,dy=-6,dur=1.4)
+p.sway_ell(316,297,17,14,deg=14,dur=.9); p.sway_ell(598,183,16,14,deg=14,dur=.8,delay=.3)
+p.star(690,60,12); p.star(360,140,10,.8); p.star(560,320,10,1.5); p.star(150,250,9,1.1); p.star(110,520,9,1.9)
+print('jigsaw', p.save())

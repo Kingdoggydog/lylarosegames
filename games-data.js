@@ -192,6 +192,7 @@ const games = [
     emoji: "🧩",
     colour: "#FFF1C9",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Help Blossom the Bunnycorn put together bright jigsaw pictures of Starlight, Chomper, Lenny, Whirly and friends - then watch each one come alive and win a sticker!",
     categories: ["puzzles", "unicorns", "animals"],
     controls: "Drag, or Tab, arrow keys and Enter"
