@@ -22,6 +22,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Chomper's Car Wash | Cars, Dinosaurs | `games/chompers-car-wash/` |
 | Chomper's Digger | Diggers & Trucks, Cars, Dinosaurs | `games/chompers-digger/` |
 | Unicorn Pinball | Unicorns, Action | `games/unicorn-pinball/` |
+| Blossom's Jigsaw Puzzles | Puzzles & Mazes, Unicorns, Animals | `games/blossoms-jigsaw/` |
 
 ## Category pages (for Google)
 

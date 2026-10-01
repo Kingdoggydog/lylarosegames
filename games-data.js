@@ -186,6 +186,16 @@ const games = [
     categories: ["unicorns", "action"],
     controls: "Tap left or right, ← → or Z and M"
   },
+  {
+    title: "Blossom's Jigsaw Puzzles",
+    folder: "blossoms-jigsaw",
+    emoji: "🧩",
+    colour: "#FFF1C9",
+    thumb: "thumb.jpg",
+    blurb: "Help Blossom the Bunnycorn put together bright jigsaw pictures of Starlight, Chomper, Lenny, Whirly and friends - then watch each one come alive and win a sticker!",
+    categories: ["puzzles", "unicorns", "animals"],
+    controls: "Drag, or Tab, arrow keys and Enter"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
