@@ -24,6 +24,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Unicorn Pinball | Unicorns, Action | `games/unicorn-pinball/` |
 | Blossom's Jigsaw Puzzles | Puzzles & Mazes, Unicorns, Animals | `games/blossoms-jigsaw/` |
 | Busy Building Site | Diggers & Trucks, Cars | `games/busy-building-site/` |
+| Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles & Mazes | `games/chompers-toot-toot/` |
 
 ## Category pages (for Google)
 

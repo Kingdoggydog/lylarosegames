@@ -208,6 +208,16 @@ const games = [
     categories: ["diggers", "cars"],
     controls: "Drag or arrow keys, big button or Space"
   },
+  {
+    title: "Chomper's Toot Toot Delivery",
+    folder: "chompers-toot-toot",
+    emoji: "🚂",
+    colour: "#D6EEFF",
+    thumb: "thumb.jpg",
+    blurb: "Flick the switches on a toy train set so Chomper's steam train takes milk, toys, bananas and baby unicorns to the right station!",
+    categories: ["trains", "dinosaurs", "puzzles"],
+    controls: "Tap the switches or keys 1-5, Space to stop and go"
+  },
   // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
