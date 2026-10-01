@@ -279,4 +279,7 @@
     .recent-name{font-size:14px;padding:0 4px}
   }
   @media (prefers-reduced-motion: reduce){.recent-tile{transition:none}}
+  /* "New game!" tag sits in the bottom-left corner of the banner picture (Andy, 1 Oct) */
+  .hero-badge{top:auto;bottom:14px;left:14px}
+  @media (max-width:640px){ .hero-badge{bottom:12px;left:12px;font-size:14px;padding:5px 12px} }
 
