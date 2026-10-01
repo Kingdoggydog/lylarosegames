@@ -864,7 +864,8 @@
     }
     for(const p of posts) hitCircle(bl, p, 0.5, 0);
     for(const bm of bumpers){ if(hitCircle(bl, bm, 0.6, 760) >= 0) hitBumper(bm, bl); }
-    for(const st of stars){ if(hitCircle(bl, st, 0.55, 0) > 40) hitStar(st); }
+    // glitter stars are rollovers: the ball rolls right over them and lights them up (no bounce)
+    for(const st of stars){ const dx = bl.x - st.x, dy = bl.y - st.y, rr2 = st.r + BR*0.5; if(dx*dx + dy*dy < rr2*rr2) hitStar(st); }
     for(const hk of hearts){ if(hitCircle(bl, hk, 0.5, 620) >= 0) hitHeart(hk); }
     if(hitCircle(bl, lenny, 0.65, 0, lenny.vx, lenny.vy) >= 0) hitLenny(bl);
     for(const f of flips) hitFlip(bl, f);
@@ -1254,8 +1255,8 @@
       ctx.translate(st.x, st.y);
       const s = 1 + st.flash*0.25;
       ctx.scale(s, s);
-      ctx.fillStyle = 'rgba(255,255,255,0.6)'; circ(0, 0, 21); ctx.fill();
-      ctx.lineWidth = 2; ctx.strokeStyle = st.lit ? '#FFD43B' : '#E3D3FF'; ctx.stroke();
+      ctx.fillStyle = 'rgba(255,255,255,0.45)'; circ(0, 0, 21); ctx.fill();
+      ctx.lineWidth = 2; ctx.setLineDash([4, 4]); ctx.strokeStyle = st.lit ? '#FFD43B' : '#D9C6FF'; ctx.stroke(); ctx.setLineDash([]);
       if(st.lit){
         const gl = ctx.createRadialGradient(0, 0, 4, 0, 0, 30);
         gl.addColorStop(0, 'rgba(255,230,120,0.9)'); gl.addColorStop(1, 'rgba(255,230,120,0)');
