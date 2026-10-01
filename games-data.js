@@ -203,6 +203,7 @@ const games = [
     emoji: "🚧",
     colour: "#FFE3B3",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Drive the digger, tipper, bulldozer and steamroller around a big building site, do jobs for Lenny the Lemur and build a whole little town!",
     categories: ["diggers", "cars"],
     controls: "Drag or arrow keys, big button or Space"
