@@ -454,13 +454,18 @@
     bakery: {name: 'Bakery',        cargo: 'Flour',         word: 'Yum!'},
     build:  {name: 'Building Site', cargo: 'Bricks',        word: 'Beep beep!'}
   };
-  // lane 0 is the one furthest from the depot. The first switch the train meets sends it to the last lane.
+  // Each map is a little tree of switches: [up, down] pairs, with a station at the end of every branch.
+  // Stations are listed top to bottom (the "lanes"). Deeper stations need two or three switches set right.
+  const DXB = 260;                              // how far apart the switches are along the track
   const MAPS = [
-    {name: 'Little Loop',    icon: '🐄', lanes: ['farm', 'toys'], L: 860, ex: 0, total: 6},
-    {name: 'Farm and Beach', icon: '🏖️', lanes: ['beach', 'farm', 'toys'], L: 900, ex: 0, total: 6},
-    {name: 'Busy Town',      icon: '🚗', lanes: ['zoo', 'beach', 'farm', 'toys'], L: 960, ex: 80, total: 7, crossing: true},
-    {name: 'Big Railway',    icon: '🌉', lanes: ['build', 'bakery', 'zoo', 'beach', 'farm', 'toys'], L: 1060, ex: 160, total: 8, crossing: true, river: true, tunnel: true}
+    {name: 'Little Loop',    icon: '🐄', tree: ['farm', 'toys'], ex: 0, total: 4},
+    {name: 'Farm and Beach', icon: '🏖️', tree: ['farm', ['beach', 'toys']], ex: 0, total: 6},
+    {name: 'Busy Town',      icon: '🚗', tree: [['zoo', 'beach'], ['farm', 'toys']], ex: 80, total: 7, crossing: true},
+    {name: 'Big Railway',    icon: '🌉', tree: [[['build', 'bakery'], 'zoo'], ['beach', ['farm', 'toys']]], ex: 120, total: 8, crossing: true, river: true, tunnel: true}
   ];
+  const leavesOf = t => Array.isArray(t) ? t.flatMap(leavesOf) : [t];
+  const depthOf = t => Array.isArray(t) ? 1 + Math.max(...t.map(depthOf)) : 0;
+  MAPS.forEach(M => { M.lanes = leavesOf(M.tree); M.L = 680 + depthOf(M.tree)*DXB; });
   const UL = 206, R = 100, LG = 240, TOP = 236, STEP = 6;
 
   // The track is drawn in "flat" coordinates (u along the lanes, v across them) and then turned to
@@ -478,6 +483,12 @@
         for(let i = 1; i <= n; i++){ const t = i/n*Math.PI/2; pts.push([cx + R*Math.cos(a0 + dir*t), cy + R*Math.sin(a0 + dir*t)]); }
         h += dir*Math.PI/2; u = cx + R*Math.cos(a0 + dir*Math.PI/2); v = cy + R*Math.sin(a0 + dir*Math.PI/2); return P;
       },
+      // a smooth S-bend: forwards du while shifting sideways dv (only used heading along +u)
+      bend(du, dv){
+        const u0 = u, v0 = v, n = Math.max(8, Math.round(Math.hypot(du, dv)*1.15/STEP));
+        for(let i = 1; i <= n; i++){ const t = i/n, a = 3*t*t - 2*t*t*t; pts.push([u0 + du*t, v0 + dv*a]); }
+        u += du; v += dv; return P;
+      },
       pts
     };
     return P;
@@ -494,36 +505,55 @@
     const T = (u, v) => land ? {x: v, y: u} : {x: u, y: v};
     const lay = {mi, n, land, screenLand, WW: land ? Hab : Wab, WH: land ? Wab : Hab, edges: [], nodes: [], switches: [], stations: [], T, UL, UR, VB, vl};
     const node = (id, u, v) => { const p = T(u, v); const nd = {id, x: p.x, y: p.y, outs: []}; lay.nodes[id] = nd; return nd; };
-    // nodes: J(i) are the switches up the left side, M(i) are where the lanes join up on the right
-    const J = i => 'J' + i, Mg = i => 'M' + i;
-    for(let i = 1; i < n; i++){ node(J(i), UL, vl(i) + R); node(Mg(i), UR, vl(i) + R); }
     const edge = (id, path, to, kind, lane) => {
       const pa = path.pts, pts = pa.map(([u, v]) => T(u, v)), cum = [0];
       for(let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
       const e = {id, pa, pts, cum, len: cum[cum.length - 1], to, kind, lane};
       lay.edges[id] = e; return e;
     };
-    const drop = (vl(n - 1) + R), bot = VB - R;
-    edge('trunk', makePath(UR, drop, Math.PI/2).line(bot - drop).arc(1).line(L - 2*R).arc(1).line(bot - drop), J(n - 1), 'trunk');
-    for(let i = n - 1; i >= 2; i--) edge('colL' + i, makePath(UL, vl(i) + R, -Math.PI/2).line(LG), J(i - 1), 'col');
-    for(let i = n - 1; i >= 1; i--) edge('lane' + i, makePath(UL, vl(i) + R, -Math.PI/2).arc(1).line(L - 2*R).arc(1), Mg(i), 'lane', i);
-    edge('lane0', makePath(UL, vl(1) + R, -Math.PI/2).line(LG).arc(1).line(L - 2*R).arc(1).line(LG), Mg(1), 'lane', 0);
+    // the lanes join up again on the right (M nodes), then run down and back along the bottom
+    const Mg = i => 'M' + i;
+    for(let i = 1; i < n; i++) node(Mg(i), UR, vl(i) + R);
     for(let i = 1; i <= n - 2; i++) edge('colR' + i, makePath(UR, vl(i) + R, Math.PI/2).line(LG), Mg(i + 1), 'col');
-    for(let i = 1; i < n; i++){
-      lay.nodes[J(i)].outs = i >= 2 ? ['colL' + i, 'lane' + i] : ['lane0', 'lane1'];
-      lay.nodes[Mg(i)].outs = i <= n - 2 ? ['colR' + i] : ['trunk'];
-    }
-    // the switches, numbered in the order the train meets them
-    for(let i = n - 1; i >= 1; i--){
-      const k = n - i, nd = lay.nodes[J(i)], lv = T(UL - 74, vl(i) + R + 6);
-      nd.sw = k - 1;
+    for(let i = 1; i < n; i++) lay.nodes[Mg(i)].outs = i <= n - 2 ? ['colR' + i] : ['trunk'];
+    // the switch tree: each switch splits into an upper and a lower branch with smooth S-bends
+    const u0 = UL + R + 40, laneEnd = UR - R;
+    let leafI = 0;
+    const place = t => { if(!Array.isArray(t)) return {leaf: t, row: leafI++}; const kids = t.map(place); return {kids, v: 0}; };
+    const root = place(M.tree);
+    const vOf = nd => nd.kids ? (nd.v = (vOf(nd.kids[0]) + vOf(nd.kids[1]))/2) : vl(nd.row);
+    vOf(root);
+    // number the switches in the order the train can meet them (nearest first)
+    const bfs = [root]; for(let i = 0; i < bfs.length; i++) if(bfs[i].kids) bfs[i].kids.forEach(c => c.kids && bfs.push(c));
+    bfs.forEach((nd, i) => { nd.id = 'J' + i; nd.k = i + 1; });
+    const depth = (nd, d) => { nd.d = d; if(nd.kids) nd.kids.forEach(c => depth(c, d + 1)); };
+    depth(root, 0);
+    bfs.forEach(nd => node(nd.id, u0 + nd.d*DXB, nd.v));
+    bfs.forEach(nd => {
+      const us = u0 + nd.d*DXB;
+      nd.kids.forEach(c => {
+        const p = makePath(us, nd.v, 0).bend(DXB, (c.kids ? c.v : vl(c.row)) - nd.v);
+        if(c.kids){ edge('br' + c.id, p, c.id, 'col'); lay.nodes[nd.id].outs.push('br' + c.id); return; }
+        const k = c.row;
+        p.line(laneEnd - (us + DXB)).arc(1);
+        if(k === 0 && n > 1) p.line(LG);
+        edge('lane' + k, p, Mg(Math.max(1, k)), 'lane', k);
+        lay.nodes[nd.id].outs.push('lane' + k);
+      });
+    });
+    const drop = (vl(n - 1) + R), bot = VB - R;
+    edge('trunk', makePath(UR, drop, Math.PI/2).line(bot - drop).arc(1).line(L - 2*R).arc(1).line(bot - (root.v + R)).arc(1).line(u0 - UL - R), root.id, 'trunk');
+    // the switches, each with its lever just behind and above the points
+    bfs.forEach((b, i) => {
+      const nd = lay.nodes[b.id], lv = T(u0 + b.d*DXB - 64, b.v - 80);
+      nd.sw = i;
       const outs = nd.outs.map(id => { const e = lay.edges[id], p = posAt(e, 70); return {id, a: Math.atan2(p.y - nd.y, p.x - nd.x)}; });
-      lay.switches.push({k, node: J(i), lane: i, x: nd.x, y: nd.y, lx: lv.x, ly: lv.y, outs});
-    }
+      lay.switches.push({k: b.k, node: b.id, x: nd.x, y: nd.y, lx: lv.x, ly: lv.y, outs});
+    });
     // where along an edge the track passes a point (u, v)
     const sAt = (e, u, v) => { let best = 0, bd = 1e9; e.pa.forEach(([a, b], i) => { const d = Math.hypot(a - u, b - v); if(d < bd){ bd = d; best = e.cum[i]; } }); return best; };
     // stations: one in the middle of each lane, with a platform, a yard and its building
-    const ust = UL + R + (L - 2*R)*0.40;
+    const ust = UR - R - 300;
     M.lanes.forEach((id, i) => {
       const e = lay.edges['lane' + i], v = vl(i);
       const base = land ? {x: v - 118, y: ust + 76} : {x: ust, y: v - 48};
@@ -1792,7 +1822,7 @@
   function St(g){ g.setTransform(PX, 0, 0, PX, 0, 0); }
   const fitK = () => Math.min(CW/LY.WW, CH/LY.WH)*0.97;
   const phoneK = () => clamp(Math.min(CW, CH)/700, 0.45, 0.8);
-  const followMode = () => fitK() < 0.42;
+  const followMode = () => fitK() < 0.36;
   function viewRect(){ const a = toWorld(0, 0), b = toWorld(CW, CH); return {x0: a.x, y0: a.y, x1: b.x, y1: b.y}; }
   function onScreen(x, y, m = 0){ const X = sx(x), Y = sy(y); return X > -m && X < CW + m && Y > -m && Y < CH + m; }
   let camLock = null;
@@ -1819,7 +1849,11 @@
     cam.x = hw*2 >= LY.WW + M*2 ? LY.WW/2 : clamp(cam.x, hw - M, LY.WW + M - hw);
     cam.y = hh*2 >= LY.WH + M + Mt ? LY.WH/2 + (M - Mt)/2 : clamp(cam.y, hh - Mt, LY.WH + M - hh);
     // keep the panning in step with where the camera can actually go
-    if(followMode()){ pan.x = clamp(pan.x, cam.x - camBase.x - 400, cam.x - camBase.x + 400); pan.y = clamp(pan.y, cam.y - camBase.y - 400, cam.y - camBase.y + 400); }
+    if(followMode()){
+      const x0 = hw - M, x1 = LY.WW + M - hw, y0 = hh - Mt, y1 = LY.WH + M - hh;
+      if(x1 > x0) pan.x = clamp(pan.x, x0 - camBase.x, x1 - camBase.x);
+      if(y1 > y0) pan.y = clamp(pan.y, y0 - camBase.y, y1 - camBase.y);
+    }
   }
 
   // ===== DRAW EVERYTHING =====

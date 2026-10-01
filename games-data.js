@@ -214,6 +214,7 @@ const games = [
     emoji: "🚂",
     colour: "#D6EEFF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Flick the switches on a toy train set so Chomper's steam train takes milk, toys, bananas and baby unicorns to the right station!",
     categories: ["trains", "dinosaurs", "puzzles"],
     controls: "Tap the switches or keys 1-5, Space to stop and go"
