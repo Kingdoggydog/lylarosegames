@@ -1947,7 +1947,8 @@
     const above = 384, below = hole.t === 'tunnel' ? 60 : Math.max(96, hole.d + 26);
     const L = VIEW_L, R = VIEW_R;
     camOn = tall && w/(R - L) < (h - topPad - 6)/(above + below);
-    k = Math.min(camOn ? w/560 : w/(R - L), (h - topPad - 6)/(above + below), 1.7);
+    // upright phones: zoomed out so nearly the whole site shows (the view only slides a little)
+    k = Math.min(camOn ? w/(phone ? 740 : 600) : w/(R - L), (h - topPad - 6)/(above + below), 1.7);
     const spare = h - topPad - (above + below)*k;
     gy = topPad + above*k + spare*(tall ? 0.55 : 0.62);
     if(camOn){
