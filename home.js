@@ -20,6 +20,13 @@
   // Newest games first: the list in games-data.js is oldest-to-newest, so show it backwards
   const newestFirst = games.slice().reverse();
   const inCat = (g, id) => id === 'all' || (id === 'favourites' ? favs.includes(g.folder) : (g.categories || []).includes(id));
+  // ----- Age groups (from games-data.js). "all" = every age. Not saved anywhere - it resets when the page reloads.
+  const AGES = typeof ageGroups !== 'undefined' ? ageGroups : [];
+  const ageById = Object.fromEntries(AGES.map(a => [a.id, a]));
+  games.forEach(g => { if (AGES.length && !ageById[g.ages]) console.warn('Game "' + g.title + '" has no age group (ages: "' + g.ages + '")'); });
+  let age = 'all';
+  const inAge = g => age === 'all' || g.ages === age;
+  const ageYears = g => parseInt(g.ages, 10);   // "3+" -> 3
   const used = categories.filter(c => games.some(g => inCat(g, c.id)));
   const pageCat = document.body.dataset.category || 'all';   // which page we're on
   const headingTag = pageCat === 'all' ? 'h2' : 'h1';
@@ -56,6 +63,7 @@
     } else {
       art.textContent = g.emoji;
     }
+    if (ageById[g.ages]) { const ab = el('span', 'age-badge', 'Age ' + g.ages); ab.style.background = ageById[g.ages].colour; art.append(ab); }
     const body = el('div', 'body');
     body.append(el('h3', null, g.title), el('p', null, g.blurb));
     const meta = el('div', 'meta');
@@ -64,6 +72,7 @@
     if (g.controls) body.append(el('p', 'controls', '🎮 ' + g.controls));
     body.append(el('span', 'play', 'Play ▶'));
     a.append(art, body);
+    if (ageById[g.ages]) a.setAttribute('aria-label', g.title + ', for ages ' + g.ages);
     // The share button sits on top of the card (a button can't live inside a link)
     const wrap = el('div', 'card');
     wrap.append(a, favButton(g), shareButton(g));
@@ -204,6 +213,18 @@
     return d;
   }
 
+  function emptyAgeCard(c) {
+    const d = el('div', 'game soon');
+    const art = el('div', 'art', '🔎'); art.setAttribute('aria-hidden', 'true');
+    const body = el('div', 'body');
+    const btn = el('button', 'play age-reset', 'Show all ages');
+    btn.type = 'button';
+    btn.addEventListener('click', () => setAge('all'));
+    body.append(el('h3', null, 'No ' + age + ' games here yet'), el('p', null, 'Try another age, or see every ' + (c.id === 'all' ? 'game' : (c.heading || c.title).toLowerCase().replace(/ games$/, '') + ' game') + '.'), btn);
+    d.append(art, body);
+    return d;
+  }
+
   function soonCard() {
     const d = el('div', 'game soon');
     const art = el('div', 'art', '✨'); art.setAttribute('aria-hidden', 'true');
@@ -243,6 +264,30 @@
 
   let current = pageCat;
 
+  // ----- Age buttons: a small row under the category buttons ("All ages / 2+ / 3+ / 4+")
+  const ageBtns = {};
+  if (AGES.length && filtersEl) {
+    const row = el('div', 'ages');
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', 'Show games by age');
+    row.append(el('span', 'ages-label', 'Age'));
+    [{ id: 'all', colour: '#FFFFFF' }, ...AGES].forEach(a => {
+      const b = el('button', 'age-btn', a.id === 'all' ? 'All ages' : a.id);
+      b.type = 'button';
+      b.style.setProperty('--age', a.colour);
+      if (a.id !== 'all') b.setAttribute('aria-label', 'Ages ' + a.id);
+      b.addEventListener('click', () => setAge(age === a.id && a.id !== 'all' ? 'all' : a.id));   // tap again to clear
+      ageBtns[a.id] = b;
+      row.append(b);
+    });
+    filtersEl.after(row);
+  }
+  function setAge(id) {
+    age = id;
+    if (window.gtag && id !== 'all') gtag('event', 'select_age', { age: id });
+    show(current);
+  }
+
   function go(id, e) {
     if (window.gtag && id !== 'all') gtag('event', 'select_category', { category: id });
     if (!canIntercept) return;            // testing from a file: just follow the link
@@ -271,6 +316,9 @@
       a.href = on && k !== 'all' ? ROOT : catUrl(k === 'all' ? ALL : k === 'favourites' ? FAV : catById[k]);
     });
     updateFavButton();
+    // Category counts follow the chosen age
+    Object.entries(buttons).forEach(([k, a]) => { if (k !== 'favourites') a.querySelector('.count').textContent = String(games.filter(g => inCat(g, k) && inAge(g)).length); });
+    Object.entries(ageBtns).forEach(([k, b]) => b.setAttribute('aria-pressed', k === age ? 'true' : 'false'));
 
     crumbsEl.replaceChildren();
     crumbsEl.hidden = c.id === 'all';
@@ -278,15 +326,18 @@
 
     headEl.replaceChildren();
     const badge = el('div', 'badge', c.emoji); badge.style.background = c.colour; badge.setAttribute('aria-hidden', 'true');
-    const txt = el('div'); txt.append(el(headingTag, null, c.heading || c.title), el('p', null, c.about));
+    const about = age !== 'all' && ageById[age] ? 'Ages ' + age + ': ' + ageById[age].about : c.about;
+    const txt = el('div'); txt.append(el(headingTag, null, c.heading || c.title), el('p', null, about));
     headEl.append(badge, txt);
 
-    if (heroEl) heroEl.hidden = c.id !== 'all';
-    if (recentEl) recentEl.hidden = c.id !== 'all' || !hasRecent;
+    if (heroEl) heroEl.hidden = c.id !== 'all' || age !== 'all';
+    if (recentEl) recentEl.hidden = c.id !== 'all' || age !== 'all' || !hasRecent;
     gridEl.replaceChildren();
-    newestFirst.filter(g => inCat(g, c.id)).forEach(g => gridEl.append(gameCard(g)));
-    if (c.id === 'favourites') { if (!favs.length) gridEl.append(emptyFavCard()); }
-    else if (showComingSoon) gridEl.append(soonCard());
+    const shown = newestFirst.filter(g => inCat(g, c.id) && inAge(g));
+    shown.forEach(g => gridEl.append(gameCard(g)));
+    if (c.id === 'favourites' && !favs.length) gridEl.append(emptyFavCard());
+    else if (!shown.length && age !== 'all') gridEl.append(emptyAgeCard(c));
+    else if (c.id !== 'favourites' && showComingSoon && age === 'all') gridEl.append(soonCard());
 
     if (current !== pageCat || document.title === '') document.title = c.id === 'all' ? SITE + ' - Free Games for Kids' : (c.heading || c.title) + ' for kids - ' + SITE;
   }
@@ -311,7 +362,8 @@
         genre: (g.categories || []).map(id => catById[id] && catById[id].title).filter(Boolean),
         gamePlatform: 'Web browser', applicationCategory: 'Game', operatingSystem: 'Any',
         isAccessibleForFree: true, inLanguage: 'en-AU',
-        audience: { '@type': 'PeopleAudience', audienceType: 'Children' },
+        audience: Object.assign({ '@type': 'PeopleAudience', audienceType: 'Children' }, ageYears(g) ? { suggestedMinAge: ageYears(g) } : {}),
+        ...(ageYears(g) ? { typicalAgeRange: ageYears(g) + '-' } : {}),
         publisher: { '@type': 'Organization', name: SITE, url: ROOT }
       }
     }))

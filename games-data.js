@@ -26,16 +26,29 @@ const categories = [
   { id: "diggers",  slug: "digger-games",  title: "Diggers",         heading: "Digger games",        emoji: "🚜", colour: "#FFE8A3", about: "Dig, scoop, tip and build with big friendly diggers and trucks." },
 ];
 
+// ===== AGE GROUPS =====
+// The age buttons under the category buttons, and the little age badge on each game card.
+// Every game below has an "ages" line using one of these ids. A game shows under exactly one age group.
+//   id      what goes in a game's "ages" line (and what the badge says, e.g. "Age 3+")
+//   about   one line shown under the heading when that age is picked
+const ageGroups = [
+  { id: "2+", colour: "#C9F2D9", about: "Simple games for toddlers - big buttons, nothing to lose." },
+  { id: "3+", colour: "#CFE6FF", about: "A little more to do - steering, matching and finishing jobs." },
+  { id: "4+", colour: "#E6DBFF", about: "Bigger challenges - scores, timing, mazes and thinking ahead." },
+];
+
 // ===== GAMES =====
 // To add a game: put it in its own folder inside "games", then add it to the END of this list (copy the example line).
 // Keep the list oldest-to-newest - the site shows it the other way round, so the newest game appears top left.
 // "categories" can list as many category ids as you like - the game shows under each one.
+// "ages" = the youngest age the game suits, one of the ageGroups ids above: "2+", "3+" or "4+".
 // "thumbAnim" (optional) = a gently moving version of the card picture, e.g. "thumb-anim.svg". It is a copy of
 // thumb.jpg with moving extras on top - if thumb.jpg ever changes, remove the thumbAnim line (or ask the hub to remake it).
 const games = [
   {
     title: "Sparklehoof's Maze",
     folder: "unicorn-maze",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "🦄",
     colour: "#CFEFD8",
     thumb: "thumb.svg",   // picture file inside the game's folder (optional)
@@ -46,6 +59,7 @@ const games = [
   {
     title: "Glitter Sky Unicorn",
     folder: "glitter-sky",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🌈",
     colour: "#FDE2EC",
     thumb: "thumb.jpg",
@@ -57,6 +71,7 @@ const games = [
   {
     title: "Unicorn Penalty Shoot-out",
     folder: "unicorn-soccer",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "⚽",
     colour: "#D6F0C8",
     thumb: "thumb.jpg",
@@ -68,6 +83,7 @@ const games = [
   {
     title: "Lenny's Banana Catch",
     folder: "lenny-banana-catch",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "🍌",
     colour: "#D8F2DC",
     thumb: "thumb.jpg",
@@ -79,6 +95,7 @@ const games = [
   {
     title: "Glitter Getaway",
     folder: "glitter-getaway",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "✨",
     colour: "#FDE2EC",
     thumb: "thumb.jpg",
@@ -90,6 +107,7 @@ const games = [
   {
     title: "Chomper's Car Crunch",
     folder: "chompers-car-crunch",
+    ages: "2+",             // age group - see ageGroups above
     emoji: "🦖",
     colour: "#E6DCFF",
     thumb: "thumb.jpg",
@@ -101,6 +119,7 @@ const games = [
   {
     title: "Whirlybird Rescue",
     folder: "whirlybird-rescue",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🚁",
     colour: "#DDE3FF",
     thumb: "thumb.jpg",
@@ -112,6 +131,7 @@ const games = [
   {
     title: "Blossom's Easter Eggs",
     folder: "blossoms-easter-eggs",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🐰",
     colour: "#E8F6D8",
     thumb: "thumb.jpg",
@@ -123,6 +143,7 @@ const games = [
   {
     title: "Chomper's Choo-Choo Express",
     folder: "chompers-choo-choo",
+    ages: "2+",             // age group - see ageGroups above
     emoji: "🚂",
     colour: "#D6EEFF",
     thumb: "thumb.jpg",
@@ -134,6 +155,7 @@ const games = [
   {
     title: "Lenny's Memory Match",
     folder: "lenny-memory-match",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🧠",
     colour: "#FFF1C9",
     thumb: "thumb.jpg",
@@ -145,6 +167,7 @@ const games = [
   {
     title: "Starlight's Unicorn Race",
     folder: "starlight-unicorn-race",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🏅",
     colour: "#D6F0C8",
     thumb: "thumb.jpg",
@@ -156,6 +179,7 @@ const games = [
   {
     title: "Chomper's Car Wash",
     folder: "chompers-car-wash",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🧽",
     colour: "#FFD9B8",
     thumb: "thumb.jpg",
@@ -167,6 +191,7 @@ const games = [
   {
     title: "Chomper's Digger",
     folder: "chompers-digger",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🚜",
     colour: "#FFE8A3",
     thumb: "thumb.jpg",
@@ -178,6 +203,7 @@ const games = [
   {
     title: "Unicorn Pinball",
     folder: "unicorn-pinball",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "🦄",
     colour: "#EDE3FF",
     thumb: "thumb.jpg",
@@ -189,6 +215,7 @@ const games = [
   {
     title: "Blossom's Jigsaw Puzzles",
     folder: "blossoms-jigsaw",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🧩",
     colour: "#FFF1C9",
     thumb: "thumb.jpg",
@@ -200,6 +227,7 @@ const games = [
   {
     title: "Busy Building Site",
     folder: "busy-building-site",
+    ages: "3+",             // age group - see ageGroups above
     emoji: "🚧",
     colour: "#FFE3B3",
     thumb: "thumb.jpg",
@@ -211,6 +239,7 @@ const games = [
   {
     title: "Chomper's Toot Toot Delivery",
     folder: "chompers-toot-toot",
+    ages: "4+",             // age group - see ageGroups above
     emoji: "🚂",
     colour: "#D6EEFF",
     thumb: "thumb.jpg",
@@ -219,7 +248,7 @@ const games = [
     categories: ["trains", "dinosaurs", "puzzles"],
     controls: "Tap the switches or keys 1-5, Space to stop and go"
   },
-  // { title: "Next game", folder: "next-game", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
+  // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
 // Show a "Coming soon" card at the end of the list

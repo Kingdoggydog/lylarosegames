@@ -283,3 +283,29 @@
   .hero-badge{top:auto;bottom:14px;left:14px}
   @media (max-width:640px){ .hero-badge{bottom:12px;left:12px;font-size:14px;padding:5px 12px} }
 
+
+  /* ===== Age groups (4 Oct): small "Age" row under the category buttons + age badge on each card ===== */
+  .ages{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .ages-label{font-weight:800;font-size:14px;color:var(--muted);margin-right:2px}
+  .age-btn{
+    font:inherit;font-weight:800;font-size:15px;cursor:pointer;color:var(--ink);
+    background:var(--age,#fff);border:3px solid transparent;border-radius:999px;
+    padding:4px 14px;min-height:40px;min-width:48px;box-shadow:0 3px 10px #2E6E6114;
+    transition:transform .12s ease;
+  }
+  .age-btn:hover{transform:translateY(-2px)}
+  .age-btn[aria-pressed="true"]{border-color:var(--ink);box-shadow:0 5px 14px #23413B33}
+  .age-btn:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  .age-badge{
+    position:absolute;left:10px;top:10px;z-index:1;
+    font-size:13px;font-weight:800;line-height:1;color:var(--ink);
+    padding:6px 10px;border-radius:999px;box-shadow:0 3px 8px #0000001f;
+  }
+  .age-reset{border:0;font:inherit;font-weight:800;cursor:pointer}
+  @media (max-width:640px){
+    .ages{gap:5px;margin-top:0}
+    .age-btn{font-size:14px;padding:3px 12px;min-height:44px}
+    .age-btn:hover{transform:none}
+    .age-badge{left:7px;top:7px;font-size:11.5px;padding:5px 8px}
+  }
+  @media (prefers-reduced-motion: reduce){.age-btn{transition:none}.age-btn:hover{transform:none}}

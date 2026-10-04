@@ -13,7 +13,7 @@ All full web addresses in the site use https://lylarosegames.com/ - never the ol
 ## How the site is laid out
 
 ```
-games-data.js       THE MASTER LIST - every category and every game. Edit this to add/change games.
+games-data.js       THE MASTER LIST - every category, age group and game. Edit this to add/change games.
 index.html          the home page (reads games-data.js)
 home.js             draws the game cards, filter buttons and Google data - no need to edit
 styles.css          shared look for the home page and category pages
@@ -61,7 +61,7 @@ games/<folder>/     one folder per game, fully self-contained
   - optional: `<meta name="game-orientation" content="landscape">` (or `portrait`) - phones held the wrong way get a friendly "turn it sideways" screen
 - Every game page must keep a way back home: `<a class="back" href="../../">← All games</a>`
 - Kid-safe: no external links out of the site, no ads, no sign-ups, no collecting personal details.
-- If the game's name, blurb or categories change, update its entry in `games-data.js` and the README table.
+- If the game's name, blurb, categories or age change, update its entry in `games-data.js` and the README table.
 - **End screens get a share button** (added to every game 4 Oct). When a round or level ends, add one with `if (window.LR && LR.shareButton) panel.appendChild(LR.shareButton("I got 3 stars in <Game name>! 🦄"));`
   - The message uses that round's real result (score, level, stars). No names or personal details in it.
   - Remove any old `.lr-share` button before adding a new one, so there's only ever one.
@@ -87,8 +87,8 @@ games/<folder>/     one folder per game, fully self-contained
 
 1. New folder `games/<short-name-with-dashes>/` containing `index.html`, `thumb.jpg` and `share.jpg`.
 2. The game's `<head>` has the items listed above, and it passes the phone/iPad rules.
-3. Add it to the `games` list in `games-data.js`, with every category it fits in `categories` (e.g. `["unicorns", "sport"]`). It appears on the home page and every matching category page automatically.
-4. Add a row to the table in `README.md`.
+3. Add it to the `games` list in `games-data.js`, with every category it fits in `categories` (e.g. `["unicorns", "sport"]`) and its starting age in `ages` - one of `"2+"`, `"3+"` or `"4+"` (the `ageGroups` list at the top of games-data.js says what each means; ask Andy if unsure). It appears on the home page and every matching category page automatically, with an age badge on its card.
+4. Add a row to the table in `README.md` (including its age).
 5. Add a `<url>` line for it in `sitemap.xml`.
 
 ## Adding a NEW category - checklist
