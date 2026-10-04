@@ -16,7 +16,7 @@
 const categories = [
   { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
-  { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles & Mazes", heading: "Puzzle & maze games", emoji: "🧩", colour: "#FFF1C9", about: "Think it through and find the way." },
+  { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles",         heading: "Puzzle games",        emoji: "🧩", colour: "#FFF1C9", about: "Think it through - jigsaws, matching, mazes and more." },
   { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger and helicopter mazes." },
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },

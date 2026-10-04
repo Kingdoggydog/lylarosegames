@@ -8,7 +8,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 
 | Game | Categories | Ages | Folder |
 | --- | --- | --- | --- |
-| Sparklehoof's Maze | Unicorns, Puzzles & Mazes, Mazes | 4+ | `games/unicorn-maze/` |
+| Sparklehoof's Maze | Unicorns, Mazes, Puzzles | 4+ | `games/unicorn-maze/` |
 | Glitter Sky Unicorn | Unicorns, Flying, Action | 3+ | `games/glitter-sky/` |
 | Unicorn Penalty Shoot-out | Unicorns, Sport | 4+ | `games/unicorn-soccer/` |
 | Lenny's Banana Catch | Animals, Action | 4+ | `games/lenny-banana-catch/` |
@@ -17,16 +17,16 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Whirlybird Rescue | Flying, Action, Animals | 3+ | `games/whirlybird-rescue/` |
 | Blossom's Easter Eggs | Unicorns, Animals, Action | 3+ | `games/blossoms-easter-eggs/` |
 | Chomper's Choo-Choo Express | Dinosaurs, Trains, Action | 2+ | `games/chompers-choo-choo/` |
-| Lenny's Memory Match | Puzzles & Mazes, Animals | 3+ | `games/lenny-memory-match/` |
+| Lenny's Memory Match | Puzzles, Animals | 3+ | `games/lenny-memory-match/` |
 | Starlight's Unicorn Race | Unicorns, Sport, Action | 3+ | `games/starlight-unicorn-race/` |
 | Chomper's Car Wash | Cars, Dinosaurs | 3+ | `games/chompers-car-wash/` |
 | Chomper's Digger | Diggers & Trucks, Cars, Dinosaurs | 3+ | `games/chompers-digger/` |
 | Unicorn Pinball | Unicorns, Action | 4+ | `games/unicorn-pinball/` |
-| Blossom's Jigsaw Puzzles | Puzzles & Mazes, Unicorns, Animals | 3+ | `games/blossoms-jigsaw/` |
+| Blossom's Jigsaw Puzzles | Puzzles, Unicorns, Animals | 3+ | `games/blossoms-jigsaw/` |
 | Busy Building Site | Diggers & Trucks, Cars | 3+ | `games/busy-building-site/` |
-| Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles & Mazes | 4+ | `games/chompers-toot-toot/` |
-| Chomper's Digger Maze | Mazes, Puzzles & Mazes, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
-| Whirly's Cloud Maze | Mazes, Puzzles & Mazes, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
+| Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles | 4+ | `games/chompers-toot-toot/` |
+| Chomper's Digger Maze | Mazes, Puzzles, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
+| Whirly's Cloud Maze | Mazes, Puzzles, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
 
 ## Age groups
 
@@ -38,7 +38,7 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 | --- | --- |
 | Unicorns | `unicorn-games/` |
 | Sport | `sport-games/` |
-| Puzzles & Mazes | `puzzle-games/` |
+| Puzzles | `puzzle-games/` |
 | Mazes | `maze-games/` |
 | Flying | `flying-games/` |
 | Animals | `animal-games/` |
