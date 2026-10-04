@@ -330,6 +330,8 @@
     const txt = el('div'); txt.append(el(headingTag, null, c.heading || c.title), el('p', null, about));
     headEl.append(badge, txt);
 
+    // The hand-written "about" text belongs to the page it's written on - hide it when another category is showing
+    document.querySelectorAll('.about-text').forEach(t => { t.hidden = t.dataset.for !== c.id; });
     if (heroEl) heroEl.hidden = c.id !== 'all' || age !== 'all';
     if (recentEl) recentEl.hidden = c.id !== 'all' || age !== 'all' || !hasRecent;
     gridEl.replaceChildren();

@@ -273,6 +273,17 @@ const games = [
     categories: ["mazes", "puzzles", "flying", "animals"],
     controls: "Arrow keys, WASD, swipe or tap the arrows"
   },
+  {
+    title: "Lenny's Jungle Maze",
+    folder: "lenny-jungle-maze",
+    ages: "3+",             // age group - see ageGroups above
+    emoji: "🐒",
+    colour: "#D8F2DC",
+    thumb: "thumb.jpg",
+    blurb: "A jungle maze game! Help Lenny the Lemur find the lost baby lemurs, lead them home to his treehouse in a wobbly line, swing across the river on vines and collect bananas.",
+    categories: ["mazes", "puzzles", "animals"],
+    controls: "Arrow keys, WASD, swipe or tap the arrows"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

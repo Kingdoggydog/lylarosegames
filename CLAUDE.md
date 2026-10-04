@@ -98,6 +98,11 @@ games/<folder>/     one folder per game, fully self-contained
 2. Copy an existing category folder (e.g. `sport-games/`) to a new folder named after the slug.
 3. In the copy's `index.html`, change: `<title>`, `<meta name="description">`, `canonical` and `og:url` addresses, the `og:title`/`og:description`, `data-category="..."` on `<body>`, and the badge emoji/colour, heading and line under it. Write a fresh Google description - never copy another page's.
 4. Add a `<url>` line for it in `sitemap.xml`.
+5. Write its "about" text: a `<section class="about-text" data-for="<id>">` under the grid with a heading and 2-3 short paragraphs for grown-ups (what the games are, which ones, ages, free/no ads) with links to its games. Fresh wording - never copied from another page.
+
+## About text on the home and category pages (hub only)
+
+The home page and every category page have a hand-written `about-text` section under the game list (for parents and for Google - Google needs real words to rank a page). When a new game joins a category, the hub adds a mention and link to it in that category's about text. Game chats don't need to touch these.
 
 ## Site-wide things (hub only)
 

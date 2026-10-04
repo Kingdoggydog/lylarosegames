@@ -27,6 +27,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles | 4+ | `games/chompers-toot-toot/` |
 | Chomper's Digger Maze | Mazes, Puzzles, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
 | Whirly's Cloud Maze | Mazes, Puzzles, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
+| Lenny's Jungle Maze | Mazes, Puzzles, Animals | 3+ | `games/lenny-jungle-maze/` |
 
 ## Age groups
 

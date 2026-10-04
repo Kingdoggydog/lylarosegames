@@ -309,3 +309,11 @@
     .age-badge{left:7px;top:7px;font-size:11.5px;padding:5px 8px}
   }
   @media (prefers-reduced-motion: reduce){.age-btn{transition:none}.age-btn:hover{transform:none}}
+
+  /* ===== "About these games" text under the game list (5 Oct): for grown-ups and for Google ===== */
+  .about-text{max-width:760px;margin:18px auto 0;background:#FFFFFFB8;border-radius:22px;padding:20px 24px;color:var(--ink);box-shadow:0 6px 18px #2E6E6114}
+  .about-text h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(24px,4vw,30px);margin:0 0 8px;color:var(--ink)}
+  .about-text p{margin:0 0 10px;font-size:15.5px;line-height:1.55;color:var(--muted)}
+  .about-text p:last-child{margin-bottom:0}
+  .about-text a{color:#C2307A;font-weight:700}
+  @media (max-width:640px){ .about-text{padding:16px 18px;border-radius:18px} .about-text p{font-size:15px} }

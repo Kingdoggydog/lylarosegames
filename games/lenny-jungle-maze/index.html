@@ -1,0 +1,1911 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lenny's Jungle Maze - Free Jungle Maze Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg1:#E4F7D9;
+    --bg2:#BDE6C2;
+    --green:#2F8A4C;
+    --green-d:#1E6B37;
+    --pink:#FF4F9A;
+    --pink-d:#C9306F;
+    --gold:#FFC23D;
+    --yel:#FFD43B;
+    --ink:#1F3B2A;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--bg1) 0%,var(--bg2) 100%);
+    background-color:var(--bg1);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1000px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  /* the bar along the top: back link, title and what you have collected */
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+  h1{flex:1 1 auto;font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(26px,4.6vw,40px);margin:0;line-height:1;color:var(--green);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .stats{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:5px 11px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;min-height:24px}
+  .pill img{width:24px;height:24px;display:block}
+  .pill.bump{animation:bump .5s ease-out}
+  .pill.done{background:#E9F9EC}
+  @keyframes bump{40%{transform:scale(1.25)}}
+  .back{font-weight:800;color:var(--green-d);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  /* the maze is square and grows to the biggest square that fits the space left over */
+  .stage{flex:1;min-height:0;container-type:size;display:grid;place-items:center;position:relative}
+  .board{position:relative;width:min(100cqw,100cqh);aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#4E9A52;box-shadow:0 10px 30px #1E6B3733;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  /* buttons under the maze */
+  .controls{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .pad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:6px;touch-action:none}
+  .pad button{padding:0;font-size:24px;background:#3FA35B;border-radius:14px;box-shadow:0 4px 0 #2B7A41;min-width:0;min-height:0}
+  .pad button:active,.pad button.on{transform:translateY(3px);box-shadow:0 1px 0 #2B7A41}
+  .pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+  .help{font-size:14px;margin:0;max-width:40ch;font-weight:600}
+  .help b{color:var(--green-d)}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--green);color:#fff;font-size:16px;min-height:48px;min-width:48px;-webkit-tap-highlight-color:transparent}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  button.ghost.off{opacity:.6;text-decoration:line-through}
+  #hintBtn{background:var(--yel);color:var(--ink);display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 0 #E8A200;padding:6px 14px}
+  #hintBtn svg{width:38px;height:38px;display:block}
+  #hintBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #E8A200}
+  .lbl{white-space:nowrap}
+  @media (hover:hover) and (pointer:fine){.pad{display:none}}
+  @media (pointer:coarse){ .help{display:none} .btns{flex-wrap:nowrap} }
+  @media (pointer:coarse) and (min-width:700px) and (min-height:700px){ .pad{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(2,68px)} .pad button{font-size:28px} }
+  @media (max-height:760px){ .help{display:none} h1{font-size:30px} }
+
+  /* the panels (level picker, level done) */
+  .overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:#1F3B2AA6;
+    padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));box-sizing:border-box}
+  .panel{background:#fff;border-radius:20px;padding:16px 18px;text-align:center;max-width:480px;width:100%;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 40px #1F3B2A55}
+  .panel h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:32px;margin:0;color:var(--green);line-height:1.05}
+  .panel p{margin:0;font-size:16px}
+  .panel p.small{font-size:14px;font-weight:800;color:#4D6A58}
+  .panel .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .panel .lr-share{align-self:center;font-size:15px}
+  #ovBtn{background:var(--pink);box-shadow:0 5px 0 var(--pink-d);font-size:22px;padding:12px 22px;min-height:56px}
+  #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--pink-d)}
+  .panel button.ghost{background:#E6F5E3;color:var(--ink)}
+  /* the lemur family picture */
+  .family{width:100%;max-width:400px;height:auto;aspect-ratio:400/150;align-self:center;background:#EAF8E4;border-radius:14px;box-shadow:inset 0 -8px 0 #CBE8C2}
+  /* level picker */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .levels button{background:#E9F7E2;color:var(--ink);padding:6px 4px 5px;border-radius:14px;box-shadow:0 3px 0 #BFDDB4;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:13px;line-height:1.1;min-width:0;position:relative}
+  .levels button .num{font-family:"Chewy",cursive;font-weight:400;font-size:24px;color:var(--green);line-height:1}
+  .levels button .nm{font-weight:800}
+  .levels button .st{font-size:15px;letter-spacing:1px;color:#D5DFCF}
+  .levels button .st i{font-style:normal;color:#FFB000}
+  .levels button.now{background:#FFF1B8;outline:3px solid #FFB000}
+  .levels button:disabled{opacity:.55;cursor:default;box-shadow:none;background:#EEF1EC}
+  .key{font-size:14px;display:grid;grid-template-columns:auto auto;justify-content:center;gap:3px 10px;text-align:left}
+  .key b{color:var(--green-d)}
+  @media (max-height:700px){ .key{display:none} }
+  /* level done */
+  .stars{display:flex;justify-content:center;gap:6px}
+  .stars svg{width:56px;height:56px}
+  .stars svg.on{animation:pop .5s ease-out both}
+  .stars svg:nth-child(2){animation-delay:.25s}.stars svg:nth-child(3){animation-delay:.5s}
+  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .got{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-weight:800;font-size:18px}
+  .got span{display:inline-flex;align-items:center;gap:4px}
+  .got img{width:36px;height:36px}
+  @media (max-height:360px){ .family{display:none} }
+  @media (max-height:520px){
+    .panel{padding:10px 14px;gap:6px;max-width:620px}
+    .panel h2{font-size:26px}
+    .panel p{font-size:14px}
+    .key{display:none}
+    .family{max-width:260px}
+    .levels{grid-template-columns:repeat(6,1fr);gap:6px}
+    .levels button .nm{font-size:11px}
+    .stars svg{width:42px;height:42px}
+    .got img{width:28px;height:28px}
+    #ovBtn{min-height:50px;font-size:20px;padding:8px 18px}
+  }
+
+  /* ===== PHONES ONLY: the maze gets the whole screen, everything else floats over the spare space ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:0}
+    .wrap{display:block;max-width:none;height:100%}
+    h1,.help{display:none}
+    .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+    /* the stage covers the screen (inside the safe area); the maze sits in the space left over */
+    .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
+      box-sizing:border-box;padding:52px 6px 136px}
+    .board{border-radius:14px}
+    /* back, levels, music and sound: small round buttons in the top-left corner */
+    .back,#lvlBtn,#musicBtn,#sfxBtn{position:fixed;z-index:3;top:calc(6px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;
+      display:grid;place-items:center;font-size:19px;background:#FFFFFFC7;box-shadow:0 2px 8px #1F3B2A26;text-decoration:none}
+    .back{left:calc(6px + env(safe-area-inset-left,0px));font-size:22px}
+    #lvlBtn{left:calc(50px + env(safe-area-inset-left,0px))}
+    #musicBtn{left:calc(94px + env(safe-area-inset-left,0px))}
+    #sfxBtn{left:calc(138px + env(safe-area-inset-left,0px))}
+    /* what you have collected: small see-through pills in the top-right corner */
+    .stats{position:fixed;z-index:3;top:calc(12px + env(safe-area-inset-top,0px));right:calc(6px + env(safe-area-inset-right,0px));gap:3px;flex-wrap:nowrap;justify-content:flex-end;pointer-events:none}
+    #lvlPill{display:none}
+    .pill{font-size:12px;padding:3px 7px 3px 4px;background:#FFFFFFB8;gap:2px;min-height:0}
+    .pill img{width:20px;height:20px}
+    /* the arrows by the left thumb, the toucan hint by the right thumb */
+    .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
+      grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
+    .pad button{background:#3FA35BE6;font-size:24px}
+    #hintBtn{position:fixed;z-index:3;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
+      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 4px 0 #E8A200,0 4px 12px #1F3B2A33}
+    #hintBtn svg{width:46px;height:46px}
+    /* sideways: maze in the middle, buttons and arrows in the left gap, collected things and hint in the right gap */
+    @media (orientation: landscape) {
+      .stage{padding:6px 92px 6px 198px}
+      .stats{flex-direction:column;align-items:flex-end;top:calc(8px + env(safe-area-inset-top,0px))}
+    }
+  }
+</style>
+
+<meta name="description" content="Lenny&#39;s Jungle Maze - a free jungle maze game for kids. Help Lenny the Lemur find the lost baby lemurs in the jungle maze, lead them home in a wobbly line, swing across the river on vines and collect bananas.">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/lenny-jungle-maze/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Lenny&#x27;s Jungle Maze - Free Jungle Maze Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Lenny&#x27;s Jungle Maze - a free jungle maze game for kids. Help Lenny the Lemur find the lost baby lemurs in the jungle maze, lead them home in a wobbly line, swing across the river on vines and collect bananas.">
+<meta property="og:url" content="https://lylarosegames.com/games/lenny-jungle-maze/">
+<meta property="og:image" content="https://lylarosegames.com/games/lenny-jungle-maze/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Lenny&#x27;s Jungle Maze - free jungle maze game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: arrow keys or WASD, swipe, tap, or the on-screen arrows -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Lenny's Jungle Maze",
+   "url": "https://lylarosegames.com/games/lenny-jungle-maze/",
+   "description": "Lenny's Jungle Maze - a free jungle maze game for kids. Help Lenny the Lemur find the lost baby lemurs in the jungle maze, lead them home in a wobbly line, swing across the river on vines and collect bananas.",
+   "image": "https://lylarosegames.com/games/lenny-jungle-maze/share.jpg",
+   "genre": [
+    "Mazes",
+    "Puzzles",
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Maze games",
+     "item": "https://lylarosegames.com/maze-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Lenny's Jungle Maze",
+     "item": "https://lylarosegames.com/games/lenny-jungle-maze/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="back" href="../../">←<span class="lbl"> All games</span></a>
+    <h1>Lenny's Jungle Maze</h1>
+    <div class="stats">
+      <span class="pill" id="lvlPill">Level 1</span>
+      <span class="pill" id="babyPill" aria-label="Baby lemurs home"></span>
+      <span class="pill" id="nanaPill" aria-label="Bananas"></span>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="board" id="board">
+      <canvas id="c" aria-label="The jungle maze"></canvas>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="pad" aria-label="Arrow buttons">
+      <button class="up" data-d="0" aria-label="Up">▲</button>
+      <button class="left" data-d="3" aria-label="Left">◀</button>
+      <button class="down" data-d="2" aria-label="Down">▼</button>
+      <button class="right" data-d="1" aria-label="Right">▶</button>
+    </div>
+    <p class="help">Move with the arrow keys. Find the <b>lost baby lemurs</b> and lead them home to the treehouse. Step onto a <b>vine</b> to swing across the river!</p>
+    <div class="btns">
+      <button id="hintBtn" aria-label="Hint: the toucan shows the way"><svg viewBox="0 0 48 48" aria-hidden="true"><g stroke="#1F3B2A" stroke-width="2.4" stroke-linejoin="round"><ellipse cx="17" cy="28" rx="11" ry="12" fill="#2B2B35"/><path d="M7 34 L2 44 L13 38 Z" fill="#2B2B35"/><ellipse cx="21" cy="27" rx="5" ry="7" fill="#FFF3B0" stroke="none"/><circle cx="21" cy="16" r="8" fill="#2B2B35"/><ellipse cx="23" cy="17" rx="4.5" ry="5" fill="#FFE066" stroke="none"/><path d="M26 11 C36 8 44 11 46 18 C40 17 33 19 27 20 Z" fill="#FF922B"/><path d="M40 14.5 C43 15 45 16 46 18 C43 17.6 41 17.6 39 17.8 Z" fill="#E03131" stroke="none"/></g><circle cx="24" cy="14.5" r="2.6" fill="#4DABF7"/><circle cx="24.4" cy="14.5" r="1.3" fill="#111"/><path d="M40 3 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z" fill="#FF4F9A"/><path d="M6 6 l1.2 2.8 2.8 1.2 -2.8 1.2 -1.2 2.8 -1.2 -2.8 -2.8 -1.2 2.8 -1.2z" fill="#2F8A4C"/></svg><span class="lbl">Hint</span></button>
+      <button class="ghost" id="lvlBtn" aria-label="Pick a level">🗺️<span class="lbl"> Levels</span></button>
+      <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
+      <button class="ghost" id="sfxBtn" aria-pressed="true">🔊<span class="lbl"> Sounds on</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="panel" id="panel" role="dialog" aria-live="polite"></div></div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const $ = id => document.getElementById(id);
+  const cvs = $('c'), ctx = cvs.getContext('2d');
+  const board = $('board'), overlay = $('overlay'), panel = $('panel');
+  const lvlPill = $('lvlPill'), babyPill = $('babyPill'), nanaPill = $('nanaPill');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TEST = /[?&]test\b/.test(location.search);
+  const FONT = '"Chewy","Comic Sans MS",cursive';
+  const TAU = Math.PI*2;
+  const O = '#1F3B2A';                      // outline colour
+  const KEY = 'lrg-lenny-jungle-maze-';
+  const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0]; // directions: 0 up, 1 right, 2 down, 3 left
+  const VD = {'^': 0, '>': 1, 'v': 2, '<': 3};
+
+  const rand = (a, b) => a + Math.random()*(b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const ease = u => 1 - Math.pow(1 - clamp(u, 0, 1), 3);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const hash = (x, y) => { const s = Math.sin(x*127.1 + y*311.7)*43758.5453; return s - Math.floor(s); };
+  function rr(g, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    g.beginPath(); g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function ell(g, x, y, rx, ry, rot){ g.beginPath(); g.ellipse(x, y, Math.max(0.001, rx), Math.max(0.001, ry), rot || 0, 0, TAU); }
+  function circ(g, x, y, r){ g.beginPath(); g.arc(x, y, Math.max(0.001, r), 0, TAU); }
+  function line(g, x1, y1, x2, y2){ g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  // ===== THE LEVELS =====
+  // #  bushes, trees and rocks       .  path         H  Lenny's treehouse (home)
+  // ~  river                         =  log bridge   o  lily pad (hop across)
+  // > < ^ v  a vine over the river that swings you across that way (always a shortcut - there is a normal way round too)
+  // 1 2 3 4  lost baby lemurs        b  banana
+  const LEVELS = [
+    {name: 'Banana Grove', icon: '🍌', floor: '#4E9A52', floor2: '#47904B', path: '#EBD9A6', edge: '#C8AE76',
+      say: 'A baby lemur is lost! Can you find it?', map: [
+      '#########',
+      '#H..#b..#',
+      '#.#.#.#.#',
+      '#.#...#.#',
+      '#.###.#.#',
+      '#b#...#b#',
+      '#.#.###.#',
+      '#...b..1#',
+      '#########']},
+    {name: 'River Bend', icon: '🌊', floor: '#4B9750', floor2: '#448D49', path: '#ECDBAA', edge: '#C6AC74',
+      say: 'Step onto the vine to swing across the river!', map: [
+      '##########',
+      '#H..#...b#',
+      '#.#.#.##.#',
+      '#b#....#.#',
+      '#.##.#.#.#',
+      '#~~~v~#~=#',
+      '#..#.....#',
+      '#.##.#.#b#',
+      '#1..b#b#2#',
+      '##########']},
+    {name: 'Waterfall Walk', icon: '💦', floor: '#4A9A58', floor2: '#43904F', path: '#E9DAAE', edge: '#C3AB78', waterfall: true,
+      say: 'Two vines and a splashy waterfall!', map: [
+      '#######~###',
+      '#H..#.b~.2#',
+      '#.#.#.#~#.#',
+      '#b#....>..#',
+      '#.#.###~#.#',
+      '#...#b.=.b#',
+      '#.#.#.#~#.#',
+      '#~~=~v~~..#',
+      '#.#b..#.#.#',
+      '#b..#1..b.#',
+      '###########']},
+    {name: 'Lily Pad Pond', icon: '🪷', floor: '#4F9C55', floor2: '#48924E', path: '#EEDDAD', edge: '#C9AF79',
+      say: 'Hop, hop, hop across the lily pads!', map: [
+      '############',
+      '#b..#H...#2#',
+      '#.#.#.##.#.#',
+      '#.#...#.b..#',
+      '#.#v~o~~~#.#',
+      '#..~~oo~~~.#',
+      '#.#~~~o~~#.#',
+      '#b#~~~o~~#b#',
+      '#...#.o..#.#',
+      '#.#.#.#.##.#',
+      '#3..b.#..1b#',
+      '############']},
+    {name: 'Misty Morning', icon: '🌫️', floor: '#5C9E66', floor2: '#55955F', path: '#E9DFC0', edge: '#C6B386', mist: true,
+      say: 'Ooh, a misty morning! Three babies to find.', map: [
+      '#############',
+      '#b..#..H..#2#',
+      '#.#.#.###.#.#',
+      '#.#...#b...b#',
+      '#.###.#.###.#',
+      '#~~~~v~=~~~~#',
+      '#.#...#...#b#',
+      '#.#.#.#.#.#.#',
+      '#b..#...#...#',
+      '###.#####.#.#',
+      '#~~=~~~~~v~.#',
+      '#1.b...#..b3#',
+      '#############']},
+    {name: 'Big Jungle Party', icon: '🎉', floor: '#4A9650', floor2: '#438C49', path: '#F0DCA8', edge: '#CDB079', party: true,
+      say: 'Find all four babies for the big jungle party!', map: [
+      '###############',
+      '#b..#...H..b#4#',
+      '#.#.#.#####.#.#',
+      '#.#.....b.#...#',
+      '#.###.#.###.#.#',
+      '#~~~~=~v~~~~~=#',
+      '#...#.....#..b#',
+      '#.#.#.#.#.#.#.#',
+      '#1#...#b#...#.#',
+      '###.#.#.#####.#',
+      '#~~=~~~v~~~~~o#',
+      '#..b#...#....2#',
+      '#.#.#.#.#.###.#',
+      '#3#..b#.....b.#',
+      '###############']}
+  ];
+  const TOTAL_BABIES = LEVELS.reduce((n, L2) => n + L2.map.join('').replace(/[^1-4]/g, '').length, 0);
+  const CALLS = ['Lenny!', 'Over here!', 'Yoo-hoo!', 'Peekaboo!', 'Find me!'];
+  const YAY = ['Yay!', 'Lenny!', 'Hooray!', 'Yippee!', 'Hello!'];
+  const CONF = ['#FF6B6B', '#FFA94D', '#FFD43B', '#69DB7C', '#4DABF7', '#9775FA', '#FF4F9A'];
+
+  // ===== SAVED STUFF =====
+  function freshProg(){ return {unlocked: 1, stars: [0, 0, 0, 0, 0, 0], home: [0, 0, 0, 0, 0, 0], cur: 0}; }
+  let prog = load(KEY + 'prog', null);
+  if(!prog || typeof prog !== 'object' || !Array.isArray(prog.stars) || !Array.isArray(prog.home)) prog = freshProg();
+  prog.unlocked = clamp(prog.unlocked|0, 1, 6); prog.cur = clamp(prog.cur|0, 0, 5);
+  for(let i = 0; i < 6; i++){ prog.stars[i] = clamp(prog.stars[i]|0, 0, 3); prog.home[i] = clamp(prog.home[i]|0, 0, 4); }
+  const saveProg = () => save(KEY + 'prog', prog);
+  const familyCount = () => prog.home.reduce((a, b) => a + b, 0);
+  let musicOn = load(KEY + 'music', true), sfxOn = load(KEY + 'sfx', true);
+
+  // ===== GAME STATE =====
+  let level = 0, lv = LEVELS[0], SX = 9, SY = 9;
+  let grid = [], babies = [], bananas = [], vines = [], H = {x: 1, y: 1};
+  let phase = 'menu';            // menu | play | paused | home (babies climbing up) | party | end
+  let clock = 0, timeScale = 1, partyT = 0, finaleT = 0, endStars = 1;
+  let trail = [], train = [], prints = [], parts = [], words = [], bubbles = [], butterflies = [], mist = [], fronds = [];
+  let toucan = null, callT = 4, birdT = 3, fishT = 4, homeSlots = 0, stepT = 0, stepN = 0;
+  const len = {x: 1, y: 1, fx: 1, fy: 1, dir: 2, roll: null, move: null, bumpT: 0, bumpDir: 2, happyT: 0, ph: 0, hop: 0, lastPrint: 0};
+  let queued = null;
+  const held = [];               // arrow buttons / keys being held down (newest last)
+  let auto = null;               // automatic play (testing only)
+
+  // ===== THE MAZE =====
+  function parse(i){
+    level = clamp(i, 0, LEVELS.length - 1); lv = LEVELS[level];
+    loadMap(lv.map);
+  }
+  function loadMap(m){
+    SY = m.length; SX = m[0].length;
+    grid = []; babies = []; bananas = []; vines = [];
+    for(let y = 0; y < SY; y++){
+      const row = [];
+      for(let x = 0; x < SX; x++){
+        const ch = m[y][x];
+        let t = 'P';
+        if(ch === '#') t = 'W';
+        else if(ch === '~') t = 'R';
+        else if(ch === '=') t = 'B';
+        else if(ch === 'o') t = 'L';
+        else if(VD[ch] != null){ t = 'V'; vines.push({x, y, d: VD[ch], id: vines.length, ph: Math.random()*6}); }
+        else if(ch === 'H') H = {x, y};
+        else if('1234'.includes(ch)) babies.push({n: +ch, x, y, st: 'wait', ph: Math.random()*6, lag: 0, jt: 0, ct: 0, slot: -1, hx: x, hy: y, jump: 0});
+        else if(ch === 'b') bananas.push({x, y, got: false, ph: Math.random()*6, t: 0});
+        row.push(t);
+      }
+      grid.push(row);
+    }
+    babies.sort((a, b) => a.n - b.n);
+    // work out where each vine lands
+    vines.forEach(v => {
+      v.ax = v.x - DX[v.d]; v.ay = v.y - DY[v.d];
+      let x = v.x, y = v.y, n = 0;
+      while(isWater(x, y)){ x += DX[v.d]; y += DY[v.d]; n++; }
+      v.lx = x; v.ly = y; v.dist = n + 1;
+    });
+  }
+  const tileAt = (x, y) => (x < 0 || y < 0 || x >= SX || y >= SY) ? 'W' : grid[y][x];
+  const canWalk = (x, y) => { const t = tileAt(x, y); return t === 'P' || t === 'B' || t === 'L'; };
+  const isWater = (x, y) => { const t = tileAt(x, y); return t === 'R' || t === 'V'; };
+  const vineAt = (x, y) => vines.find(v => v.x === x && v.y === y);
+  // a vine you can swing on from here, going this way
+  function vineFrom(x, y, d){ const v = vineAt(x + DX[d], y + DY[d]); return v && v.d === d ? v : null; }
+
+  // ===== DRAWING HELPERS =====
+  let T = 40, dpr = 1, size = 360;
+  const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
+  let bgDirty = true;
+  const FOOT = 0.3;                          // characters stand a little below the middle of their square
+
+  // ----- Lenny the Lemur (everyday grey fur and stripy tail, like in Lenny's Banana Catch) - hips at 0,0, feet at 0,39 -----
+  // o: t, look {x,y}, mood 'happy', pose 'walk' | 'cheer' | 'hang' | 'wave' | 'climb' | 'sit', baby, ph, step
+  function drawLemur(c, o){
+    const t = o.t, ph = o.ph || 0, B = !!o.baby;
+    const grey = B ? '#A6A6B4' : '#9A9AA8', dark = '#55556A', white = '#F4F4F6', black = '#2B2B35';
+    c.lineCap = 'round'; c.lineJoin = 'round';
+    // stripy tail (the babies' tails bounce)
+    const sway = reduced ? 0 : B ? Math.sin(t*7 + ph)*18 : Math.sin(t*2.2 + ph)*14;
+    const tl = B ? 0.78 : 1, tb = B && !reduced ? -Math.abs(Math.sin(t*7 + ph))*8 : 0;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      pts.push([((1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway))*tl, ((1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66 + tb))*tl]);
+    }
+    if(!o.noTail) for(let i = 0; i < 14; i++){ c.strokeStyle = i % 2 ? black : white; c.lineWidth = (10 - i*0.25)*(B ? 0.9 : 1); line(c, pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1]); }
+    // legs
+    const pose = o.pose || 'walk';
+    const st = o.step || 0, l1 = pose === 'walk' ? Math.max(0, Math.sin(st))*6 : 0, l2 = pose === 'walk' ? Math.max(0, -Math.sin(st))*6 : 0;
+    const dangle = pose === 'hang' ? 6 : 0;
+    c.fillStyle = grey;
+    ell(c, -9, 26 - l1 + dangle, 7, 11, 0.15 + (pose === 'hang' ? 0.3 : 0)); c.fill(); ell(c, 9, 26 - l2 + dangle, 7, 11, -0.15 - (pose === 'hang' ? 0.3 : 0)); c.fill();
+    c.fillStyle = black;
+    ell(c, -11, 35 - l1 + dangle, 7, 4); c.fill(); ell(c, 11, 35 - l2 + dangle, 7, 4); c.fill();
+    // arms
+    let hands;
+    const wig = reduced ? 0 : Math.sin(t*10 + ph);
+    if(pose === 'cheer') hands = [[-40, -42 + wig*4], [40, -42 - wig*4]];
+    else if(pose === 'hang') hands = [[-8, -66], [8, -66]];
+    else if(pose === 'wave') hands = [[-38, -48 + wig*7], [30, 4]];
+    else if(pose === 'climb'){ const k = Math.sin(t*12 + ph)*8; hands = [[-14, -50 + k], [14, -50 - k]]; }
+    else { const b = reduced ? 0 : Math.sin(st)*5; hands = [[-32, 2 + b], [32, 2 - b]]; }
+    c.strokeStyle = grey; c.lineWidth = 8;
+    line(c, -13, -14, hands[0][0], hands[0][1]); line(c, 13, -14, hands[1][0], hands[1][1]);
+    // furry body with a pale tummy
+    c.fillStyle = grey; ell(c, 0, 2, 18, 24); c.fill();
+    c.fillStyle = white; ell(c, 0, 6, 11, 16); c.fill();
+    hands.forEach(h => { c.fillStyle = dark; circ(c, h[0], h[1], 5.5); c.fill(); });
+    // head (bigger on the babies)
+    c.save();
+    if(B){ c.translate(0, -24); c.scale(1.35, 1.35); c.translate(0, 24); }
+    c.fillStyle = dark; circ(c, -14, -52, 7); c.fill(); circ(c, 14, -52, 7); c.fill();
+    c.fillStyle = '#E9B8C6'; circ(c, -14, -52, 3.2); c.fill(); circ(c, 14, -52, 3.2); c.fill();
+    c.fillStyle = grey; circ(c, 0, -36, 18); c.fill();
+    c.fillStyle = white; ell(c, 0, -31, 14, 12); c.fill();
+    c.fillStyle = black; ell(c, -7, -36, 6, 6.5, -0.3); c.fill(); ell(c, 7, -36, 6, 6.5, 0.3); c.fill();
+    const lk = o.look || {x: 0, y: 1}, el = Math.hypot(lk.x, lk.y) || 1, ex = lk.x/el*1.8, ey = lk.y/el*1.8;
+    if(o.blink){ c.strokeStyle = '#FF9F1C'; c.lineWidth = 2; line(c, -10, -36, -4, -36); line(c, 4, -36, 10, -36); }
+    else {
+      c.fillStyle = '#FF9F1C'; circ(c, -7, -36, 4.2); c.fill(); circ(c, 7, -36, 4.2); c.fill();
+      c.fillStyle = '#111'; circ(c, -7 + ex, -36 + ey, 2); c.fill(); circ(c, 7 + ex, -36 + ey, 2); c.fill();
+      c.fillStyle = '#fff'; circ(c, -6.2 + ex, -37.2 + ey, 0.8); c.fill(); circ(c, 7.8 + ex, -37.2 + ey, 0.8); c.fill();
+    }
+    c.fillStyle = black; ell(c, 0, -26, 4, 3); c.fill();
+    c.strokeStyle = black; c.lineWidth = 1.6; c.beginPath();
+    if(o.open){ c.fillStyle = '#7A2E4A'; ell(c, 0, -21, 3.6, 3); c.fill(); }
+    else if(o.mood === 'happy'){ c.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI); c.stroke(); }
+    else { c.moveTo(-3, -21); c.lineTo(3, -21); c.stroke(); }
+    if(B){ c.fillStyle = 'rgba(255,140,180,0.45)'; ell(c, -12, -27, 3.5, 2.2); c.fill(); ell(c, 12, -27, 3.5, 2.2); c.fill(); }
+    c.restore();
+  }
+  // draw a lemur standing with his feet at (x, y) in maze squares
+  function lemurAt(c, x, y, k, o){
+    c.save(); c.translate(x, y);
+    if(o.lean) c.rotate(o.lean);
+    if(o.squish){ c.scale(1 + o.squish*0.18, 1 - o.squish*0.16); }
+    c.scale(k, k); c.translate(0, -39);
+    drawLemur(c, o);
+    c.restore();
+  }
+  const LK = 0.0086, BK = 0.0052;           // how big Lenny and the babies are
+
+  // ----- the toucan who shows the way -----
+  function drawToucan(c, x, y, s, face, t){
+    c.save(); c.translate(x, y); c.scale(s*face, s);
+    c.lineJoin = 'round';
+    const flap = reduced ? 0.3 : Math.sin(t*18);
+    c.fillStyle = '#2B2B35';
+    c.beginPath(); c.moveTo(-14, 4); c.lineTo(-34, 14); c.lineTo(-30, 2); c.closePath(); c.fill();
+    ell(c, 0, 0, 20, 15); c.fill();
+    c.fillStyle = '#FFF3B0'; ell(c, 10, 2, 8, 10); c.fill();
+    c.fillStyle = '#E03131'; ell(c, 6, 13, 6, 2.5); c.fill();
+    c.fillStyle = '#2B2B35'; circ(c, 15, -12, 11); c.fill();
+    c.fillStyle = '#FFE066'; ell(c, 18, -10, 6.5, 7.5); c.fill();
+    c.fillStyle = '#4DABF7'; circ(c, 19, -15, 3.8); c.fill();
+    c.fillStyle = '#111'; circ(c, 19.6, -15, 1.9); c.fill();
+    c.fillStyle = '#fff'; circ(c, 20.4, -15.8, 0.7); c.fill();
+    // the big bright beak
+    c.fillStyle = '#FF922B'; c.beginPath(); c.moveTo(24, -19); c.bezierCurveTo(36, -24, 50, -18, 54, -7); c.bezierCurveTo(46, -8, 36, -6, 25, -6); c.closePath(); c.fill();
+    c.fillStyle = '#FFD43B'; c.beginPath(); c.moveTo(25, -18); c.bezierCurveTo(34, -21, 42, -19, 45, -15); c.bezierCurveTo(38, -14, 32, -13, 25, -12); c.closePath(); c.fill();
+    c.fillStyle = '#E03131'; c.beginPath(); c.moveTo(47, -14); c.bezierCurveTo(51, -12, 53, -10, 54, -7); c.bezierCurveTo(51, -7.5, 48, -7.5, 45, -7.4); c.closePath(); c.fill();
+    c.strokeStyle = '#2B2B35'; c.lineWidth = 1.6; c.beginPath(); c.moveTo(25, -10); c.quadraticCurveTo(40, -11, 53, -8); c.stroke();
+    // flapping wing
+    c.save(); c.translate(-4, -4); c.rotate(-0.5 + flap*0.7);
+    c.fillStyle = '#3B3B4A'; ell(c, -10, 0, 16, 8); c.fill();
+    c.fillStyle = '#2B2B35'; ell(c, -14, 2, 9, 4); c.fill();
+    c.restore();
+    c.restore();
+  }
+
+  // ----- bananas -----
+  function drawBanana(c, x, y, rot, s){
+    c.save(); c.translate(x, y); c.rotate(rot); c.scale(s, s);
+    c.fillStyle = '#FFD43B'; c.strokeStyle = '#E8A317'; c.lineWidth = 2.4;
+    c.beginPath(); c.moveTo(-20, -6); c.quadraticCurveTo(0, 18, 20, -6); c.quadraticCurveTo(0, 6, -20, -6); c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = '#6B4F2A'; circ(c, -20, -6, 2.6); c.fill(); circ(c, 20, -6, 2.2); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.65)'; c.lineWidth = 2; c.beginPath(); c.moveTo(-10, 2); c.quadraticCurveTo(0, 8, 10, 2); c.stroke();
+    c.restore();
+  }
+  function twinkle(g, x, y, r, col){
+    g.fillStyle = col; g.beginPath();
+    g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y); g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y); g.quadraticCurveTo(x, y, x, y - r); g.fill();
+  }
+  function heart(g, x, y, r, col){
+    g.fillStyle = col; g.beginPath();
+    g.moveTo(x, y + r*0.9);
+    g.bezierCurveTo(x - r*1.4, y - r*0.1, x - r*0.7, y - r*1.2, x, y - r*0.45);
+    g.bezierCurveTo(x + r*0.7, y - r*1.2, x + r*1.4, y - r*0.1, x, y + r*0.9); g.fill();
+  }
+  function leaf(c, x, y, len2, ang, col){
+    c.save(); c.translate(x, y); c.rotate(ang);
+    c.fillStyle = col;
+    c.beginPath(); c.moveTo(0, 0); c.quadraticCurveTo(len2*0.5, -len2*0.32, len2, 0); c.quadraticCurveTo(len2*0.5, len2*0.32, 0, 0); c.fill();
+    c.restore();
+  }
+  function leafy(c, x, y, r, col){ c.fillStyle = col; c.beginPath(); for(let i = 0; i < 6; i++){ const a = i/6*TAU; c.moveTo(x + Math.cos(a)*r*0.5 + r*0.55, y + Math.sin(a)*r*0.45); c.arc(x + Math.cos(a)*r*0.5, y + Math.sin(a)*r*0.45, r*0.55, 0, TAU); } c.fill(); }
+
+  // little pictures for the score pills and panels
+  const iconCache = {};
+  function icon(id){
+    if(iconCache[id]) return iconCache[id];
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d');
+    if(id === 'baby'){ g.translate(32, 35); g.scale(0.95, 0.95); g.translate(0, 40); drawLemur(g, {t: 0.4, baby: true, mood: 'happy', pose: 'sit', noTail: true, look: {x: 0, y: 1}}); }
+    else if(id === 'banana'){ drawBanana(g, 32, 30, -0.35, 1.25); }
+    return (iconCache[id] = c.toDataURL());
+  }
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.gain.value = sfxOn ? 1 : 0; sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.24 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.03);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  const now = () => actx ? actx.currentTime : 0;
+  const sfx = {
+    // pitter-patter feet
+    step(i){ if(!audio()) return; noise(now(), 0.05, 'bandpass', i % 2 ? 2600 : 2100, 2.5, 0.045, 0.003); tone(i % 2 ? 640 : 560, 0.05, 'triangle', 0.035); },
+    bump(){ tone(300, 0.22, 'sine', 0.18, 150); tone(600, 0.1, 'triangle', 0.03, 300, 0.02); },
+    // a happy baby squeak when a baby joins the line
+    squeak(){ tone(900, 0.12, 'triangle', 0.12, 1500); tone(1300, 0.15, 'sine', 0.1, 2100, 0.11); tone(1700, 0.12, 'sine', 0.05, 2500, 0.24); },
+    // "wheee!" on the vine
+    wheee(){ if(!audio()) return; const t = now();
+      noise(t, 0.9, 'bandpass', 500, 1.1, 0.08, 0.15, null, 2400);
+      const o = actx.createOscillator(), g = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain();
+      o.type = 'triangle'; o.frequency.setValueAtTime(500, t); o.frequency.exponentialRampToValueAtTime(1150, t + 0.35); o.frequency.exponentialRampToValueAtTime(640, t + 0.85);
+      lfo.frequency.value = 7; lg.gain.value = 28; lfo.connect(lg).connect(o.frequency);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.11, t + 0.05); g.gain.setValueAtTime(0.11, t + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.9);
+      o.connect(g).connect(sfxBus); o.start(t); lfo.start(t); o.stop(t + 0.95); lfo.stop(t + 0.95); },
+    babyWhee(){ tone(1100, 0.3, 'triangle', 0.05, 1700); tone(1600, 0.25, 'sine', 0.04, 1200, 0.25); },
+    boop(n){ const f = 520*Math.pow(2, Math.min(n, 8)/12); tone(f, 0.1, 'sine', 0.16, f*1.5); tone(f*2, 0.12, 'triangle', 0.05, null, 0.07); },
+    plop(){ tone(240, 0.12, 'sine', 0.14, 520); if(audio()) noise(now(), 0.12, 'lowpass', 900, 0.8, 0.05, 0.004); },
+    splash(){ if(!audio()) return; noise(now(), 0.4, 'lowpass', 1800, 0.7, 0.07, 0.01, null, 500); for(let i = 0; i < 3; i++) tone(rand(300, 500), 0.1, 'sine', 0.04, rand(900, 1400), i*0.06); },
+    ladder(i){ tone(660*Math.pow(2, (i % 6)/12), 0.07, 'triangle', 0.08); },
+    climb(){ [523, 587, 659, 784, 880].forEach((f, i) => tone(f, 0.08, 'triangle', 0.08, null, i*0.1)); },
+    home(){ [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.18, 'triangle', 0.09, null, i*0.07)); },
+    toucan(){ if(!audio()) return; [0, 0.16].forEach(d => { tone(760, 0.11, 'square', 0.035, 470, d); tone(380, 0.11, 'sawtooth', 0.02, 260, d); });
+      [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.3, 'sine', 0.06, null, 0.35 + i*0.07)); },
+    birds(){ if(!audio()) return; const k = Math.floor(Math.random()*3), t = Math.random()*0.2;
+      if(k === 0){ for(let i = 0; i < 2; i++) tone(2300, 0.09, 'sine', 0.025, 3300, t + i*0.14); }
+      else if(k === 1){ tone(700, 0.22, 'sine', 0.03, 640, t); tone(560, 0.3, 'sine', 0.03, 520, t + 0.28); }
+      else { for(let i = 0; i < 6; i++) tone(2600 + (i % 2)*400, 0.05, 'sine', 0.02, null, t + i*0.06); } },
+    cheer(){ tone(520, 0.35, 'triangle', 0.08, 900); tone(660, 0.35, 'triangle', 0.06, 1100, 0.03);
+      [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'triangle', 0.09, null, 0.14 + i*0.07));
+      if(audio()) for(let i = 0; i < 4; i++) noise(now() + 0.05 + i*0.09, 0.06, 'bandpass', 1500, 0.8, 0.08, 0.003); },
+    fanfare(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.8 : 0.16, 'triangle', 0.13, null, i*0.13));
+      [262, 330, 392].forEach(f => tone(f, 1.1, 'triangle', 0.06, null, 0.8)); this.cheer(); }
+  };
+  // background music: the bouncy jungle tune from Lenny's Banana Catch (marimba, bongos and shaker)
+  const BPM = 116, STEP = 60/BPM/2;
+  const CHORDS = [41, 38, 46, 48, 41, 38, 43, 48];
+  const MINOR = [38, 43];
+  const MELODY = [
+    72,0,77,0,76,72,69,0,   74,0,77,0,81,0,77,74,
+    70,0,74,77,0,74,70,0,   72,0,76,0,79,0,0,0,
+    81,0,79,77,76,0,77,0,   74,0,77,0,74,72,69,0,
+    70,0,74,0,79,77,74,0,   76,0,72,0,77,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    if(beat === 0 || beat === 3 || beat === 4 || beat === 6) tone(hz(root + (beat === 3 || beat === 6 ? 7 : 0)), STEP*1.4, 'triangle', 0.2, null, d, musicBus);
+    if(beat === 0) [12, 16, 19].forEach(n => { const nn = MINOR.includes(root) && n === 16 ? 15 : n; tone(hz(root + nn), STEP*7, 'sine', 0.035, null, d, musicBus); });
+    const m = MELODY[i];
+    if(m){ tone(hz(m), 0.35, 'sine', 0.12, null, d, musicBus); tone(hz(m)*4, 0.06, 'sine', 0.04, null, d, musicBus); }
+    if(beat === 0 || beat === 5) tone(210, 0.14, 'sine', 0.2, 150, d, musicBus);
+    if(beat === 2 || beat === 3 || beat === 6) tone(360, 0.09, 'sine', 0.12, 290, d, musicBus);
+    noise(t, 0.05, 'highpass', 6500, 0.7, beat % 2 ? 0.045 : 0.022, 0.004, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){ playStep(mStep, mNext); mNext += STEP; mStep = (mStep + 1) % 64; }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  function duckMusic(secs){
+    if(!actx || !musicOn) return;
+    const g = musicBus.gain, t = actx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.08, t + 0.1); g.setValueAtTime(0.08, t + secs); g.linearRampToValueAtTime(0.24, t + secs + 0.8);
+  }
+  document.addEventListener('visibilitychange', () => {
+    held.length = 0; paintPad();
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+  addEventListener('blur', () => { held.length = 0; paintPad(); });
+
+  const musicBtn = $('musicBtn'), sfxBtn = $('sfxBtn');
+  function paintSoundBtns(){
+    // the words sit in a span so phones can show just the picture (screen readers still hear them)
+    musicBtn.innerHTML = '🎵<span class="lbl"> Music ' + (musicOn ? 'on' : 'off') + '</span>';
+    musicBtn.setAttribute('aria-pressed', musicOn); musicBtn.classList.toggle('off', !musicOn);
+    sfxBtn.innerHTML = (sfxOn ? '🔊' : '🔈') + '<span class="lbl"> Sounds ' + (sfxOn ? 'on' : 'off') + '</span>';
+    sfxBtn.setAttribute('aria-pressed', sfxOn); sfxBtn.classList.toggle('off', !sfxOn);
+    if(actx){
+      musicBus.gain.cancelScheduledValues(actx.currentTime); musicBus.gain.setTargetAtTime(musicOn ? 0.24 : 0, actx.currentTime, 0.1);
+      sfxBus.gain.setTargetAtTime(sfxOn ? 1 : 0, actx.currentTime, 0.05);
+    }
+  }
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save(KEY + 'music', musicOn); wake(); startMusic(); paintSoundBtns(); musicBtn.blur(); });
+  sfxBtn.addEventListener('click', () => { sfxOn = !sfxOn; save(KEY + 'sfx', sfxOn); wake(); startMusic(); paintSoundBtns(); sfxBtn.blur(); });
+  paintSoundBtns();
+
+  // ===== HUD =====
+  const homeCount = () => babies.filter(b => b.st === 'home').length;
+  function updateHud(bumpId){
+    const hb = homeCount(), nb = babies.length, gb = bananas.filter(b => b.got).length;
+    lvlPill.textContent = 'Level ' + (level + 1);
+    babyPill.innerHTML = '<img alt="" src="' + icon('baby') + '">' + hb + '/' + nb;
+    babyPill.setAttribute('aria-label', 'Baby lemurs home: ' + hb + ' of ' + nb);
+    nanaPill.innerHTML = '<img alt="" src="' + icon('banana') + '">' + gb + '/' + bananas.length;
+    nanaPill.setAttribute('aria-label', 'Bananas: ' + gb + ' of ' + bananas.length);
+    babyPill.classList.toggle('done', hb === nb); nanaPill.classList.toggle('done', gb === bananas.length);
+    const el = {baby: babyPill, nana: nanaPill}[bumpId];
+    if(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  }
+
+  // ===== STARTING A LEVEL =====
+  function startLevel(i){
+    parse(i);
+    prog.cur = level; saveProg();
+    Object.assign(len, {x: H.x, y: H.y, fx: H.x, fy: H.y, dir: 2, roll: null, move: null, bumpT: 0, happyT: 0, hop: 0});
+    queued = null; held.length = 0; paintPad();
+    trail = [{x: H.x, y: H.y, k: 'walk'}]; train = []; prints = []; parts = []; words = []; bubbles = []; toucan = null;
+    homeSlots = 0; partyT = 0; finaleT = 0; callT = 3.5; birdT = 2; fishT = 3;
+    makeScenery();
+    phase = 'play';
+    overlay.hidden = true;
+    bgDirty = true; resize();
+    updateHud();
+    say(() => lennyHead(), lv.say, 3.6);
+  }
+  function makeScenery(){
+    // butterflies, swaying leaves and (on the misty level) soft mist
+    butterflies = [];
+    const nb = reduced ? 0 : 3 + Math.floor(SX/5);
+    for(let i = 0; i < nb; i++) butterflies.push({x: rand(1, SX - 1), y: rand(1, SY - 1), a: rand(0, TAU), sp: rand(0.5, 0.9), col: pick(['#FF8FB0', '#FFD43B', '#74C0FC', '#B197FC', '#FFA94D']), ph: rand(0, 6)});
+    fronds = [];
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'W' || waterLook(x, y) || nearHouse(x, y)) continue;
+      if(hash(x + level*7, y + 3) < 0.4) fronds.push({x: x + 0.5 + (hash(x, y + 1) - 0.5)*0.3, y: y + 0.5 + (hash(x + 2, y) - 0.5)*0.3, a: hash(y, x)*TAU, len: 0.38 + hash(x + 5, y)*0.2, ph: hash(x, y)*6, col: pick(['#2E8B4A', '#3FA05A', '#57B86A', '#26763F'])});
+    }
+    mist = [];
+    if(lv.mist) for(let i = 0; i < 7; i++) mist.push({x: rand(-2, SX + 2), y: rand(0, SY), r: rand(2.2, 3.8), sp: rand(0.15, 0.35)*(i % 2 ? 1 : -1)});
+  }
+
+  // ===== MOVING ABOUT =====
+  const SPEED = 4.2;                         // squares per second
+  function heldDir(){ return held.length ? held[held.length - 1] : null; }
+  function junction(x, y, from){
+    // a "junction" is a square with more than one new way to go
+    let c = 0; for(let d = 0; d < 4; d++){ if(d === (from + 2) % 4) continue; if(canWalk(x + DX[d], y + DY[d])) c++; }
+    return c >= 2;
+  }
+  const canGo = d => canWalk(len.x + DX[d], len.y + DY[d]) || !!vineFrom(len.x, len.y, d);
+  function request(d){
+    if(phase !== 'play') return;
+    wake(); startMusic();
+    if(len.move){
+      // turning right round: go straight back the way we came
+      if(len.move.kind === 'walk' && d === (len.move.d + 2) % 4){
+        const m = len.move;
+        trail.push({x: len.fx, y: len.fy, k: 'walk'});   // the babies follow right up to where Lenny turned round
+        len.move = {fx: m.tx, fy: m.ty, tx: m.fx, ty: m.fy, d, t: 1 - m.t, kind: 'walk', half: m.t < 0.5};
+        len.x = m.tx; len.y = m.ty; len.roll = d; len.dir = d; queued = null;
+        return;
+      }
+      queued = d; return;
+    }
+    tryGo(d, true);
+  }
+  // try to go one way; returns true if Lenny set off
+  function tryGo(d, fresh){
+    const nx = len.x + DX[d], ny = len.y + DY[d];
+    if(canWalk(nx, ny)){ startMove(d); return true; }
+    const v = vineFrom(len.x, len.y, d);
+    if(v){ startSwing(v); return true; }
+    if(fresh){
+      len.dir = d; len.bumpT = 0.35; len.bumpDir = d;
+      sfx.bump();
+      const wv = vineAt(nx, ny);
+      if(wv && Math.random() < 0.8) say(() => lennyHead(), 'This vine swings the other way!', 2.2);
+      else if(isWater(nx, ny) && Math.random() < 0.5) say(() => lennyHead(), pick(['Too splashy! Find a bridge.', 'Brrr, wet! Let\'s go round.']), 2.2);
+    }
+    return false;
+  }
+  function startMove(d){
+    len.dir = d;
+    len.move = {fx: len.x, fy: len.y, tx: len.x + DX[d], ty: len.y + DY[d], d, t: 0, kind: 'walk', half: false};
+    len.roll = d;
+  }
+  function startSwing(v){
+    len.dir = v.d;
+    len.move = {fx: len.x, fy: len.y, tx: v.lx, ty: v.ly, d: v.d, t: 0, kind: 'swing', vine: v, dur: 0.75 + v.dist*0.14};
+    len.roll = null; queued = null;
+    sfx.wheee(); say(() => lennyHead(), 'Wheee!', 1.4);
+    if(train.length) setTimeout(() => { if(phase === 'play') say(() => trainPos(1), 'Wheee!', 1.2); }, 500);
+  }
+  function addPrint(x, y, d, side){
+    if(tileAt(Math.round(x), Math.round(y)) === 'L') return;
+    const a = Math.atan2(DY[d], DX[d]) + Math.PI/2, ox = Math.cos(a - Math.PI/2)*0.1*side, oy = Math.sin(a - Math.PI/2)*0.1*side;
+    prints.push({x: x + 0.5 + ox, y: y + 0.5 + oy + 0.1, a, t: clock});
+    if(prints.length > 500) prints.shift();
+  }
+  function arrive(){
+    const m = len.move;
+    len.x = m.tx; len.y = m.ty; len.fx = m.tx; len.fy = m.ty;
+    trail.push({x: m.tx, y: m.ty, k: m.kind, vine: m.vine || null});
+    trimTrail();
+    len.move = null;
+    const x = len.x, y = len.y;
+    if(m.kind === 'walk') addPrint(x, y, m.d, 1); else { len.hop = 1; landSplash(x, y); }
+    // lily pads wobble when you hop on them
+    if(tileAt(x, y) === 'L'){ sfx.plop(); lilyDip[x + ',' + y] = 1; if(Math.random() < 0.35) popWord('Hop!', x + 0.5, y + 0.1, '#2F9E44'); }
+    // bananas
+    bananas.forEach(b => {
+      if(b.got || b.x !== x || b.y !== y) return;
+      b.got = true; b.t = 0;
+      const n = bananas.filter(q => q.got).length;
+      sfx.boop(n); popWord('Boop!', x + 0.5, y + 0.15, '#E8A200');
+      burst(x + 0.5, y + 0.5, ['#FFD43B', '#FFF3B0', '#FFC23D'], 12, 'spark');
+      updateHud('nana');
+    });
+    // a lost baby joins the line!
+    babies.forEach(b => {
+      if(b.st !== 'wait' || b.x !== x || b.y !== y) return;
+      b.st = 'join'; b.jt = 0; b.hx = x; b.hy = y;
+      train.push(b); b.lag = train.length*GAP;
+      sfx.squeak(); len.happyT = 1.6;
+      say(() => ({x: b.dx || x + 0.5, y: (b.dy || y + 0.5) - 0.55}), pick(YAY), 1.5);
+      for(let i = 0; i < (reduced ? 3 : 8); i++) parts.push({k: 'heart', x: x + 0.5 + rand(-0.25, 0.25), y: y + 0.3, vx: rand(-0.3, 0.3), vy: rand(-1.2, -0.6), life: 1, r: rand(0.06, 0.1), col: pick(['#FF4F9A', '#FF8FB0', '#FF6B6B'])});
+      if(train.length === 1 && homeCount() === 0) setTimeout(() => { if(phase === 'play') say(() => lennyHead(), babies.some(q => q.st === 'wait') ? 'Follow me! Let\'s find the others.' : 'Follow me home to the treehouse!', 2.8); }, 900);
+    });
+    // home to the treehouse with babies!
+    if(x === H.x && y === H.y && train.length){ startHome(); return; }
+    decide(true);
+  }
+  // what to do next after arriving somewhere
+  function decide(arrived){
+    const want = queued !== null ? queued : heldDir();
+    if(want !== null && canGo(want)){ queued = null; tryGo(want, false); return; }
+    // keep going along a corridor until a turn or a junction
+    const f = len.roll;
+    if(arrived && f !== null && canWalk(len.x + DX[f], len.y + DY[f]) && !junction(len.x, len.y, f)){ startMove(f); return; }
+    len.roll = null;
+    if(want !== null && queued !== null) tryGo(want, true);
+    queued = null;
+  }
+  const lilyDip = {};
+  function landSplash(x, y){
+    // a little splash near the river bank as Lenny lands
+    if(!reduced) for(let i = 0; i < 6; i++) parts.push({k: 'dust', x: x + 0.5 + rand(-0.2, 0.2), y: y + 0.5 + FOOT, vx: rand(-0.6, 0.6), vy: rand(-0.3, 0.05), life: 1, r: rand(0.05, 0.09)});
+  }
+
+  // ===== THE WOBBLY LINE OF BABIES (they follow Lenny's exact path) =====
+  const GAP = 0.62;
+  function trailLength(){
+    let L2 = Math.hypot(len.fx - trail[trail.length - 1].x, len.fy - trail[trail.length - 1].y);
+    for(let i = trail.length - 1; i > 0; i--) L2 += Math.hypot(trail[i].x - trail[i - 1].x, trail[i].y - trail[i - 1].y);
+    return L2;
+  }
+  function trimTrail(){
+    const need = (train.length + 2)*GAP + 3;
+    while(trail.length > 2){
+      let L2 = 0;
+      for(let i = trail.length - 1; i > 1; i--) L2 += Math.hypot(trail[i].x - trail[i - 1].x, trail[i].y - trail[i - 1].y);
+      if(L2 > need) trail.shift(); else break;
+    }
+  }
+  // where you would be if you were this far back along Lenny's path (in squares)
+  function pathPos(lag){
+    let ax = len.fx, ay = len.fy, rem = lag;
+    let kind = len.move ? len.move.kind : 'walk', vine = len.move ? len.move.vine : null;
+    for(let i = trail.length - 1; i >= 0; i--){
+      const bx = trail[i].x, by = trail[i].y, l = Math.hypot(ax - bx, ay - by);
+      if(rem <= l && l > 0){
+        const u = rem/l, x = lerp(ax, bx, u), y = lerp(ay, by, u);
+        let lift = 0, swing = null;
+        if(kind === 'swing' && vine){
+          const full = Math.hypot(vine.lx - vine.ax, vine.ly - vine.ay) || 1;
+          const along = clamp(Math.hypot(x - vine.ax, y - vine.ay)/full, 0, 1);
+          lift = Math.sin(Math.PI*along)*swingH(vine); swing = {vine, u: along};
+        }
+        return {x, y, lift, swing, dx: ax - bx, dy: ay - by};
+      }
+      rem -= l; ax = bx; ay = by;
+      kind = trail[i].k; vine = trail[i].vine;
+    }
+    return {x: ax, y: ay, lift: 0, swing: null, dx: 0, dy: 1};
+  }
+  // a sideways swing makes a big arc up the screen; an up-and-down swing flies over the water, getting bigger as it comes "closer"
+  const swingH = v => v.d % 2 ? 0.45 + v.dist*0.12 : 0.24 + v.dist*0.05;
+  const swingZoom = (v, u) => 1 + (v.d % 2 ? 0.12 : 0.38)*Math.sin(Math.PI*clamp(u, 0, 1));
+  function trainPos(i){ const b = train[i - 1]; if(!b) return lennyHead(); return {x: (b.dx || 0), y: (b.dy || 0) - 0.5}; }
+
+  // ===== HOME TO THE TREEHOUSE =====
+  function startHome(){
+    phase = 'home';
+    len.roll = null; queued = null; held.length = 0; paintPad(); len.happyT = 99; toucan = null;
+    say(() => lennyHead(), pick(['Home sweet home!', 'Up you go!', 'We made it!']), 2);
+    train.forEach((b, i) => { b.lag = Math.max(b.lag, (i + 1)*GAP); });
+  }
+  function updateHome(dt){
+    train.forEach((b, i) => {
+      if(b.st === 'join'){ b.st = 'follow'; }
+      if(b.st !== 'follow') return;
+      const prev = train[i - 1];
+      const limit = !prev || prev.st === 'climb' || prev.st === 'home' ? 0 : prev.lag + GAP*0.75;
+      b.lag = Math.max(limit, b.lag - 2.6*dt);
+      if(b.lag <= 0.001){ b.st = 'climb'; b.ct = 0; b.slot = homeSlots++; sfx.climb(); }
+    });
+    if(train.every(b => b.st === 'home')){
+      train = [];
+      trail = [{x: H.x, y: H.y, k: 'walk'}];
+      len.happyT = 1.5;
+      updateHud('baby');
+      if(babies.every(b => b.st === 'home')) startParty();
+      else {
+        phase = 'play';
+        const left = babies.filter(b => b.st === 'wait').length;
+        say(() => lennyHead(), left === 1 ? 'One more baby to find!' : left + ' more babies to find!', 2.6);
+      }
+    }
+  }
+  function platformSpot(slot){
+    const xs = [-0.62, 0.62, -0.28, 0.28];
+    return {x: H.x + 0.5 + xs[slot % 4], y: 0.66};
+  }
+  const ladderX = () => H.x + 0.5 + 0.24;
+
+  // ===== THE PARTY AT THE END OF A LEVEL =====
+  function startParty(){
+    phase = 'party'; partyT = 0; len.happyT = 99;
+    const total = bananas.length, got = bananas.filter(b => b.got).length;
+    endStars = got === total ? 3 : got >= Math.ceil(total/2) ? 2 : 1;
+    prog.stars[level] = Math.max(prog.stars[level], endStars);
+    prog.home[level] = Math.max(prog.home[level], babies.length);
+    if(level + 2 > prog.unlocked) prog.unlocked = Math.min(6, level + 2);
+    prog.cur = Math.min(5, level + 1);
+    saveProg();
+    sfx.fanfare(); duckMusic(3);
+    for(let i = 0; i < 4; i++) setTimeout(() => burst(H.x + 0.5, 0.6, CONF, 22, 'conf'), i*280);
+    say(() => lennyHead(), endStars === 3 ? 'Everyone\'s home, and every banana too!' : 'Everyone\'s home! Hooray!', 2.6);
+    if(lv.party){ finaleT = 0.001; setTimeout(() => { bubbles = []; }, 700); }
+  }
+  function updateParty(dt){
+    partyT += dt;
+    if(!reduced && Math.random() < dt*5) burst(rand(0.5, SX - 0.5), -0.2, CONF, 3, 'conf');
+    babies.forEach(b => { if(b.jump <= 0 && Math.random() < dt*2.5) b.jump = 1; });
+    if(finaleT > 0){ finaleT += dt; if(at(finaleT - dt, finaleT, 1.2)) sfx.fanfare(); }
+    if(partyT > (finaleT > 0 ? 7 : 2.8)){ phase = 'end'; showEnd(); }
+  }
+  const at = (a, b, s) => a < s && b >= s;
+
+  // ===== PARTICLES AND WORDS =====
+  function burst(x, y, cols, n, kind){
+    if(reduced) n = Math.min(n, 5);
+    for(let i = 0; i < n; i++){
+      const a = rand(0, TAU), sp = rand(0.8, 2.4);
+      if(kind === 'conf') parts.push({k: 'conf', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 2, rot: rand(0, 6), vr: rand(-12, 12), col: cols[i % cols.length], life: 1, r: rand(0.06, 0.1)});
+      else parts.push({k: 'spark', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, col: cols[i % cols.length], life: 1, r: rand(0.05, 0.09)});
+    }
+  }
+  function popWord(text, x, y, col){ words.push({text, x, y, t: 0, col: col || '#FF4F9A'}); }
+  function say(get, text, dur, extra){ bubbles = bubbles.filter(b => b.text !== text); bubbles.push(Object.assign({get, text, t: 0, dur}, extra || {})); if(bubbles.length > 3) bubbles.shift(); }
+  function lennyHead(){ const lift = len.move && len.move.kind === 'swing' ? Math.sin(Math.PI*clamp(len.move.t, 0, 1))*swingH(len.move.vine) : 0; return {x: len.fx + 0.5, y: len.fy + 0.5 + FOOT - lift - 0.95}; }
+
+  // ===== HINT: the toucan flies ahead to the nearest lost baby (or home) =====
+  // one step along the maze (walking, or swinging on a vine)
+  function steps(x, y, noVines){
+    const out = [];
+    for(let d = 0; d < 4; d++){
+      const nx = x + DX[d], ny = y + DY[d];
+      if(canWalk(nx, ny)) out.push({x: nx, y: ny, d});
+      else if(!noVines){ const v = vineFrom(x, y, d); if(v) out.push({x: v.lx, y: v.ly, d, vine: v}); }
+    }
+    return out;
+  }
+  function route(sx, sy, goals, noVines){
+    const key = (x, y) => x + ',' + y, prev = new Map([[key(sx, sy), null]]), q = [[sx, sy]];
+    let end = null;
+    while(q.length){
+      const [x, y] = q.shift();
+      if(goals.has(key(x, y)) && !(x === sx && y === sy)){ end = [x, y]; break; }
+      for(const s of steps(x, y, noVines)){ const k = key(s.x, s.y); if(!prev.has(k)){ prev.set(k, {x, y, d: s.d, vine: s.vine}); q.push([s.x, s.y]); } }
+    }
+    if(!end) return null;
+    const path = [{x: end[0], y: end[1]}];
+    let k = key(end[0], end[1]);
+    while(prev.get(k)){ const p = prev.get(k); path[0].d = p.d; path[0].vine = p.vine; path.unshift({x: p.x, y: p.y}); k = key(p.x, p.y); }
+    return path;
+  }
+  function showHint(){
+    if(phase !== 'play') return;
+    wake(); startMusic();
+    const sx = len.move ? len.move.tx : len.x, sy = len.move ? len.move.ty : len.y;
+    const waiting = babies.filter(b => b.st === 'wait');
+    const goals = new Set((waiting.length ? waiting : [H]).map(g => g.x + ',' + g.y));
+    const path = route(sx, sy, goals, false);
+    if(!path) return;
+    const pts = [{x: len.fx + 0.5, y: len.fy + 0.2}].concat(path.map(p => ({x: p.x + 0.5, y: p.y + 0.5})));
+    let total = 0; for(let i = 1; i < pts.length; i++) total += Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+    toucan = {pts, total, t: 0, speed: Math.max(6, total/1.6), life: 3.4};
+    sfx.toucan();
+  }
+  function toucanAt(dist){
+    const p = toucan.pts; let d = dist;
+    for(let i = 1; i < p.length; i++){
+      const l = Math.hypot(p[i].x - p[i - 1].x, p[i].y - p[i - 1].y);
+      if(d <= l){ const u = l ? d/l : 1; return {x: lerp(p[i - 1].x, p[i].x, u), y: lerp(p[i - 1].y, p[i].y, u), face: p[i].x >= p[i - 1].x ? 1 : -1}; }
+      d -= l;
+    }
+    const e = p[p.length - 1]; return {x: e.x, y: e.y, face: 1};
+  }
+
+  // ===== PANELS =====
+  const starSvg = on => '<svg viewBox="0 0 24 24" aria-hidden="true"' + (on ? ' class="on"' : '') + '><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z" fill="' + (on ? '#FFC21A' : '#E8EEE2') + '" stroke="' + (on ? '#E8A200' : '#CFD8C8') + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  function showPanel(html){
+    panel.innerHTML = html;
+    overlay.hidden = false;
+    const b = $('ovBtn'); if(b) setTimeout(() => { try { b.focus({preventScroll: true}); } catch(e){} }, 30);
+  }
+  let TEST_ALL = false;
+  function levelButtons(){
+    return '<div class="levels">' + LEVELS.map((L2, i) => {
+      const locked = i + 1 > prog.unlocked && !TEST_ALL;
+      const st = prog.stars[i];
+      return '<button type="button" data-lv="' + i + '"' + (locked ? ' disabled' : '') + (i === prog.cur ? ' class="now"' : '') + ' aria-label="Level ' + (i + 1) + ': ' + L2.name + (locked ? ', locked' : ', ' + st + ' stars') + '">' +
+        '<span class="num">' + (locked ? '🔒' : (i + 1)) + '</span><span class="nm">' + L2.icon + ' ' + L2.name + '</span>' +
+        '<span class="st"><i>' + '★'.repeat(st) + '</i>' + '★'.repeat(3 - st) + '</span></button>';
+    }).join('') + '</div>';
+  }
+  function showMenu(){
+    const cur = clamp(prog.cur, 0, (TEST_ALL ? 6 : prog.unlocked) - 1);
+    const fam = familyCount();
+    showPanel('<h2>Lenny\'s Jungle Maze</h2>' +
+      '<canvas class="family" id="family" width="800" height="300" aria-label="Lenny\'s lemur family: ' + fam + ' of ' + TOTAL_BABIES + ' babies home"></canvas>' +
+      '<p class="small">Lemur family: ' + fam + ' of ' + TOTAL_BABIES + ' babies home</p>' +
+      '<p>Baby lemurs are lost in the jungle maze! Find them and lead them home to Lenny\'s treehouse.</p>' +
+      '<button id="ovBtn" type="button" data-go="lv' + cur + '">' + (prog.stars.some(s => s) ? 'Play level ' + (cur + 1) + ' ▶' : 'Let\'s go! ▶') + '</button>' +
+      levelButtons() +
+      '<div class="key"><span>⬅️ ➡️ Arrows or swipe</span><span>move Lenny</span><span><b>Baby lemurs</b></span><span>follow you home</span><span><b>Vines</b></span><span>swing across the river</span><span>Every banana</span><span>3 stars!</span></div>');
+    drawFamily($('family'));
+  }
+  function showEnd(){
+    const gb = bananas.filter(b => b.got).length, last = level === LEVELS.length - 1, n = babies.length;
+    const msg = endStars === 3 ? 'Every baby home and every banana found!' : endStars === 2 ? 'All the babies are home! Can you find every banana for 3 stars?' : 'All the babies are home! The toucan can help you find the bananas.';
+    showPanel('<h2>' + (last ? 'What a jungle party!' : (endStars === 3 ? 'Super leading!' : 'Hooray!') + ' Level ' + (level + 1) + ' done!') + '</h2>' +
+      '<div class="stars" aria-label="' + endStars + ' stars">' + [0, 1, 2].map(i => starSvg(i < endStars)).join('') + '</div>' +
+      '<div class="got" aria-label="What you did">' +
+        '<span><img alt="Baby lemurs home" src="' + icon('baby') + '">' + n + ' home</span>' +
+        '<span><img alt="Bananas" src="' + icon('banana') + '">' + gb + '/' + bananas.length + '</span></div>' +
+      '<p>' + msg + '</p>' +
+      '<button id="ovBtn" type="button" data-go="' + (last ? 'menu' : 'lv' + (level + 1)) + '">' + (last ? 'See the lemur family 🌴' : 'Next level ▶') + '</button>' +
+      '<div class="row"><button class="ghost" type="button" data-go="lv' + level + '">🔁 Again</button><button class="ghost" type="button" data-go="menu">🗺️ Levels</button></div>');
+    // share this level's result (the panel is rebuilt each time, so there's only ever one share button)
+    if(window.LR && LR.shareButton){
+      const old = panel.querySelector('.lr-share'); if(old) old.remove();
+      const sb = LR.shareButton('I led ' + n + ' baby lemur' + (n === 1 ? '' : 's') + ' home in Lenny\'s Jungle Maze and got ' + endStars + ' star' + (endStars === 1 ? '' : 's') + '! 🐒', 'Share my rescue');
+      panel.appendChild(sb);
+    }
+  }
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b || b.classList.contains('lr-share')) return;
+    wake(); startMusic();
+    if(b.dataset.lv != null){ startLevel(+b.dataset.lv); return; }
+    const go = b.dataset.go || '';
+    if(go.startsWith('lv')){ startLevel(+go.slice(2)); return; }
+    if(go === 'menu'){ phase = 'menu'; showMenu(); }
+    else if(go === 'resume'){ overlay.hidden = true; phase = 'play'; }
+  });
+  $('lvlBtn').addEventListener('click', () => {
+    wake(); startMusic(); $('lvlBtn').blur();
+    if(phase === 'end' || phase === 'party' || phase === 'home') return;
+    const wasPlaying = phase === 'play';
+    showMenu();
+    if(wasPlaying){
+      // a "Keep playing" button, so the levels button works like a pause
+      const keep = document.createElement('button'); keep.type = 'button'; keep.className = 'ghost'; keep.dataset.go = 'resume'; keep.textContent = '▶ Keep playing level ' + (level + 1);
+      panel.insertBefore(keep, panel.querySelector('.levels'));
+      phase = 'paused';
+    }
+  });
+  $('hintBtn').addEventListener('click', () => { showHint(); $('hintBtn').blur(); });
+
+  // ----- the lemur family picture: every baby brought home so far sits on the big branch -----
+  function drawFamily(cv){
+    const g = cv.getContext('2d'), W = 800, Hh = 300;
+    g.clearRect(0, 0, W, Hh);
+    // soft jungle behind
+    g.fillStyle = '#D7F0CF'; rr(g, 0, 0, W, Hh, 28); g.fill();
+    ['#BFE3B4', '#B1DAA5'].forEach((col, i) => { for(let x = -20; x < W + 40; x += 70) leafy(g, x + i*35, 40 + i*20, 60, col); });
+    // the big branch
+    g.strokeStyle = '#8B5A3C'; g.lineWidth = 22; g.lineCap = 'round';
+    g.beginPath(); g.moveTo(-10, 210); g.quadraticCurveTo(W*0.45, 180, W + 10, 205); g.stroke();
+    g.strokeStyle = '#A8734D'; g.lineWidth = 6; g.beginPath(); g.moveTo(-10, 203); g.quadraticCurveTo(W*0.45, 173, W + 10, 198); g.stroke();
+    for(let x = 40; x < W; x += 110){ leaf(g, x, 200, 46, 2.4, '#3FA05A'); leaf(g, x + 20, 204, 40, 0.7, '#57B86A'); }
+    const by = x => { const u = (x + 10)/(W + 20); return (1 - u)*(1 - u)*210 + 2*(1 - u)*u*180 + u*u*205 - 10; };
+    // Lenny in the middle
+    g.save(); g.translate(400, by(400) + 2); g.scale(1.55, 1.55); g.translate(0, -39); drawLemur(g, {t: 1.3, mood: 'happy', pose: 'cheer', look: {x: 0, y: 1}}); g.restore();
+    // the babies: 15 places along the branch
+    const n = familyCount();
+    const xs = []; for(let i = 0; i < TOTAL_BABIES; i++){ const side = i % 2 ? 1 : -1, k = Math.floor(i/2) + 1; xs.push(400 + side*(30 + k*44)); }
+    xs.forEach((x, i) => {
+      g.save(); g.translate(x, by(x) - 4);
+      if(i < n){ g.scale(0.82, 0.82); g.translate(0, -39); drawLemur(g, {t: i*0.7, ph: i, baby: true, mood: 'happy', pose: i % 3 === 0 ? 'wave' : 'sit', look: {x: x < 400 ? 1 : -1, y: 1}}); }
+      else { g.globalAlpha = 0.2; g.scale(0.82, 0.82); g.translate(0, -39); drawLemur(g, {t: 0, baby: true, pose: 'sit', noTail: true, blink: true, look: {x: 0, y: 1}}); g.globalAlpha = 1; }
+      g.restore();
+    });
+  }
+
+  // ===== KEYBOARD, TOUCH AND MOUSE =====
+  const keyMap = {ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3, w: 0, d: 1, s: 2, a: 3, W: 0, D: 1, S: 2, A: 3};
+  addEventListener('keydown', e => {
+    if(!overlay.hidden){
+      // Enter or Space presses the big pink button (unless another button has been picked with Tab)
+      if((e.key === 'Enter' || e.key === ' ') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#panel button'))){
+        const b = $('ovBtn'); if(b){ e.preventDefault(); b.click(); }
+      }
+      return;
+    }
+    const d = keyMap[e.key];
+    if(d != null){
+      e.preventDefault();
+      if(e.repeat) return;
+      if(!held.includes(d)) held.push(d);
+      request(d);
+    } else if(e.key === 'h' || e.key === 'H') showHint();
+  });
+  addEventListener('keyup', e => {
+    const d = keyMap[e.key];
+    if(d != null){ const i = held.indexOf(d); if(i >= 0) held.splice(i, 1); }
+  });
+  // on-screen arrows: press and hold to keep going
+  const padBtns = [...document.querySelectorAll('.pad button')];
+  function paintPad(){ padBtns.forEach(b => b.classList.toggle('on', held.includes(+b.dataset.d))); }
+  padBtns.forEach(b => {
+    const d = +b.dataset.d;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { b.setPointerCapture(e.pointerId); } catch(err){}
+      if(!held.includes(d)) held.push(d);
+      paintPad(); request(d);
+    });
+    const up = () => { const i = held.indexOf(d); if(i >= 0) held.splice(i, 1); paintPad(); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
+    b.addEventListener('click', e => e.preventDefault());
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  // swipe on the maze (or tap a spot next to Lenny to go that way)
+  let sw = null;
+  board.addEventListener('pointerdown', e => {
+    wake(); startMusic();
+    if(phase !== 'play') return;
+    sw = {x: e.clientX, y: e.clientY, moved: false};
+    try { board.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  board.addEventListener('pointermove', e => {
+    if(!sw) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y, th = Math.max(18, T*0.45);
+    if(Math.abs(dx) > th || Math.abs(dy) > th){
+      request(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+      sw.x = e.clientX; sw.y = e.clientY; sw.moved = true;
+    }
+  });
+  board.addEventListener('pointerup', e => {
+    if(!sw) return;
+    if(!sw.moved){
+      const r = board.getBoundingClientRect();
+      const px = (e.clientX - r.left)/T - (len.fx + 0.5), py = (e.clientY - r.top)/T - (len.fy + 0.5);
+      if(Math.hypot(px, py) > 0.45) request(Math.abs(px) > Math.abs(py) ? (px > 0 ? 1 : 3) : (py > 0 ? 2 : 0));
+    }
+    sw = null;
+  });
+  board.addEventListener('pointercancel', () => { sw = null; });
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt;
+    len.bumpT = Math.max(0, len.bumpT - dt);
+    len.happyT = Math.max(0, len.happyT - dt);
+    len.hop = Math.max(0, len.hop - dt*3);
+    for(const k in lilyDip){ lilyDip[k] = Math.max(0, lilyDip[k] - dt*1.6); }
+
+    if(phase === 'play'){
+      if(len.move){
+        const m = len.move;
+        if(m.kind === 'walk'){
+          m.t += dt*SPEED;
+          len.ph += dt*SPEED*Math.PI;
+          stepT -= dt; if(stepT <= 0){ sfx.step(stepN++); stepT = 0.12; }
+          if(!m.half && m.t >= 0.5){ m.half = true; addPrint(lerp(m.fx, m.tx, 0.5), lerp(m.fy, m.ty, 0.5), m.d, -1); }
+        } else m.t += dt/m.dur;
+        if(m.t >= 1){
+          const over = m.kind === 'walk' ? (m.t - 1)/SPEED : 0;
+          arrive();
+          if(len.move && over > 0 && len.move.kind === 'walk') len.move.t = Math.min(0.9, over*SPEED);
+        } else {
+          const u = m.kind === 'swing' ? ease(m.t)*0.15 + m.t*0.85 : m.t;
+          len.fx = lerp(m.fx, m.tx, u); len.fy = lerp(m.fy, m.ty, u);
+        }
+      } else if(heldDir() !== null || queued !== null){
+        decide(false);
+      }
+      if(TEST && auto) autoStep();
+    } else if(phase === 'home') updateHome(dt);
+    else if(phase === 'party') updateParty(dt);
+
+    // babies: joining the line, following, climbing up to the treehouse
+    train.forEach((b, i) => {
+      if(phase !== 'home') b.lag = lerp(b.lag, (i + 1)*GAP, Math.min(1, dt*4));
+      if(b.st === 'join'){ b.jt += dt/0.45; if(b.jt >= 1){ b.st = 'follow'; } }
+    });
+    babies.forEach(b => {
+      if(b.st === 'climb'){
+        const was = b.ct; b.ct += dt/1.1;
+        const r0 = Math.floor(was*8), r1 = Math.floor(Math.min(b.ct, 0.7)*8);
+        if(r1 > r0 && b.ct < 0.72) sfx.ladder(r1);
+        if(b.ct >= 1){ b.st = 'home'; b.jump = 1; sfx.home(); const p = platformSpot(b.slot); burst(p.x, p.y - 0.3, ['#FF4F9A', '#FFD43B', '#69DB7C'], 10, 'spark'); updateHud('baby');
+          prog.home[level] = Math.max(prog.home[level], homeCount()); saveProg(); }
+      }
+      if(b.jump > 0) b.jump = Math.max(0, b.jump - dt*1.6);
+      if(b.told) b.told = Math.max(0, b.told - dt);
+    });
+    bananas.forEach(b => { if(b.got) b.t += dt; });
+
+    // the toucan hint
+    if(toucan){ toucan.t += dt; if(toucan.t >= toucan.life) toucan = null; }
+
+    // lost babies call out now and then (a little clue)
+    if(phase === 'play'){
+      callT -= dt;
+      if(callT <= 0){
+        callT = rand(5, 8);
+        const w = babies.filter(b => b.st === 'wait');
+        if(w.length){ const b = pick(w); say(() => ({x: b.x + 0.5, y: b.y + 0.5 + FOOT - 0.62}), pick(CALLS), 1.8); tone(1400, 0.1, 'sine', 0.03, 1900); }
+      }
+      // jungle birds sing
+      birdT -= dt; if(birdT <= 0){ birdT = rand(7, 13); sfx.birds(); }
+      // a little fishy splash on the river
+      fishT -= dt;
+      if(fishT <= 0){
+        fishT = rand(3, 6);
+        const ws = []; for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++) if(tileAt(x, y) === 'R' && Math.hypot(x - len.x, y - len.y) > 1.5) ws.push([x, y]);
+        if(ws.length && !reduced){ const [x, y] = pick(ws); ripples.push({x: x + 0.5, y: y + 0.5, t: 0}); for(let i = 0; i < 7; i++) parts.push({k: 'drop', x: x + 0.5, y: y + 0.5, vx: rand(-0.7, 0.7), vy: rand(-1.6, -0.8), life: 1, r: rand(0.035, 0.06)}); if(Math.hypot(x - len.x, y - len.y) < 6) sfx.splash(); }
+      }
+    }
+    ripples = ripples.filter(r => (r.t += dt) < 1.2);
+
+    // butterflies flutter about
+    butterflies.forEach(b => {
+      b.a += Math.sin(clock*0.9 + b.ph)*dt*1.6;
+      b.x += Math.cos(b.a)*b.sp*dt; b.y += Math.sin(b.a)*b.sp*dt*0.8;
+      if(b.x < 0.3 || b.x > SX - 0.3 || b.y < 0.5 || b.y > SY - 0.3){ b.a += Math.PI*dt*3; b.x = clamp(b.x, 0.3, SX - 0.3); b.y = clamp(b.y, 0.5, SY - 0.3); }
+    });
+    mist.forEach(m => { m.x += m.sp*dt; if(m.x > SX + 4) m.x = -4; if(m.x < -4) m.x = SX + 4; });
+
+    // particles
+    parts = parts.filter(p => {
+      p.life -= dt*(p.k === 'conf' ? 0.45 : p.k === 'heart' ? 0.9 : p.k === 'drop' ? 1.4 : p.k === 'dust' ? 1.8 : 1.6);
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      if(p.k === 'conf'){ p.vy += 4*dt; p.vx *= 0.99; p.rot += p.vr*dt; }
+      else if(p.k === 'drop'){ p.vy += 5*dt; }
+      else if(p.k === 'heart'){ p.vx *= 0.97; }
+      else { p.vx *= 0.93; p.vy *= 0.93; }
+      return p.life > 0;
+    });
+    if(parts.length > 500) parts.splice(0, parts.length - 500);
+    words = words.filter(w => (w.t += dt) < 1.2);
+    bubbles = bubbles.filter(b => (b.t += dt) < b.dur);
+  }
+  let ripples = [];
+
+  // ===== DRAWING =====
+  function resize(){
+    const r = board.getBoundingClientRect();
+    if(r.width < 2) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    size = r.width;
+    cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
+    T = size/SX; bgDirty = true;
+  }
+  addEventListener('resize', resize);
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+
+  // the outside edge of the maze shows the river running off the map
+  function isBorder(x, y){ return x === 0 || y === 0 || x === SX - 1 || y === SY - 1; }
+  function waterLook(x, y){
+    const t = tileAt(x, y);
+    if(t === 'R' || t === 'V' || t === 'B' || t === 'L') return true;
+    if(x < 0 || y < 0 || x >= SX || y >= SY || !isBorder(x, y)) return false;
+    const corner = (x === 0 || x === SX - 1) && (y === 0 || y === SY - 1);
+    if(corner) return false;
+    const ix = x === 0 ? 1 : x === SX - 1 ? SX - 2 : x, iy = y === 0 ? 1 : y === SY - 1 ? SY - 2 : y;
+    const it = tileAt(ix, iy);
+    return it === 'R' || it === 'V';
+  }
+  function nearHouse(x, y){ return y === 0 && Math.abs(x - H.x) <= 1; }
+  function wallKind(x, y){
+    const k = hash(x + level*13, y + 7);
+    if(isBorder(x, y)) return k < 0.4 ? 'tree' : k < 0.7 ? 'bush' : k < 0.85 ? 'palm' : 'fern';
+    return k < 0.26 ? 'bush' : k < 0.5 ? 'tree' : k < 0.66 ? 'palm' : k < 0.82 ? 'rock' : 'fern';
+  }
+  function drawBackground(){
+    const c = bgc;
+    bg.width = Math.round(size*dpr); bg.height = Math.round(size*dpr);
+    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);   // draw in squares: 1 unit = 1 square
+    paintGround(c);
+  }
+  // everything that doesn't move: the jungle floor, paths, river, bridges, bushes and trees
+  function paintGround(c){
+    c.fillStyle = lv.floor; c.fillRect(0, 0, SX, SY);
+    c.fillStyle = lv.floor2; for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++) if((x + y) % 2) c.fillRect(x, y, 1, 1);
+    // leaf litter
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(hash(x + 1, y + 2) < 0.6){ c.fillStyle = 'rgba(30,80,40,0.25)'; ell(c, x + hash(x, y)*0.8 + 0.1, y + hash(y, x)*0.8 + 0.1, 0.08, 0.04, hash(x + 3, y)*3); c.fill(); }
+    }
+    // paths: soft, earthy tracks joining the open squares
+    const open = (x, y) => { const t = tileAt(x, y); return t === 'P' || t === 'B'; };
+    const pathShape = (inset, col) => {
+      c.fillStyle = col;
+      for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+        if(tileAt(x, y) !== 'P') continue;
+        rr(c, x + inset, y + inset, 1 - inset*2, 1 - inset*2, 0.32); c.fill();
+        if(open(x + 1, y)) c.fillRect(x + 0.5, y + inset, 1, 1 - inset*2);
+        if(open(x, y + 1)) c.fillRect(x + inset, y + 0.5, 1 - inset*2, 1);
+        if(open(x + 1, y) && open(x, y + 1) && open(x + 1, y + 1)) c.fillRect(x + 0.5, y + 0.5, 1, 1);
+        if(open(x - 1, y) && tileAt(x - 1, y) === 'B') c.fillRect(x - 0.5, y + inset, 1, 1 - inset*2);
+        if(open(x, y - 1) && tileAt(x, y - 1) === 'B') c.fillRect(x + inset, y - 0.5, 1 - inset*2, 1);
+      }
+    };
+    pathShape(0.05, lv.edge);
+    pathShape(0.11, lv.path);
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'P') continue;
+      c.fillStyle = 'rgba(150,110,60,0.22)';
+      if(hash(x, y + 9) < 0.6){ circ(c, x + 0.25 + hash(x, y)*0.5, y + 0.25 + hash(y, x)*0.5, 0.035); c.fill(); }
+    }
+    // the river
+    const wshape = (inset, col, rad) => {
+      c.fillStyle = col;
+      for(let y = -1; y <= SY; y++) for(let x = -1; x <= SX; x++){
+        if(!waterLook(x, y)) continue;
+        rr(c, x + inset, y + inset, 1 - inset*2, 1 - inset*2, rad); c.fill();
+        if(waterLook(x + 1, y)) c.fillRect(x + 0.5, y + inset, 1, 1 - inset*2);
+        if(waterLook(x, y + 1)) c.fillRect(x + inset, y + 0.5, 1 - inset*2, 1);
+        // reach right to the edge of the map
+        if(x === 0 && !waterLook(x - 1, y)) c.fillRect(x - 0.5, y + inset, 1, 1 - inset*2);
+        if(x === SX - 1) c.fillRect(x + 0.5, y + inset, 1, 1 - inset*2);
+        if(y === 0) c.fillRect(x + inset, y - 0.5, 1 - inset*2, 1);
+        if(y === SY - 1) c.fillRect(x + inset, y + 0.5, 1 - inset*2, 1);
+      }
+    };
+    wshape(-0.02, '#3C7F45', 0.4);
+    wshape(0.06, '#3FA7DE', 0.36);
+    wshape(0.2, '#62BEEC', 0.26);
+    wshape(0.33, 'rgba(160,225,250,0.55)', 0.16);
+    // log bridges
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'B') continue;
+      const vert = canWalk(x, y - 1) || canWalk(x, y + 1);
+      c.save(); c.translate(x + 0.5, y + 0.5); if(!vert) c.rotate(Math.PI/2);
+      c.fillStyle = 'rgba(20,60,80,0.25)'; rr(c, -0.36, -0.55, 0.78, 1.14, 0.08); c.fill();
+      c.fillStyle = '#C98B52'; rr(c, -0.38, -0.6, 0.76, 1.2, 0.08); c.fill();
+      c.strokeStyle = '#8B5A2B'; c.lineWidth = 0.035;
+      for(let k = -0.45; k < 0.6; k += 0.18){ line(c, -0.36, k, 0.36, k); }
+      c.fillStyle = '#8B5A3C'; rr(c, -0.46, -0.62, 0.1, 1.24, 0.05); c.fill(); rr(c, 0.36, -0.62, 0.1, 1.24, 0.05); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.18)'; rr(c, -0.44, -0.6, 0.04, 1.2, 0.02); c.fill();
+      c.restore();
+    }
+    // bushes, trees and rocks (back rows first, so the front ones overlap a little)
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'W' || waterLook(x, y) || nearHouse(x, y)) continue;
+      c.fillStyle = 'rgba(15,50,25,0.28)'; ell(c, x + 0.55, y + 0.62, 0.5, 0.36); c.fill();
+    }
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'W' || waterLook(x, y) || nearHouse(x, y)) continue;
+      drawWall(c, wallKind(x, y), x, y);
+    }
+    // the cliff at the top of the waterfall
+    if(lv.waterfall) for(let x = 0; x < SX; x++) if(tileAt(x, 0) === 'R'){
+      c.fillStyle = '#8D8A9E'; rr(c, x - 0.25, -0.2, 0.42, 0.9, 0.15); c.fill(); rr(c, x + 0.83, -0.2, 0.42, 0.9, 0.15); c.fill();
+      c.fillStyle = '#B3B0C2'; ell(c, x - 0.05, 0.15, 0.12, 0.22); c.fill(); ell(c, x + 1.03, 0.2, 0.12, 0.2); c.fill();
+      leafy(c, x - 0.1, 0.6, 0.2, '#3FA05A'); leafy(c, x + 1.1, 0.62, 0.2, '#2E8B4A');
+    }
+  }
+  function drawWall(c, kind, x, y){
+    const cx = x + 0.5, cy = y + 0.5, k = Math.floor(hash(y + 5, x + 3)*100);
+    if(kind === 'bush'){
+      leafy(c, cx - 0.17, cy + 0.08, 0.32, '#2E8B4A'); leafy(c, cx + 0.17, cy + 0.06, 0.34, '#26763F'); leafy(c, cx, cy - 0.12, 0.32, '#3FA05A');
+      c.fillStyle = '#57B86A'; circ(c, cx - 0.1, cy - 0.18, 0.12); c.fill();
+      // bright jungle flowers
+      const fc = ['#FF6B9E', '#FF922B', '#FFD43B', '#F06595'][k % 4];
+      [[-0.2, 0.02], [0.18, -0.08], [0.04, 0.17]].forEach(([a, b], i) => { if((k + i) % 3 === 2) return;
+        c.fillStyle = fc; for(let p = 0; p < 5; p++){ const an = p/5*TAU; circ(c, cx + a + Math.cos(an)*0.045, cy + b + Math.sin(an)*0.045, 0.04); c.fill(); }
+        c.fillStyle = '#FFF3B0'; circ(c, cx + a, cy + b, 0.025); c.fill(); });
+    } else if(kind === 'tree'){
+      leafy(c, cx, cy, 0.56, '#1F6B37');
+      leafy(c, cx - 0.06, cy - 0.06, 0.44, '#2E8B4A');
+      c.fillStyle = '#3FA05A'; circ(c, cx - 0.12, cy - 0.14, 0.26); c.fill();
+      c.fillStyle = '#57B86A'; circ(c, cx - 0.16, cy - 0.2, 0.13); c.fill();
+      if(k % 3 === 0){ c.fillStyle = '#FFA94D'; [[0.2, 0.1], [-0.18, 0.2], [0.08, 0.26]].forEach(([a, b]) => { circ(c, cx + a, cy + b, 0.055); c.fill(); }); }
+    } else if(kind === 'palm'){
+      const base = hash(x, y)*TAU;
+      for(let i = 0; i < 7; i++){ const a = base + i/7*TAU; leaf(c, cx, cy, 0.56, a, i % 2 ? '#2E8B4A' : '#3FA05A'); }
+      for(let i = 0; i < 7; i++){ const a = base + (i + 0.5)/7*TAU; leaf(c, cx, cy, 0.36, a, '#57B86A'); }
+      c.fillStyle = '#8B5A3C'; circ(c, cx, cy, 0.1); c.fill();
+      c.fillStyle = '#6B4226'; circ(c, cx + 0.05, cy + 0.03, 0.05); c.fill(); circ(c, cx - 0.05, cy + 0.04, 0.05); c.fill();
+    } else if(kind === 'rock'){
+      leafy(c, cx + 0.2, cy + 0.22, 0.24, '#2E8B4A');
+      c.fillStyle = '#8D8A9E'; ell(c, cx, cy + 0.04, 0.42, 0.33); c.fill();
+      c.fillStyle = '#A9A6B9'; ell(c, cx - 0.06, cy - 0.04, 0.32, 0.23); c.fill();
+      c.fillStyle = '#C6C3D3'; ell(c, cx - 0.14, cy - 0.12, 0.13, 0.08, -0.3); c.fill();
+      c.fillStyle = '#6FBF5A'; ell(c, cx + 0.12, cy - 0.2, 0.16, 0.07, 0.2); c.fill();
+      leafy(c, cx - 0.26, cy + 0.24, 0.17, '#3FA05A');
+    } else {
+      // fern
+      const base = hash(y, x)*TAU;
+      for(let i = 0; i < 6; i++){
+        const a = base + i/6*TAU;
+        c.save(); c.translate(cx, cy); c.rotate(a);
+        c.strokeStyle = '#2E8B4A'; c.lineWidth = 0.035; line(c, 0, 0, 0.5, 0);
+        for(let j = 1; j < 6; j++){ const u = j/6; leaf(c, u*0.5, 0, 0.16*(1 - u*0.5), -1.1, '#4CAF5E'); leaf(c, u*0.5, 0, 0.16*(1 - u*0.5), 1.1, '#3FA05A'); }
+        c.restore();
+      }
+      c.fillStyle = '#2E8B4A'; circ(c, cx, cy, 0.09); c.fill();
+    }
+  }
+
+  // ----- Lenny's treehouse (home) -----
+  function drawTreehouse(c){
+    const hx = H.x + 0.5, py = 0.68;
+    // leafy canopy behind
+    leafy(c, hx - 0.95, 0.42, 0.62, '#1F6B37'); leafy(c, hx + 0.95, 0.4, 0.62, '#1F6B37');
+    leafy(c, hx - 0.85, 0.3, 0.46, '#2E8B4A'); leafy(c, hx + 0.88, 0.28, 0.46, '#2E8B4A');
+    // trunk
+    c.fillStyle = '#8B5A3C'; rr(c, hx - 0.17, py - 0.1, 0.34, H.y + 0.62 - py + 0.1, 0.06); c.fill();
+    c.fillStyle = '#A8734D'; rr(c, hx - 0.12, py, 0.08, H.y + 0.5 - py, 0.03); c.fill();
+    // platform
+    c.fillStyle = '#C98B52'; rr(c, hx - 0.92, py - 0.06, 1.84, 0.14, 0.05); c.fill();
+    c.strokeStyle = '#8B5A2B'; c.lineWidth = 0.025; for(let k = -0.75; k < 0.9; k += 0.25) line(c, hx + k, py - 0.05, hx + k, py + 0.07);
+    // the little hut
+    c.fillStyle = '#E9B97A'; rr(c, hx - 0.36, py - 0.42, 0.72, 0.38, 0.04); c.fill();
+    c.strokeStyle = 'rgba(140,90,40,0.5)'; c.lineWidth = 0.02; for(let k = -0.3; k < 0.36; k += 0.12) line(c, hx + k, py - 0.4, hx + k, py - 0.05);
+    c.fillStyle = '#6B4226'; rr(c, hx - 0.09, py - 0.3, 0.18, 0.26, 0.06); c.fill();
+    c.fillStyle = '#FFE8A3'; circ(c, hx + 0.22, py - 0.26, 0.07); c.fill(); circ(c, hx - 0.22, py - 0.26, 0.07); c.fill();
+    // leaf roof
+    c.fillStyle = '#3FA05A'; c.beginPath(); c.moveTo(hx - 0.5, py - 0.38); c.quadraticCurveTo(hx, py - 0.86, hx + 0.5, py - 0.38); c.closePath(); c.fill();
+    c.fillStyle = '#57B86A'; c.beginPath(); c.moveTo(hx - 0.42, py - 0.42); c.quadraticCurveTo(hx - 0.1, py - 0.8, hx + 0.1, py - 0.62); c.quadraticCurveTo(hx - 0.1, py - 0.5, hx - 0.42, py - 0.42); c.fill();
+    // little flag
+    c.strokeStyle = '#6B4226'; c.lineWidth = 0.025; line(c, hx + 0.08, py - 0.7, hx + 0.08, py - 0.98);
+    const fw = reduced ? 0 : Math.sin(clock*4)*0.03;
+    c.fillStyle = '#FF4F9A'; c.beginPath(); c.moveTo(hx + 0.08, py - 0.98); c.lineTo(hx + 0.3, py - 0.92 + fw); c.lineTo(hx + 0.08, py - 0.85); c.closePath(); c.fill();
+    // rope ladder down to Lenny's front door
+    const lx = ladderX(), y0 = py + 0.06, y1 = H.y + 0.5 + FOOT - 0.04;
+    c.strokeStyle = '#B07A3A'; c.lineWidth = 0.03; line(c, lx - 0.09, y0, lx - 0.09, y1); line(c, lx + 0.09, y0, lx + 0.09, y1);
+    c.strokeStyle = '#8B5A2B'; c.lineWidth = 0.035; for(let y = y0 + 0.1; y < y1; y += 0.14) line(c, lx - 0.09, y, lx + 0.09, y);
+  }
+
+  // ----- the moving bits on the river: ripples, vines, lily pads and the waterfall -----
+  function drawWaterBits(c){
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      const t = tileAt(x, y);
+      if(t === 'R' || t === 'V'){
+        if(reduced) continue;
+        const u = (clock*0.35 + hash(x, y)) % 1;
+        c.strokeStyle = 'rgba(255,255,255,' + (0.5*Math.sin(Math.PI*u)).toFixed(3) + ')'; c.lineWidth = 0.03;
+        const rx = x + 0.3 + hash(y, x)*0.4, ry = y + 0.3 + hash(x + 1, y)*0.4;
+        c.beginPath(); c.arc(rx, ry, 0.08 + u*0.12, Math.PI*1.1, Math.PI*1.9); c.stroke();
+      }
+    }
+    ripples.forEach(r => { const u = r.t/1.2; c.strokeStyle = 'rgba(255,255,255,' + (0.8*(1 - u)).toFixed(3) + ')'; c.lineWidth = 0.035; ell(c, r.x, r.y, 0.1 + u*0.35, 0.06 + u*0.22); c.stroke(); });
+    // which way each vine swings: little arrows on the water
+    vines.forEach(v => {
+      const cx = v.x + 0.5, cy = v.y + 0.5, p = reduced ? 0 : (clock*1.2) % 1;
+      c.save(); c.translate(cx, cy); c.rotate(Math.atan2(DY[v.d], DX[v.d]));
+      for(let i = 0; i < 2; i++){ const o = -0.18 + i*0.2 + p*0.1; c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 0.05; c.beginPath(); c.moveTo(o - 0.08, -0.12); c.lineTo(o + 0.04, 0); c.lineTo(o - 0.08, 0.12); c.stroke(); }
+      c.restore();
+    });
+    // lily pads
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++){
+      if(tileAt(x, y) !== 'L') continue;
+      const dip = lilyDip[x + ',' + y] || 0, bob = reduced ? 0 : Math.sin(clock*2 + hash(x, y)*6)*0.025 + dip*0.05*Math.sin(dip*12);
+      const cx = x + 0.5, cy = y + 0.52 + bob, r = 0.4 - dip*0.03;
+      c.fillStyle = 'rgba(20,60,80,0.25)'; ell(c, cx + 0.03, cy + 0.05, r, r*0.8); c.fill();
+      c.fillStyle = '#4CAF50'; c.beginPath(); c.moveTo(cx, cy); c.ellipse(cx, cy, r, r*0.8, 0, 0.25, TAU - 0.15); c.closePath(); c.fill();
+      c.fillStyle = '#69C46B'; c.beginPath(); c.moveTo(cx, cy); c.ellipse(cx, cy, r*0.82, r*0.64, 0, 0.3, TAU - 0.2); c.closePath(); c.fill();
+      c.strokeStyle = 'rgba(40,120,50,0.6)'; c.lineWidth = 0.02; for(let i = 0; i < 5; i++){ const a = 0.9 + i*1.05; line(c, cx, cy, cx + Math.cos(a)*r*0.75, cy + Math.sin(a)*r*0.6); }
+      if(hash(x, y) < 0.5){ c.fillStyle = '#FF8FB0'; for(let p = 0; p < 6; p++){ const a = p/6*TAU; ell(c, cx - 0.16 + Math.cos(a)*0.05, cy - 0.1 + Math.sin(a)*0.04, 0.05, 0.03, a); c.fill(); } c.fillStyle = '#FFD43B'; circ(c, cx - 0.16, cy - 0.1, 0.03); c.fill(); }
+    }
+    // the waterfall
+    if(lv.waterfall) for(let x = 0; x < SX; x++) if(tileAt(x, 0) === 'R'){
+      c.save(); c.beginPath(); c.rect(x + 0.08, -0.1, 0.84, 1.0); c.clip();
+      c.fillStyle = '#7FD3F7'; c.fillRect(x + 0.08, -0.1, 0.84, 1.0);
+      c.strokeStyle = 'rgba(255,255,255,0.75)'; c.lineWidth = 0.05;
+      for(let i = 0; i < 6; i++){ const sx = x + 0.15 + i*0.14, off = reduced ? 0 : (clock*2.4 + i*0.37) % 1; for(let k = -1; k < 2; k++){ const y0 = (k + off)*0.6 - 0.1; line(c, sx, y0, sx, y0 + 0.3); } }
+      c.restore();
+      // splashy foam at the bottom
+      for(let i = 0; i < 6; i++){ const a = clock*3 + i; c.fillStyle = 'rgba(255,255,255,0.85)'; circ(c, x + 0.18 + i*0.13, 0.95 + (reduced ? 0 : Math.sin(a)*0.04), 0.09 + (reduced ? 0 : Math.sin(a*1.3)*0.02)); c.fill(); }
+      if(!reduced && Math.random() < 0.3) parts.push({k: 'drop', x: x + rand(0.2, 0.8), y: 0.95, vx: rand(-0.6, 0.6), vy: rand(-1.2, -0.5), life: 0.7, r: rand(0.03, 0.05)});
+    }
+  }
+  // a vine hanging from a branch (or swinging with someone holding on)
+  function vinePivot(v){ const mx = (v.ax + v.lx)/2 + 0.5, my = (v.ay + v.ly)/2 + 0.5; return {x: mx, y: my - swingH(v) - 0.95}; }
+  function drawVineRest(c, v){
+    const p = vinePivot(v), sw = reduced ? 0 : Math.sin(clock*1.6 + v.ph)*0.08;
+    const ex = v.x + 0.5 + sw, ey = v.y + 0.38;
+    c.strokeStyle = '#3F8B4C'; c.lineWidth = 0.06;
+    c.beginPath(); c.moveTo(p.x, p.y); c.quadraticCurveTo(lerp(p.x, ex, 0.5) + 0.12, lerp(p.y, ey, 0.5), ex, ey); c.stroke();
+    for(let i = 1; i < 5; i++){ const u = i/5; leaf(c, lerp(p.x, ex, u) + 0.06*Math.sin(u*3), lerp(p.y, ey, u), 0.16, i % 2 ? 0.5 : 2.6, '#4CAF5E'); }
+    c.fillStyle = '#2E7D3E'; circ(c, ex, ey, 0.06); c.fill();
+    drawBranch(c, p);
+  }
+  function drawBranch(c, p){
+    c.strokeStyle = '#6B4226'; c.lineWidth = 0.15; c.lineCap = 'round'; line(c, p.x - 0.62, p.y - 0.08, p.x + 0.55, p.y + 0.05);
+    c.strokeStyle = '#A8734D'; c.lineWidth = 0.04; line(c, p.x - 0.55, p.y - 0.12, p.x + 0.5, p.y);
+    leafy(c, p.x - 0.66, p.y - 0.1, 0.34, '#1F6B37'); leafy(c, p.x - 0.6, p.y - 0.16, 0.24, '#3FA05A');
+    leafy(c, p.x + 0.58, p.y + 0.02, 0.3, '#2E8B4A'); leafy(c, p.x + 0.52, p.y - 0.04, 0.2, '#57B86A');
+  }
+  function drawRope(c, v, hx, hy){
+    const p = vinePivot(v);
+    c.strokeStyle = '#3F8B4C'; c.lineWidth = 0.06; line(c, p.x, p.y, hx, hy);
+    for(let i = 1; i < 4; i++){ const u = i/4; leaf(c, lerp(p.x, hx, u), lerp(p.y, hy, u), 0.14, i % 2 ? 0.6 : 2.5, '#4CAF5E'); }
+    drawBranch(c, p);
+  }
+
+  function render(g, poster){
+    if(bgDirty && !poster){ drawBackground(); bgDirty = false; }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    if(poster) { g.setTransform(dpr*T, 0, 0, dpr*T, 0, 0); paintGround(g); }
+    else g.drawImage(bg, 0, 0);
+    const c = g;
+    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);
+    drawWaterBits(c);
+    // paw prints (they fade slowly, so you can see where you've been)
+    prints.forEach(p => {
+      const a = 0.42*clamp(1 - (clock - p.t)/50, 0, 1); if(a <= 0.01) return;
+      c.save(); c.translate(p.x, p.y); c.rotate(p.a); c.globalAlpha = a; c.fillStyle = '#6B4A2A';
+      ell(c, 0, 0.02, 0.05, 0.06); c.fill();
+      [-0.05, 0, 0.05].forEach((ox, i) => { circ(c, ox, -0.06 - (i === 1 ? 0.015 : 0), 0.02); c.fill(); });
+      c.restore();
+    });
+    c.globalAlpha = 1;
+    // swaying leaves
+    fronds.forEach(f => leaf(c, f.x, f.y, f.len, f.a + (reduced ? 0 : Math.sin(clock*1.5 + f.ph)*0.14), f.col));
+    // the sparkly toucan trail
+    if(toucan){
+      const a = Math.min(1, (toucan.life - toucan.t)*2), dist = Math.min(toucan.total, toucan.t*toucan.speed);
+      c.globalAlpha = a;
+      for(let d = 0.3, i = 0; d < dist; d += 0.33, i++){
+        const p = toucanAt(d), tw = reduced ? 1 : (Math.sin(clock*8 - i*0.7) + 1)/2;
+        c.fillStyle = i % 2 ? '#FF4F9A' : '#FFD43B'; circ(c, p.x, p.y, 0.06 + tw*0.03); c.fill();
+        if(i % 3 === 0) twinkle(c, p.x, p.y, 0.12 + tw*0.08, '#FFFFFF');
+      }
+      if(dist >= toucan.total){ const e = toucan.pts[toucan.pts.length - 1], k = reduced ? 0.5 : (clock*1.5) % 1;
+        c.strokeStyle = '#FF4F9A'; c.lineWidth = 0.06; c.globalAlpha = a*(1 - k); circ(c, e.x, e.y, 0.3 + k*0.25); c.stroke(); }
+      c.globalAlpha = 1;
+    }
+    // bananas
+    bananas.forEach(b => {
+      if(b.got && b.t > 0.6) return;
+      const cx = b.x + 0.5, cy = b.y + 0.5, bob = reduced ? 0 : Math.sin(clock*3 + b.ph)*0.04;
+      if(b.got){ const u = b.t/0.6; c.globalAlpha = 1 - u; drawBanana(c, cx, cy - u*0.6, -0.35 + u*3, 0.012*(1 + u)); c.globalAlpha = 1; return; }
+      c.fillStyle = 'rgba(20,50,20,0.2)'; ell(c, cx, cy + 0.2, 0.2, 0.06); c.fill();
+      drawBanana(c, cx, cy - 0.04 + bob, -0.35 + (reduced ? 0 : Math.sin(clock*2 + b.ph)*0.12), 0.012);
+      const tw = reduced ? 0.5 : (Math.sin(clock*4 + b.ph) + 1)/2;
+      if(tw > 0.5) twinkle(c, cx + 0.2, cy - 0.18, 0.08*tw, '#FFFFFF');
+    });
+    drawTreehouse(c);
+    // resting vines (unless someone is holding on)
+    vines.forEach(v => { if(!vineBusy(v)) drawVineRest(c, v); });
+    // everybody, front to back: Lenny, babies following, lost babies, babies climbing the ladder
+    const list = [];
+    const lp = lennyPos();
+    list.push({y: lp.gy, draw: () => drawLenny(c, lp)});
+    babies.forEach(b => {
+      if(b.st === 'wait'){
+        const near = Math.hypot(len.fx - b.x, len.fy - b.y) < 2.6;
+        const hop = reduced ? 0 : near ? Math.abs(Math.sin(clock*7 + b.ph))*0.07 : 0;
+        const gx = b.x + 0.5, gy = b.y + 0.5 + FOOT;
+        b.dx = gx; b.dy = gy - 0.3;
+        list.push({y: gy, draw: () => {
+          c.fillStyle = 'rgba(20,50,20,0.22)'; ell(c, gx, gy, 0.16, 0.05); c.fill();
+          lemurAt(c, gx, gy - hop, BK, {t: clock, ph: b.ph, baby: true, pose: near ? 'cheer' : 'wave', mood: near ? 'happy' : null, open: near, look: {x: len.fx - b.x, y: len.fy - b.y}});
+        }});
+      } else if(b.st === 'join' || b.st === 'follow'){
+        const p = pathPos(b.lag);
+        let gx = p.x + 0.5, gy = p.y + 0.5 + FOOT, lift = p.lift;
+        if(b.st === 'join'){ const u = ease(b.jt); gx = lerp(b.hx + 0.5, gx, u); gy = lerp(b.hy + 0.5 + FOOT, gy, u); lift = Math.sin(Math.PI*b.jt)*0.35; }
+        b.dx = gx; b.dy = gy - lift - 0.3;
+        const dl = Math.hypot(gx - lp.x, gy - lp.gy);
+        const squish = dl < 0.45 && !reduced ? (1 - dl/0.45) : 0;
+        const moving = len.move || phase === 'home';
+        list.push({y: gy, draw: () => {
+          c.fillStyle = 'rgba(20,50,20,0.22)'; ell(c, gx, gy, 0.15*(1 - Math.min(0.5, lift)), 0.05); c.fill();
+          if(p.swing && b.st === 'follow') drawRope(c, p.swing.vine, gx, gy - lift - 0.55*swingZoom(p.swing.vine, p.swing.u));
+          const bob = moving && !p.swing && !reduced ? Math.abs(Math.sin(clock*14 + b.ph))*0.05 : 0;
+          lemurAt(c, gx, gy - lift - bob, BK*(p.swing ? swingZoom(p.swing.vine, p.swing.u) : 1), {t: clock, ph: b.ph, baby: true, pose: p.swing ? 'hang' : b.st === 'join' ? 'cheer' : 'walk', step: clock*14 + b.ph, mood: 'happy', squish, look: {x: p.dx, y: p.dy}, lean: p.dx*0.12});
+        }});
+      } else if(b.st === 'climb'){
+        const lx = ladderX(), y0 = H.y + 0.5 + FOOT, u = b.ct;
+        let gx, gy, pose = 'climb';
+        const top = 0.68;
+        if(u < 0.7){ const k = u/0.7; gx = lx; gy = lerp(y0, top, k); }
+        else { const k = ease((u - 0.7)/0.3), s = platformSpot(b.slot); gx = lerp(lx, s.x, k); gy = top - Math.sin(Math.PI*k)*0.15; pose = 'cheer'; }
+        b.dx = gx; b.dy = gy - 0.3;
+        list.push({y: u < 0.7 ? 1.0 : 0.69, draw: () => lemurAt(c, gx, gy, BK, {t: clock, ph: b.ph, baby: true, pose, mood: 'happy', look: {x: 0, y: -1}})});
+      } else if(b.st === 'home'){
+        const s = platformSpot(b.slot), j = b.jump > 0 && !reduced ? Math.sin(Math.PI*b.jump)*0.2 : 0;
+        b.dx = s.x; b.dy = s.y - 0.3;
+        list.push({y: 0.69, draw: () => lemurAt(c, s.x, s.y - j, BK, {t: clock, ph: b.ph, baby: true, pose: b.jump > 0 || phase === 'party' ? 'cheer' : 'wave', mood: 'happy', look: {x: 0, y: 1}})});
+      }
+    });
+    list.sort((a, b) => a.y - b.y).forEach(o => o.draw());
+    // the toucan
+    if(toucan){
+      const dist = toucan.t*toucan.speed;
+      let p, alpha = 1, alt = 0.6;
+      if(dist < toucan.total) p = toucanAt(dist);
+      else {
+        const e = toucan.pts[toucan.pts.length - 1], since = toucan.t - toucan.total/toucan.speed;
+        const leave = toucan.life - 0.6;
+        if(toucan.t < leave){ const a = since*4; p = {x: e.x + Math.cos(a)*0.35, y: e.y + Math.sin(a)*0.18, face: Math.sin(a) > 0 ? -1 : 1}; }
+        else { const k = (toucan.t - leave)/0.6; p = {x: e.x + k*1.5, y: e.y - k*1.5, face: 1}; alpha = 1 - k; }
+      }
+      c.globalAlpha = alpha;
+      c.fillStyle = 'rgba(20,50,20,0.18)'; ell(c, p.x, p.y + 0.15, 0.18, 0.05); c.fill();
+      drawToucan(c, p.x, p.y - alt + (reduced ? 0 : Math.sin(clock*9)*0.04), 0.011, p.face, clock);
+      c.globalAlpha = 1;
+    }
+    // butterflies
+    butterflies.forEach(b => {
+      const f = reduced ? 0.6 : Math.abs(Math.sin(clock*14 + b.ph));
+      c.save(); c.translate(b.x, b.y); c.rotate(Math.cos(b.a)*0.3);
+      c.fillStyle = b.col; ell(c, -0.06*f, -0.02, 0.07*f + 0.01, 0.06, -0.4); c.fill(); ell(c, 0.06*f, -0.02, 0.07*f + 0.01, 0.06, 0.4); c.fill();
+      ell(c, -0.045*f, 0.05, 0.045*f + 0.008, 0.035, 0.3); c.fill(); ell(c, 0.045*f, 0.05, 0.045*f + 0.008, 0.035, -0.3); c.fill();
+      c.fillStyle = '#2B2B35'; ell(c, 0, 0.01, 0.015, 0.06); c.fill();
+      c.restore();
+    });
+    // particles
+    parts.forEach(p => {
+      c.globalAlpha = clamp(p.life*1.6, 0, 1);
+      if(p.k === 'conf'){ c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.col; c.fillRect(-p.r, -p.r*0.5, p.r*2, p.r); c.restore(); }
+      else if(p.k === 'heart') heart(c, p.x, p.y, p.r, p.col);
+      else if(p.k === 'drop'){ c.fillStyle = 'rgba(200,240,255,0.95)'; circ(c, p.x, p.y, p.r); c.fill(); }
+      else if(p.k === 'dust'){ c.globalAlpha = clamp(p.life*0.6, 0, 0.6); c.fillStyle = '#F1E3C6'; circ(c, p.x, p.y, p.r); c.fill(); }
+      else twinkle(c, p.x, p.y, p.r*1.6, p.col);
+    });
+    c.globalAlpha = 1;
+    // soft morning mist (it doesn't hide anything, it just looks magical)
+    mist.forEach(m => {
+      const gr = c.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.r);
+      gr.addColorStop(0, 'rgba(255,255,255,0.32)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = gr; c.fillRect(m.x - m.r, m.y - m.r, m.r*2, m.r*2);
+    });
+    // words and speech bubbles (drawn in pixels so the text stays sharp)
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    words.forEach(w => {
+      const u = w.t/1.2, x = w.x*T, y = (w.y - u*0.6)*T;
+      const fs = clamp(T*0.42, 14, 32);
+      c.globalAlpha = clamp((1 - u)*2, 0, 1);
+      c.font = fs + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.lineWidth = Math.max(3, fs*0.22); c.strokeStyle = '#fff'; c.lineJoin = 'round'; c.strokeText(w.text, x, y);
+      c.fillStyle = w.col; c.fillText(w.text, x, y);
+    });
+    c.globalAlpha = 1;
+    if(!poster || poster.bubbles) bubbles.forEach(b => drawBubble(c, b));
+    if(finaleT > 0) drawFinale(c);
+  }
+  function vineBusy(v){
+    if(len.move && len.move.kind === 'swing' && len.move.vine === v) return true;
+    return train.some(b => { if(b.st !== 'follow') return false; const p = pathPos(b.lag); return p.swing && p.swing.vine === v; }) || (posterSwing && posterSwing.vine === v);
+  }
+  let posterSwing = null;
+  function lennyPos(){
+    let lift = 0, swing = null;
+    if(len.move && len.move.kind === 'swing'){ const u = clamp(len.move.t, 0, 1); lift = Math.sin(Math.PI*u)*swingH(len.move.vine); swing = len.move.vine; }
+    const hop = len.hop > 0 && !reduced ? Math.sin(Math.PI*len.hop)*0.12 : 0;
+    const walkBob = len.move && len.move.kind === 'walk' && !reduced ? Math.abs(Math.sin(len.ph))*0.06 : 0;
+    let bx = 0, by = 0;
+    if(len.bumpT > 0 && !reduced){ const k = Math.sin(len.bumpT*40)*0.06*len.bumpT/0.35; bx = DX[len.bumpDir]*k; by = DY[len.bumpDir]*k; }
+    const x = len.fx + 0.5 + bx, gy = len.fy + 0.5 + FOOT + by;
+    return {x, gy, y: gy - lift - hop - walkBob, lift, swing, zoom: swing ? swingZoom(swing, len.move.t) : 1};
+  }
+  function drawLenny(c, p){
+    c.fillStyle = 'rgba(20,50,20,0.25)'; ell(c, p.x, p.gy, 0.26*(1 - Math.min(0.5, p.lift*0.5)), 0.07); c.fill();
+    if(p.swing) drawRope(c, p.swing, p.x, p.y - 0.88*p.zoom);
+    let look = {x: DX[len.dir], y: DY[len.dir]};
+    if(!len.move){ const w = babies.find(b => b.st === 'wait'); if(w && Math.hypot(w.x - len.x, w.y - len.y) < 4) look = {x: w.x - len.x, y: w.y - len.y}; }
+    const happy = len.happyT > 0 || phase === 'party' || !!p.swing;
+    const pose = p.swing ? 'hang' : phase === 'party' || (phase === 'home') ? 'cheer' : 'walk';
+    const lean = len.move && len.move.kind === 'walk' ? (len.dir === 1 ? 0.1 : len.dir === 3 ? -0.1 : 0) : 0;
+    const blink = !reduced && (clock % 4) < 0.12;
+    lemurAt(c, p.x, p.y, LK*p.zoom, {t: clock, pose, step: len.ph, mood: happy ? 'happy' : null, open: !!p.swing, look, lean, blink});
+  }
+  function drawBubble(c, b){
+    const p = b.get(); if(!p) return;
+    const a = Math.min(1, b.t*6, (b.dur - b.t)*4);
+    if(a <= 0) return;
+    const fs = clamp(T*0.36, 13, 22);
+    c.font = fs + 'px ' + FONT;
+    const maxW = Math.min(size - 16, Math.max(140, T*4));
+    const lines = []; let cur = '';
+    b.text.split(' ').forEach(wd => { const t = cur ? cur + ' ' + wd : wd; if(c.measureText(t).width > maxW - 20 && cur){ lines.push(cur); cur = wd; } else cur = t; });
+    if(cur) lines.push(cur);
+    const bw = Math.max(...lines.map(l => c.measureText(l).width)) + 22, bh = lines.length*fs*1.15 + 12;
+    const tx = p.x*T, ty = p.y*T;
+    let bx = clamp(tx - bw/2, 6, size - bw - 6), by = ty - bh - 10;
+    let below = false;
+    if(by < 6){ by = ty + 0.9*T; below = true; }
+    by = clamp(by, 6, size - bh - 6);
+    c.globalAlpha = a;
+    c.fillStyle = '#fff'; c.strokeStyle = O; c.lineWidth = 2.2; c.lineJoin = 'round';
+    const kx = clamp(tx, bx + 14, bx + bw - 14);
+    c.beginPath();
+    if(below){ c.moveTo(kx - 7, by + 1); c.lineTo(kx, by - 9); c.lineTo(kx + 7, by + 1); }
+    else { c.moveTo(kx - 7, by + bh - 1); c.lineTo(kx, by + bh + 9); c.lineTo(kx + 7, by + bh - 1); }
+    c.closePath(); c.fill(); c.stroke();
+    rr(c, bx, by, bw, bh, 12); c.fill(); c.stroke();
+    c.fillRect(kx - 6, below ? by - 1 : by + bh - 3, 12, 4);
+    c.fillStyle = O; c.textAlign = 'center'; c.textBaseline = 'middle';
+    lines.forEach((l, i) => c.fillText(l, bx + bw/2, by + 6 + fs*0.6 + i*fs*1.15));
+    c.globalAlpha = 1;
+  }
+
+  // the big jungle party at the end of the last level: everyone dancing!
+  function drawFinale(c){
+    const u = Math.min(1, finaleT/0.8);
+    c.save();
+    c.globalAlpha = 0.9*u;
+    const gr = c.createLinearGradient(0, 0, 0, size);
+    gr.addColorStop(0, '#FFE3B3'); gr.addColorStop(0.6, '#FFC9DE'); gr.addColorStop(1, '#BDE6C2');
+    c.fillStyle = gr; c.fillRect(0, 0, size, size);
+    c.globalAlpha = 1;
+    if(u < 0.3){ c.restore(); return; }
+    c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
+    const S2 = size/7;
+    c.scale(S2, S2);
+    // big leaves round the edges
+    [[0, 0], [7, 0], [0, 7], [7, 7]].forEach(([x, y]) => { leafy(c, x, y, 1.6, '#2E8B4A'); leafy(c, x + (x ? -0.25 : 0.25), y + (y ? -0.2 : 0.2), 1.1, '#3FA05A'); });
+    for(let k = 0; k < 5; k++){ leaf(c, 0, 1.6 + k*0.9, 1.3, -0.25 + k*0.12, k % 2 ? '#3FA05A' : '#57B86A'); leaf(c, 7, 1.6 + k*0.9, 1.3, Math.PI + 0.25 - k*0.12, k % 2 ? '#57B86A' : '#3FA05A'); }
+    // string of lanterns
+    c.strokeStyle = '#6B4226'; c.lineWidth = 0.03; c.beginPath(); c.moveTo(0.4, 0.9); c.quadraticCurveTo(3.5, 1.7, 6.6, 0.9); c.stroke();
+    for(let i = 0; i < 9; i++){ const x = 0.7 + i*0.7, y = 0.9 + Math.sin(Math.PI*(x - 0.4)/6.2)*0.4 + 0.05; c.fillStyle = CONF[i % CONF.length]; ell(c, x, y + 0.14, 0.12, 0.16); c.fill(); c.fillStyle = 'rgba(255,255,255,0.5)'; ell(c, x - 0.04, y + 0.1, 0.03, 0.06); c.fill(); }
+    // the treehouse, big
+    c.save(); c.translate(3.5, 4.3);
+    c.fillStyle = '#8B5A3C'; rr(c, -0.3, 0, 0.6, 2.2, 0.08); c.fill();
+    c.fillStyle = '#C98B52'; rr(c, -1.6, -0.08, 3.2, 0.22, 0.08); c.fill();
+    c.fillStyle = '#E9B97A'; rr(c, -0.7, -0.8, 1.4, 0.72, 0.06); c.fill();
+    c.fillStyle = '#6B4226'; rr(c, -0.17, -0.6, 0.34, 0.52, 0.1); c.fill();
+    c.fillStyle = '#FFE8A3'; circ(c, 0.45, -0.5, 0.13); c.fill(); circ(c, -0.45, -0.5, 0.13); c.fill();
+    c.fillStyle = '#3FA05A'; c.beginPath(); c.moveTo(-1, -0.74); c.quadraticCurveTo(0, -1.7, 1, -0.74); c.closePath(); c.fill();
+    c.restore();
+    // everyone dancing: Lenny and all the babies in the family
+    const n = Math.max(babies.length, familyCount());
+    for(let i = 0; i < n; i++){
+      const row = i < 8 ? 0 : 1, k = row ? i - 8 : i, cnt = row ? n - 8 : Math.min(8, n);
+      const x = 3.5 + (k - (cnt - 1)/2)*0.78 + (row ? 0.39 : 0), y = row ? 6.05 : 6.75;
+      const hop = reduced ? 0 : Math.abs(Math.sin(clock*5 + i*1.3))*0.18;
+      c.save(); c.translate(x, y - hop); c.rotate(reduced ? 0 : Math.sin(clock*5 + i)*0.12); c.scale(0.0085, 0.0085); c.translate(0, -39);
+      drawLemur(c, {t: clock, ph: i, baby: true, pose: 'cheer', mood: 'happy', open: i % 2 === 0, look: {x: 0, y: 1}});
+      c.restore();
+    }
+    c.save(); c.translate(3.5, 4.22 - (reduced ? 0 : Math.abs(Math.sin(clock*4))*0.15)); c.scale(0.013, 0.013); c.translate(0, -39);
+    drawLemur(c, {t: clock, pose: 'cheer', mood: 'happy', open: true, look: {x: 0, y: 1}}); c.restore();
+    // the toucan flies round and round
+    const ta = clock*1.4;
+    drawToucan(c, 3.5 + Math.cos(ta)*2.4, 2.25 + Math.sin(ta)*0.35, 0.016, Math.sin(ta) > 0 ? -1 : 1, clock);
+    c.restore();
+    c.save();
+    c.font = Math.round(S2*0.62) + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineWidth = S2*0.12; c.lineJoin = 'round'; c.strokeStyle = '#FFFFFF'; c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
+    c.strokeText('Jungle party!', size/2, S2*0.5); c.fillStyle = '#FF4F9A'; c.fillText('Jungle party!', size/2, S2*0.5);
+    c.restore();
+  }
+
+  // ===== MAIN LOOP =====
+  let lastT = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t - lastT)/1000)*timeScale; lastT = t;
+    if(phase !== 'paused') update(dt);
+    render(ctx, null);
+    requestAnimationFrame(loop);
+  }
+
+  // ===== HELPER FOR AUTOMATIC TESTING (only switched on by adding ?test to the address) =====
+  function autoStep(){
+    if(phase !== 'play' || len.move) return;
+    const waiting = babies.filter(b => b.st === 'wait'), left = bananas.filter(b => !b.got);
+    let goals = waiting.concat(left);
+    if(!goals.length) goals = train.length ? [H] : [];
+    if(!goals.length) return;
+    const path = route(len.x, len.y, new Set(goals.map(g => g.x + ',' + g.y)), auto.noVines);
+    if(path && path.length > 1) request(path[1].d);
+  }
+
+  // ===== GO! =====
+  parse(prog.cur);
+  Object.assign(len, {x: H.x, y: H.y, fx: H.x, fy: H.y});
+  trail = [{x: H.x, y: H.y, k: 'walk'}];
+  makeScenery();
+  resize(); updateHud();
+  phase = 'menu';
+  showMenu();
+  requestAnimationFrame(loop);
+
+  const DN = {up: 0, right: 1, down: 2, left: 3};
+  if(TEST) window.__ljm = {
+    get state(){ return {level: level + 1, name: lv.name, phase, x: len.x, y: len.y, moving: !!len.move, swinging: !!(len.move && len.move.kind === 'swing'), size: SX,
+      cell: T, board: size, following: train.length, home: homeCount(), babies: babies.length, waiting: babies.filter(b => b.st === 'wait').length,
+      bananas: bananas.filter(b => b.got).length + '/' + bananas.length, stars: endStars, overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)),
+      hint: !!toucan, prints: prints.length, vines: vines.map(v => ({x: v.x, y: v.y, d: v.d, from: [v.ax, v.ay], to: [v.lx, v.ly]}))}; },
+    start(n){ startLevel(n - 1); },
+    press(d){ request(typeof d === 'string' ? DN[d] : d); },
+    hold(d){ d = typeof d === 'string' ? DN[d] : d; if(!held.includes(d)) held.push(d); request(d); }, release(){ held.length = 0; },
+    speed(k){ timeScale = k; },
+    autoplay(on, opts){ auto = on === false ? null : Object.assign({noVines: false}, opts || {}); },
+    unlockAll(){ TEST_ALL = true; prog.unlocked = 6; saveProg(); },
+    reset(){ prog = freshProg(); saveProg(); },
+    hint(){ showHint(); return toucan && toucan.pts.length; },
+    tp(x, y){ len.x = len.fx = x; len.y = len.fy = y; len.move = null; trail.push({x, y, k: 'walk'}); },
+    route(x, y, noVines){ const p = route(len.x, len.y, new Set([x + ',' + y]), noVines); return p && p.slice(1).map(s => s.d); },
+    menu(){ phase = 'menu'; showMenu(); },
+    calm(){ callT = birdT = fishT = 999; bubbles = []; parts = []; words = []; },
+    // pictures for the game card and share preview
+    poster(w, h, opts){ return makePoster(w, h, opts || {}); }
+  };
+
+  // ----- a hand-made scene for the card pictures -----
+  function makePoster(w, h, o){
+    const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+    const g = cv.getContext('2d');
+    const keep = {level, lv, SX, SY, grid, babies, bananas, vines, H: Object.assign({}, H), trail, train, prints, parts, words, bubbles, butterflies, mist, fronds, toucan, phase, T, dpr, size, len: Object.assign({}, len), finaleT};
+    level = o.level || 0; lv = Object.assign({}, LEVELS[level], o.lv || {});
+    loadMap(o.map);
+    T = o.T; dpr = 1; size = w;
+    // Lenny at the end of the path, babies following along it
+    const path = o.path;
+    trail = path.slice(0, -1).map(([x, y]) => ({x, y, k: 'walk'}));
+    const [lx, ly] = path[path.length - 1];
+    const prev = path[path.length - 2];
+    Object.assign(len, {x: lx, y: ly, fx: lx - (lx - prev[0])*(o.u || 0), fy: ly - (ly - prev[1])*(o.u || 0), dir: o.dir == null ? 1 : o.dir, move: {kind: 'walk', d: o.dir == null ? 1 : o.dir, t: 0.5, fx: prev[0], fy: prev[1], tx: lx, ty: ly}, hop: 0, bumpT: 0, happyT: 1, ph: 0.8});
+    trail.push({x: prev[0], y: prev[1], k: 'walk'});
+    train = babies.filter(b => b.n <= (o.follow || 0)).map((b, i) => { b.st = 'follow'; b.lag = (i + 1)*GAP; return b; });
+    babies.filter(b => b.n === o.swingBaby).forEach(b => { b.st = 'poster'; });
+    prints = []; parts = []; words = (o.words || []).map(([text, x, y, col]) => ({text, x, y, t: 0.2, col}));
+    bubbles = (o.bubbles || []).map(([text, x, y]) => ({get: () => ({x, y}), text, t: 0.5, dur: 99}));
+    butterflies = (o.butterflies || []).map(([x, y, col], i) => ({x, y, a: i, sp: 0, col, ph: i*2}));
+    mist = []; fronds = []; toucan = null; phase = 'play'; finaleT = 0;
+    for(let y = 0; y < SY; y++) for(let x = 0; x < SX; x++) if(tileAt(x, y) === 'W' && !waterLook(x, y) && !nearHouse(x, y) && hash(x + 3, y + 5) < 0.3) fronds.push({x: x + 0.5, y: y + 0.5, a: hash(y, x)*TAU, len: 0.45, ph: 0, col: '#3FA05A'});
+    // a baby swinging across the river on a vine
+    posterSwing = null;
+    if(o.swing){ const v = vines[0]; posterSwing = {vine: v, u: o.swing}; }
+    render(g, {bubbles: true});
+    if(posterSwing){
+      const v = posterSwing.vine, u = posterSwing.u;
+      g.setTransform(T, 0, 0, T, 0, 0);
+      const x = lerp(v.ax, v.lx, u) + 0.5, gy = lerp(v.ay, v.ly, u) + 0.5 + FOOT, lift = Math.sin(Math.PI*u)*swingH(v);
+      g.fillStyle = 'rgba(20,50,80,0.25)'; ell(g, x, gy, 0.1, 0.035); g.fill();
+      const z = swingZoom(v, u);
+      drawRope(g, v, x, gy - lift - 0.55*z);
+      lemurAt(g, x, gy - lift, BK*z, {t: 0.3, baby: true, pose: 'hang', mood: 'happy', open: true, look: {x: 1, y: 0}});
+      if(o.swingWord){ g.setTransform(1, 0, 0, 1, 0, 0); const fs = T*0.42; g.font = fs + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = fs*0.22; g.strokeStyle = '#fff'; g.lineJoin = 'round';
+        g.strokeText(o.swingWord, (x + 1.05)*T, (gy - lift - 0.55)*T); g.fillStyle = '#FF4F9A'; g.fillText(o.swingWord, (x + 1.05)*T, (gy - lift - 0.55)*T); }
+    }
+    if(o.toucan){ g.setTransform(T, 0, 0, T, 0, 0); drawToucan(g, o.toucan[0], o.toucan[1], 0.013, o.toucan[2] || 1, 0.35); }
+    const url = cv.toDataURL('image/png');
+    posterSwing = null;
+    ({level, lv, SX, SY, grid, babies, bananas, vines, trail, train, prints, parts, words, bubbles, butterflies, mist, fronds, toucan, phase, T, dpr, size, finaleT} = keep);
+    H = keep.H; Object.assign(len, keep.len);
+    resize();
+    return url;
+  }
+})();
+</script>
+</body>
+</html>
