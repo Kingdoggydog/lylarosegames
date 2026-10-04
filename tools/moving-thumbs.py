@@ -220,3 +220,13 @@ for i,(x,dx,r) in enumerate(((352,-14,6),(366,8,5),(343,-26,5),(372,18,4))):
     p.add(f'<circle class="bub" style="--l:{i*0.35}s;--d:{1.4+i%2*0.3}s;--x:{dx}px" cx="{x}" cy="300" r="{r}" fill="#8A5A34"/>')
 p.star(495,176,11); p.star(592,282,10,.7); p.star(178,488,10,1.4); p.star(500,384,9,2.0)
 print('digger maze', p.save())
+
+p=Pic('whirly-cloud-maze','Whirly hovering with a spinning rotor, Woolly waving for help, a glowing star, cloud puffs blowing away and sparkles')
+p.bob(352,168,176,106,dy=-2,dur=1.6)
+p.add('<ellipse class="blur" cx="404" cy="174" rx="70" ry="4" fill="#fff" style="animation-name:blur"/>')
+p.sway_rect(138,84,74,66,172,150,deg=3,dur=1.2)
+p.pulse(362,356,76,76,k=1.08,dur=1.6)
+for i,(x,y) in enumerate(((672,170),(690,300),(676,470))):
+    p.add(f'<circle class="puff" style="--l:{i*1.1}s" cx="{x}" cy="{y}" r="18"/>')
+p.star(300,90,10); p.star(560,300,10,.8); p.star(250,420,9,1.6)
+print('cloud maze', p.save())

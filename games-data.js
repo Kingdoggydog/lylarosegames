@@ -17,6 +17,7 @@ const categories = [
   { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
   { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles & Mazes", heading: "Puzzle & maze games", emoji: "🧩", colour: "#FFF1C9", about: "Think it through and find the way." },
+  { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger and helicopter mazes." },
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
   { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
@@ -53,7 +54,7 @@ const games = [
     colour: "#CFEFD8",
     thumb: "thumb.svg",   // picture file inside the game's folder (optional)
     blurb: "Gallop through the hedge maze, grab the stars and find the rainbow gate.",
-    categories: ["unicorns", "puzzles"],
+    categories: ["unicorns", "puzzles", "mazes"],
     controls: "Keyboard or touch"
   },
   {
@@ -257,7 +258,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A digger maze game! Drive Chomper's big yellow digger through the building site maze, dig through soft dirt walls for shortcuts, find gold nuggets and dinosaur bones, and reach Tipper the dump truck.",
-    categories: ["puzzles", "diggers", "dinosaurs"],
+    categories: ["mazes", "puzzles", "diggers", "dinosaurs"],
     controls: "Arrow keys, swipe or tap the arrows"
   },
   {
@@ -267,8 +268,9 @@ const games = [
     emoji: "🚁",
     colour: "#DDE3FF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A helicopter maze game hidden under the clouds! Fly Whirly the rescue helicopter to blow the clouds off the maze, pop balloons to open gates, ride the wind puffs and fly the animal friends to the picnic.",
-    categories: ["puzzles", "flying", "animals"],
+    categories: ["mazes", "puzzles", "flying", "animals"],
     controls: "Arrow keys, WASD, swipe or tap the arrows"
   },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },

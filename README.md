@@ -8,7 +8,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 
 | Game | Categories | Ages | Folder |
 | --- | --- | --- | --- |
-| Sparklehoof's Maze | Unicorns, Puzzles & Mazes | 4+ | `games/unicorn-maze/` |
+| Sparklehoof's Maze | Unicorns, Puzzles & Mazes, Mazes | 4+ | `games/unicorn-maze/` |
 | Glitter Sky Unicorn | Unicorns, Flying, Action | 3+ | `games/glitter-sky/` |
 | Unicorn Penalty Shoot-out | Unicorns, Sport | 4+ | `games/unicorn-soccer/` |
 | Lenny's Banana Catch | Animals, Action | 4+ | `games/lenny-banana-catch/` |
@@ -25,8 +25,8 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Blossom's Jigsaw Puzzles | Puzzles & Mazes, Unicorns, Animals | 3+ | `games/blossoms-jigsaw/` |
 | Busy Building Site | Diggers & Trucks, Cars | 3+ | `games/busy-building-site/` |
 | Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles & Mazes | 4+ | `games/chompers-toot-toot/` |
-| Chomper's Digger Maze | Puzzles & Mazes, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
-| Whirly's Cloud Maze | Puzzles & Mazes, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
+| Chomper's Digger Maze | Mazes, Puzzles & Mazes, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
+| Whirly's Cloud Maze | Mazes, Puzzles & Mazes, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
 
 ## Age groups
 
@@ -39,6 +39,7 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 | Unicorns | `unicorn-games/` |
 | Sport | `sport-games/` |
 | Puzzles & Mazes | `puzzle-games/` |
+| Mazes | `maze-games/` |
 | Flying | `flying-games/` |
 | Animals | `animal-games/` |
 | Action | `action-games/` |
