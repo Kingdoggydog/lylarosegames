@@ -248,6 +248,17 @@ const games = [
     categories: ["trains", "dinosaurs", "puzzles"],
     controls: "Tap the switches or keys 1-5, Space to stop and go"
   },
+  {
+    title: "Chomper's Digger Maze",
+    folder: "chompers-digger-maze",
+    ages: "3+",             // age group - see ageGroups above
+    emoji: "🚜",
+    colour: "#FFE8A3",
+    thumb: "thumb.jpg",
+    blurb: "A digger maze game! Drive Chomper's big yellow digger through the building site maze, dig through soft dirt walls for shortcuts, find gold nuggets and dinosaur bones, and reach Tipper the dump truck.",
+    categories: ["puzzles", "diggers", "dinosaurs"],
+    controls: "Arrow keys, swipe or tap the arrows"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

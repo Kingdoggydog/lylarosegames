@@ -1,0 +1,1845 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chomper's Digger Maze - Free Digger Maze Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --bg1:#FFF1C9;
+    --bg2:#FFDCA8;
+    --purple:#7B4FD6;
+    --purple-d:#5A2FA0;
+    --pink:#FF4F9A;
+    --pink-d:#C9306F;
+    --gold:#FFC23D;
+    --yel:#FFD43B;
+    --ink:#2F2350;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--bg1) 0%,var(--bg2) 100%);
+    background-color:var(--bg1);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1100px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  /* the bar along the top: back link, title and what you have collected */
+  .bar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px}
+  h1{flex:1 1 auto;font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(26px,4.6vw,40px);margin:0;line-height:1;color:var(--purple);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .stats{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:5px 11px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;min-height:24px}
+  .pill img{width:24px;height:24px;display:block}
+  .pill.bump{animation:bump .5s ease-out}
+  .pill.done{background:#E9F9EC}
+  @keyframes bump{40%{transform:scale(1.25)}}
+  .back{font-weight:800;color:var(--purple-d);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:44px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  /* the maze fills whatever space is left over (the game works out the exact size) */
+  .stage{flex:1;min-height:0;display:grid;place-items:center;position:relative}
+  .board{position:relative;width:300px;height:300px;border-radius:18px;overflow:hidden;background:#E8C98C;box-shadow:0 10px 30px #5A2FA033;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:100%;touch-action:none}
+  /* buttons under the maze */
+  .controls{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .pad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:6px;touch-action:none}
+  .pad button{padding:0;font-size:24px;background:#E8A200;border-radius:14px;box-shadow:0 4px 0 #B87F00;min-width:0;min-height:0}
+  .pad button:active,.pad button.on{transform:translateY(3px);box-shadow:0 1px 0 #B87F00}
+  .pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+  .help{font-size:14px;margin:0;max-width:36ch;font-weight:600}
+  .help b{color:#8A5A34}
+  .btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--purple);color:#fff;font-size:16px;min-height:48px;min-width:48px;-webkit-tap-highlight-color:transparent}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  button.ghost.off{opacity:.6;text-decoration:line-through}
+  #hintBtn{background:var(--yel);color:var(--ink);display:inline-flex;align-items:center;gap:6px;box-shadow:0 4px 0 #E8A200;padding:6px 14px}
+  #hintBtn svg{width:34px;height:34px;display:block}
+  #hintBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #E8A200}
+  .lbl{white-space:nowrap}
+  @media (hover:hover) and (pointer:fine){.pad{display:none}}
+  @media (pointer:coarse) and (min-width:700px) and (min-height:700px){ .pad{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(2,68px)} .pad button{font-size:28px} }
+  @media (max-height:760px){ .help{display:none} h1{font-size:30px} }
+
+  /* the panels (level picker, level done, dino bones) */
+  .overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:#2F2350A6;
+    padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left));box-sizing:border-box}
+  .panel{background:#fff;border-radius:20px;padding:16px 18px;text-align:center;max-width:480px;width:100%;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 40px #2F235055}
+  .panel h2{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:32px;margin:0;color:var(--purple);line-height:1.05}
+  .panel p{margin:0;font-size:16px}
+  .panel p.small{font-size:14px;font-weight:800;color:#6B5A8E}
+  .panel .hero{width:100%;max-width:300px;height:auto;aspect-ratio:2/1;align-self:center}
+  .panel .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .panel .lr-share{align-self:center;font-size:15px}
+  #ovBtn{background:var(--pink);box-shadow:0 5px 0 var(--pink-d);font-size:22px;padding:12px 22px;min-height:56px}
+  #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--pink-d)}
+  .panel button.ghost{background:#F1EBFF;color:var(--ink)}
+  /* level picker */
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .levels button{background:#FFF4D6;color:var(--ink);padding:6px 4px 5px;border-radius:14px;box-shadow:0 3px 0 #E8C77A;display:flex;flex-direction:column;align-items:center;gap:1px;font-size:13px;line-height:1.1;min-width:0;position:relative}
+  .levels button .num{font-family:"Chewy",cursive;font-weight:400;font-size:24px;color:#B87F00;line-height:1}
+  .levels button .nm{font-weight:800}
+  .levels button .st{font-size:15px;letter-spacing:1px;color:#E9DFC4}
+  .levels button .st i{font-style:normal;color:#FFB000}
+  .levels button .bn{position:absolute;right:5px;top:4px;width:22px;height:22px}
+  .levels button.now{background:#FFE08A;outline:3px solid #FFB000}
+  .levels button:disabled{opacity:.55;cursor:default;box-shadow:none;background:#EEE9F5}
+  .key{font-size:14px;display:grid;grid-template-columns:auto auto;justify-content:center;gap:3px 10px;text-align:left}
+  .key b{color:#8A5A34}
+  @media (max-height:700px){ .key{display:none} }
+  /* level done */
+  .stars{display:flex;justify-content:center;gap:6px}
+  .stars svg{width:56px;height:56px}
+  .stars svg.on{animation:pop .5s ease-out both}
+  .stars svg:nth-child(2){animation-delay:.25s}.stars svg:nth-child(3){animation-delay:.5s}
+  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+  .got{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-weight:800;font-size:18px}
+  .got span{display:inline-flex;align-items:center;gap:4px}
+  .got img{width:36px;height:36px}
+  /* dino bones */
+  .skel{width:100%;max-width:400px;height:auto;aspect-ratio:400/230;align-self:center;background:#FFF4DE;border-radius:14px;box-shadow:inset 0 -8px 0 #E9CFA2}
+  .say{font-family:"Chewy",cursive;font-size:26px;color:var(--purple);line-height:1.1}
+  @media (max-height:520px){
+    .panel{padding:10px 14px;gap:6px;max-width:620px}
+    .panel h2{font-size:26px}
+    .panel p{font-size:14px}
+    .panel .hero{display:none}
+    .key{display:none}
+    .levels{grid-template-columns:repeat(6,1fr);gap:6px}
+    .levels button .nm{font-size:11px}
+    .stars svg{width:42px;height:42px}
+    .got img{width:28px;height:28px}
+    .skel{max-width:300px}
+    #ovBtn{min-height:50px;font-size:20px;padding:8px 18px}
+  }
+
+  /* ===== PHONES ONLY: the maze gets the whole screen, everything else floats over the spare space ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:0}
+    .wrap{display:block;max-width:none;height:100%}
+    h1,.help{display:none}
+    .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+    /* the stage covers the screen (inside the safe area); the maze sits in the middle of the space left over */
+    .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
+      box-sizing:border-box;padding:52px 6px 134px}
+    .board{border-radius:14px}
+    /* back, levels, music and sound: small round buttons in the top-left corner */
+    .back,#lvlBtn,#musicBtn,#sfxBtn{position:fixed;z-index:3;top:calc(6px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;
+      display:grid;place-items:center;font-size:19px;background:#FFFFFFC7;box-shadow:0 2px 8px #2F235026;text-decoration:none}
+    .back{left:calc(6px + env(safe-area-inset-left,0px));font-size:22px}
+    #lvlBtn{left:calc(50px + env(safe-area-inset-left,0px))}
+    #musicBtn{left:calc(94px + env(safe-area-inset-left,0px))}
+    #sfxBtn{left:calc(138px + env(safe-area-inset-left,0px))}
+    /* what you have collected: small see-through pills in the top-right corner */
+    .stats{position:fixed;z-index:3;top:calc(12px + env(safe-area-inset-top,0px));right:calc(6px + env(safe-area-inset-right,0px));gap:3px;flex-wrap:nowrap;justify-content:flex-end;pointer-events:none}
+    #lvlPill{display:none}
+    .pill{font-size:12px;padding:3px 7px 3px 4px;background:#FFFFFFB8;gap:2px;min-height:0}
+    .pill img{width:20px;height:20px}
+    /* the arrows by the left thumb, the hint hard hat by the right thumb */
+    .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
+      grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
+    .pad button{background:#E8A200E6;font-size:24px}
+    #hintBtn{position:fixed;z-index:3;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
+      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 4px 0 #E8A200,0 4px 12px #2F235033}
+    #hintBtn svg{width:44px;height:44px}
+    /* sideways: maze in the middle, buttons and arrows in the left gap, collected things and hint in the right gap */
+    @media (orientation: landscape) {
+      .stage{padding:6px 92px 6px 198px}
+      .stats{flex-direction:column;align-items:flex-end;top:calc(8px + env(safe-area-inset-top,0px))}
+    }
+  }
+</style>
+
+<meta name="description" content="Chomper&#39;s Digger Maze - a free digger maze game for kids. Drive Chomper&#39;s big yellow digger through the building site maze, dig through dirt walls for shortcuts, find gold nuggets and dinosaur bones and reach Tipper the dump truck.">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/chompers-digger-maze/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Chomper&#x27;s Digger Maze - Free Digger Maze Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Chomper&#x27;s Digger Maze - a free digger maze game for kids. Drive Chomper&#x27;s big yellow digger through the building site maze, dig through dirt walls for shortcuts, find gold nuggets and dinosaur bones and reach Tipper the dump truck.">
+<meta property="og:url" content="https://lylarosegames.com/games/chompers-digger-maze/">
+<meta property="og:image" content="https://lylarosegames.com/games/chompers-digger-maze/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Chomper&#x27;s Digger Maze - free digger maze game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: arrow keys or WASD, swipe, tap, or the on-screen arrows -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Chomper's Digger Maze",
+   "url": "https://lylarosegames.com/games/chompers-digger-maze/",
+   "description": "Chomper's Digger Maze - a free digger maze game for kids. Drive Chomper's big yellow digger through the building site maze, dig through dirt walls for shortcuts, find gold nuggets and dinosaur bones and reach Tipper the dump truck.",
+   "image": "https://lylarosegames.com/games/chompers-digger-maze/share.jpg",
+   "genre": [
+    "Puzzles & Mazes",
+    "Diggers & Trucks",
+    "Dinosaurs"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Puzzle & maze games",
+     "item": "https://lylarosegames.com/puzzle-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Chomper's Digger Maze",
+     "item": "https://lylarosegames.com/games/chompers-digger-maze/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <a class="back" href="../../">←<span class="lbl"> All games</span></a>
+    <h1>Chomper's Digger Maze</h1>
+    <div class="stats">
+      <span class="pill" id="lvlPill">Level 1</span>
+      <span class="pill" id="nugPill" aria-label="Gold nuggets"></span>
+      <span class="pill" id="hatPill" aria-label="Hard hats"></span>
+      <span class="pill" id="bonePill" aria-label="Dinosaur bone"></span>
+    </div>
+  </div>
+
+  <div class="stage" id="stage">
+    <div class="board" id="board">
+      <canvas id="c" aria-label="The maze"></canvas>
+    </div>
+  </div>
+
+  <div class="controls">
+    <div class="pad" aria-label="Driving buttons">
+      <button class="up" data-d="0" aria-label="Up">▲</button>
+      <button class="left" data-d="3" aria-label="Left">◀</button>
+      <button class="down" data-d="2" aria-label="Down">▼</button>
+      <button class="right" data-d="1" aria-label="Right">▶</button>
+    </div>
+    <p class="help">Drive with the arrow keys. Bump into <b>brown dirt</b> to dig a shortcut! Grey rocks and fences are too hard to dig.</p>
+    <div class="btns">
+      <button id="hintBtn" aria-label="Hint: show me the way"><svg viewBox="0 0 48 48" aria-hidden="true"><g stroke="#2F2350" stroke-width="3" stroke-linejoin="round"><path d="M8 32 A16 15 0 0 1 40 32 Z" fill="#FFD43B"/><rect x="4" y="30" width="40" height="7" rx="3.5" fill="#FFC21A"/><path d="M24 17 v13" stroke="#E8A200" stroke-width="4" stroke-linecap="round"/></g><ellipse cx="17" cy="23" rx="4" ry="2.2" fill="#fff" opacity=".7" transform="rotate(-35 17 23)"/><path d="M40 4 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FF4F9A"/><path d="M8 6 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3z" fill="#7B4FD6"/></svg><span class="lbl">Hint</span></button>
+      <button class="ghost" id="lvlBtn" aria-label="Pick a level">🗺️<span class="lbl"> Levels</span></button>
+      <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
+      <button class="ghost" id="sfxBtn" aria-pressed="true">🔊<span class="lbl"> Sounds on</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="panel" id="panel" role="dialog" aria-live="polite"></div></div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const $ = id => document.getElementById(id);
+  const cvs = $('c'), ctx = cvs.getContext('2d');
+  const board = $('board'), stage = $('stage'), overlay = $('overlay'), panel = $('panel');
+  const lvlPill = $('lvlPill'), nugPill = $('nugPill'), hatPill = $('hatPill'), bonePill = $('bonePill');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TEST = /[?&]test\b/.test(location.search);
+  const FONT = '"Chewy","Comic Sans MS",cursive';
+  const TAU = Math.PI*2;
+  const O = '#2F2350';                      // outline colour
+  const KEY = 'lrg-chompers-digger-maze-';
+  const DX = [0, 1, 0, -1], DY = [-1, 0, 1, 0]; // directions: 0 up, 1 right, 2 down, 3 left
+  const OPEN = 0, DIRT = 1, FENCE = 2, ROCK = 3, EDGE = 4, GATE = 5;
+
+  const rand = (a, b) => a + Math.random()*(b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const ease = u => 1 - Math.pow(1 - clamp(u, 0, 1), 3);
+  function rng(seed){ return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0)/4294967296; }; }
+  function rr(g, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    g.beginPath(); g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function ell(g, x, y, rx, ry, rot){ g.beginPath(); g.ellipse(x, y, Math.max(0.001, rx), Math.max(0.001, ry), rot || 0, 0, TAU); }
+  function line(g, x1, y1, x2, y2){ g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke(); }
+  function poly(g, pts){ g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); }
+  function load(k, d){ try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+
+  // ===== THE LEVELS =====
+  // n = maze size, dirt = how many walls are soft dirt, rock = how many of the other walls are rocks
+  const LEVELS = [
+    {name: 'Little Sandpit',  icon: '🏖️', n: 7,  dirt: 0.6,  rock: 0,    fence: 'timber',  nug: 3, hat: 1, puddles: 0, button: false,
+      ground: '#F8E2A6', ground2: '#F2D592', edge: '#E7C27C', say: 'Brown dirt? Dig right through it!'},
+    {name: 'Building Site',   icon: '🚧', n: 8,  dirt: 0.45, rock: 0,    fence: 'barrier', nug: 4, hat: 2, puddles: 0, button: false,
+      ground: '#F0DBAE', ground2: '#E8CF9C', edge: '#D9B57A', say: 'Orange fences are too strong to dig!'},
+    {name: 'Rocky Quarry',    icon: '🪨', n: 9,  dirt: 0.4,  rock: 0.5,  fence: 'barrier', nug: 5, hat: 2, puddles: 0, button: false,
+      ground: '#EADFC9', ground2: '#E0D3B9', edge: '#CDBB9A', say: 'Grey rocks are too hard. Look for brown dirt!'},
+    {name: 'Muddy Puddles',   icon: '💦', n: 10, dirt: 0.4,  rock: 0.35, fence: 'barrier', nug: 5, hat: 2, puddles: 7, button: false,
+      ground: '#E4DCA8', ground2: '#DBD197', edge: '#C7B983', say: 'Splash through the muddy puddles!'},
+    {name: 'Big Red Button',  icon: '🔴', n: 11, dirt: 0.38, rock: 0.35, fence: 'barrier', nug: 6, hat: 2, puddles: 2, button: true,
+      ground: '#ECE6DA', ground2: '#E3DCCD', edge: '#CFC5B2', say: 'The gate is shut! Find the big red button!'},
+    {name: 'Dino Dig',        icon: '🦕', n: 13, dirt: 0.38, rock: 0.4,  fence: 'barrier', nug: 7, hat: 3, puddles: 3, button: false,
+      ground: '#F3CF9B', ground2: '#EBC28A', edge: '#D9A86A', say: 'The very last dinosaur bone is in here!'}
+  ];
+  // each level's bone is one piece of the big dinosaur skeleton
+  const BONES = ['Tail', 'Back leg', 'Little arm', 'Ribs', 'Neck', 'Head'];
+
+  // ===== SAVED STUFF =====
+  function freshProg(){ return {unlocked: 1, stars: [0, 0, 0, 0, 0, 0], bones: [0, 0, 0, 0, 0, 0], cur: 0, seen: 0}; }
+  let prog = load(KEY + 'prog', null);
+  if(!prog || typeof prog !== 'object' || !Array.isArray(prog.stars)) prog = freshProg();
+  prog.unlocked = clamp(prog.unlocked|0, 1, 6); prog.cur = clamp(prog.cur|0, 0, 5);
+  for(let i = 0; i < 6; i++){ prog.stars[i] = clamp(prog.stars[i]|0, 0, 3); prog.bones[i] = prog.bones[i] ? 1 : 0; }
+  const saveProg = () => save(KEY + 'prog', prog);
+  let musicOn = load(KEY + 'music', true), sfxOn = load(KEY + 'sfx', true);
+
+  // ===== GAME STATE =====
+  let level = 0, lv = LEVELS[0], NX = 7, NY = 7;
+  let wR = [], wD = [];          // wR[y][x] = the wall to the right of square x,y ; wD[y][x] = the wall below it
+  let items = [], puddles = [], decor = [], button = null, gateOpen = true, gateA = 1;
+  let phase = 'menu';            // menu | play | end
+  let clock = 0, timeScale = 1, endT = 0, endStars = 1, newBone = false, skeletonJustDone = false;
+  let tracks = [], parts = [], words = [], flyers = [], hint = null, digs = 0;
+  const dig = {x: 0, y: 0, fx: 0, fy: 0, face: 1, tilt: 0, dir: 1, roll: null, move: null, scoop: null, bumpT: 0, bumpDir: 1, puttT: 0, tread: 0, lastDir: 1, happyT: 0, blinkT: 2, blink: 0};
+  let queued = null;
+  const held = [];               // arrow buttons / keys being held down (newest last)
+  const tip = {st: 'wait', t: 0, dx: 0, trayA: 0, heap: 0, happyT: 0, honkT: 0, wheel: 0, bounce: 0};
+  const lenny = {say: '', sayT: 0, cheerT: 0, hop: 0};
+
+  // ===== THE MAZE =====
+  function wallType(x, y, d){
+    const nx = x + DX[d], ny = y + DY[d];
+    if(x === NX - 1 && y === NY - 1 && d === exitDir()) return GATE;
+    if(nx < 0 || ny < 0 || nx >= NX || ny >= NY) return EDGE;
+    if(d === 1) return wR[y][x];
+    if(d === 3) return wR[y][x - 1];
+    if(d === 2) return wD[y][x];
+    return wD[y - 1][x];
+  }
+  function setWall(x, y, d, v){
+    if(d === 1) wR[y][x] = v; else if(d === 3) wR[y][x - 1] = v; else if(d === 2) wD[y][x] = v; else wD[y - 1][x] = v;
+  }
+  const isOpen = (x, y, d) => wallType(x, y, d) === OPEN;
+
+  function makeMaze(R){
+    const n = lv.n; NX = NY = n;
+    wR = Array.from({length: n}, () => new Array(n).fill(FENCE));
+    wD = Array.from({length: n}, () => new Array(n).fill(FENCE));
+    // 1. an ordinary maze where every square can be reached (no digging needed)
+    const seen = Array.from({length: n}, () => new Array(n).fill(false));
+    // (Tipper's exit square is left out for now, so it ends up as a dead end you only drive into on purpose)
+    seen[n - 1][n - 1] = true;
+    const stack = [[0, 0]]; seen[0][0] = true;
+    while(stack.length){
+      const [x, y] = stack[stack.length - 1];
+      const opts = [0, 1, 2, 3].filter(d => { const nx = x + DX[d], ny = y + DY[d]; return nx >= 0 && ny >= 0 && nx < n && ny < n && !seen[ny][nx]; });
+      if(!opts.length){ stack.pop(); continue; }
+      const d = opts[Math.floor(R()*opts.length)];
+      setWall(x, y, d, OPEN); seen[y + DY[d]][x + DX[d]] = true; stack.push([x + DX[d], y + DY[d]]);
+    }
+    if(R() < 0.5) wR[n - 1][n - 2] = OPEN; else wD[n - 2][n - 1] = OPEN;
+    // 2. a few extra gaps, so there is more than one way round
+    for(let i = 0; i < Math.round(n*n*0.03); i++){
+      const x = Math.floor(R()*(n - 1)), y = Math.floor(R()*(n - 1));
+      if(R() < 0.5) wR[y][x] = OPEN; else wD[y][x] = OPEN;
+    }
+    // 3. now turn some of the walls into soft dirt (shortcuts), and some of the rest into rocks
+    for(let y = 0; y < n; y++) for(let x = 0; x < n; x++){
+      [[wR, x < n - 1], [wD, y < n - 1]].forEach(([w, inside]) => {
+        if(!inside || w[y][x] === OPEN) return;
+        w[y][x] = R() < lv.dirt ? DIRT : (R() < lv.rock ? ROCK : FENCE);
+      });
+    }
+  }
+  // how far each square is from a square, going only through open gaps
+  function distances(sx, sy, allowDirt){
+    const D = Array.from({length: NY}, () => new Array(NX).fill(-1));
+    const q = [[sx, sy]]; D[sy][sx] = 0;
+    while(q.length){
+      const [x, y] = q.shift();
+      for(let d = 0; d < 4; d++){
+        const t = wallType(x, y, d);
+        if(!(t === OPEN || (allowDirt && t === DIRT))) continue;
+        const nx = x + DX[d], ny = y + DY[d];
+        if(D[ny][nx] < 0){ D[ny][nx] = D[y][x] + 1; q.push([nx, ny]); }
+      }
+    }
+    return D;
+  }
+  function openCount(x, y){ let c = 0; for(let d = 0; d < 4; d++) if(isOpen(x, y, d)) c++; return c; }
+
+  function placeThings(R){
+    const D = distances(0, 0, false), E = distances(NX - 1, NY - 1, false);
+    let maxD = 0; for(let y = 0; y < NY; y++) for(let x = 0; x < NX; x++) maxD = Math.max(maxD, D[y][x]);
+    const taken = new Set(['0,0', (NX - 1) + ',' + (NY - 1)]);
+    const cells = [];
+    for(let y = 0; y < NY; y++) for(let x = 0; x < NX; x++) if(!taken.has(x + ',' + y)) cells.push({x, y, d: D[y][x], e: E[y][x], end: openCount(x, y) === 1});
+    const free = c => !taken.has(c.x + ',' + c.y);
+    const near = (c, min) => items.some(it => Math.abs(it.x - c.x) + Math.abs(it.y - c.y) < min) || (button && Math.abs(button.x - c.x) + Math.abs(button.y - c.y) < min);
+    const take = (c, kind) => { taken.add(c.x + ',' + c.y); items.push({x: c.x, y: c.y, kind, got: false, ph: R()*6}); };
+    items = []; button = null; puddles = [];
+    // the big red button: somewhere far from the exit and not too close to the start
+    if(lv.button){
+      const opts = cells.filter(c => c.d >= maxD*0.35 && c.e >= maxD*0.45).sort((a, b) => (b.end - a.end) || (R() - 0.5));
+      const c = opts[0] || cells[Math.floor(R()*cells.length)];
+      button = {x: c.x, y: c.y, pressed: false, t: 0}; taken.add(c.x + ',' + c.y);
+    }
+    // the dinosaur bone: a long way from the start, in a dead end if there is one
+    {
+      const far = cells.filter(c => free(c) && c.d >= maxD*0.55);
+      const ends = far.filter(c => c.end);
+      const pool = ends.length ? ends : far.length ? far : cells.filter(free);
+      take(pool[Math.floor(R()*pool.length)], 'bone');
+    }
+    // gold nuggets and lost hard hats, spread out, often in dead ends (so it's worth exploring)
+    const spots = cells.filter(free).sort(() => R() - 0.5).sort((a, b) => (b.end - a.end)*(R() < 0.7 ? 1 : 0));
+    const want = [];
+    for(let i = 0; i < lv.hat; i++) want.push('hat');
+    for(let i = 0; i < lv.nug; i++) want.push('nug');
+    want.forEach(kind => {
+      let c = spots.find(s => free(s) && !near(s, 3)) || spots.find(s => free(s) && !near(s, 2)) || spots.find(free);
+      if(c) take(c, kind);
+    });
+    // muddy puddles (just for splashing)
+    const pool = cells.filter(c => free(c)).sort(() => R() - 0.5);
+    for(let i = 0; i < lv.puddles && i < pool.length; i++){ puddles.push({x: pool[i].x, y: pool[i].y, rx: 0.3 + R()*0.08, ry: 0.22 + R()*0.06, rot: R()*0.6 - 0.3, splashT: 0}); taken.add(pool[i].x + ',' + pool[i].y); }
+    // little pebbles, grass and (in the Dino Dig) footprints on the play mat
+    decor = [];
+    for(let i = 0; i < NX*NY*0.9; i++){
+      const k = R();
+      decor.push({x: R()*NX, y: R()*NY, kind: level === 5 && k < 0.12 ? 'foot' : k < 0.55 ? 'pebble' : k < 0.8 ? 'dot' : 'tuft', r: 0.04 + R()*0.05, rot: R()*TAU});
+    }
+  }
+
+  // ===== DRAWING HELPERS =====
+  // layout: cs = size of one maze square in pixels, ox/oy = where the maze starts, bay = where Tipper waits
+  const BAY = 1.6, PAD = 0.2;
+  let L = {cs: 40, ox: 8, oy: 8, bay: 'right', W: 300, H: 300, dpr: 1};
+  let posterSpr = 0;
+  function exitDir(){ return L.bay === 'right' ? 1 : 2; }
+  const shadowCol = 'rgba(70,45,20,0.18)';
+
+  // ----- Chomper (a cute purple dinosaur, facing right, feet at 0,0) - the same Chomper as in Chomper's Digger -----
+  const PU = '#A47BF0', PD = '#8A60DC', TUM = '#EEE2FF', PL = '#FF9ACB', OC = '#5A2FA0';
+  function leg(g, x, lift, col){
+    g.lineWidth = 4; g.strokeStyle = OC; g.fillStyle = col;
+    rr(g, x - 7, -26 - lift, 14, 24, 6); g.stroke(); g.fill();
+    ell(g, x + 5, -4 - lift, 13, 6.5); g.stroke(); g.fill();
+    g.fillStyle = '#F6EEFF';
+    [8, 12.5, 17].forEach(dx => { ell(g, x + dx, -4 - lift, 2.2, 2.2); g.fill(); });
+    ell(g, x + 1, -26 - lift*0.4, 13, 14); g.stroke(); g.fillStyle = col; g.fill();
+  }
+  function drawChomperFig(g, o){
+    g.save(); g.scale(1.1, 1.1);
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    const bob = o.bob || 0;
+    if(!o.onlyArm){
+      if(o.legs) leg(g, -12, o.l2 || 0, PD);
+      g.save(); g.translate(0, bob);
+      const wag = Math.sin(clock*(o.dance ? 12 : 3))*(o.dance ? 9 : 5);
+      g.fillStyle = PL; g.strokeStyle = OC; g.lineWidth = 2.5;
+      [[-52, -38, 6], [-38, -50, 8], [-24, -62, 9], [-8, -70, 9], [6, -99, 7], [21, -102, 7]].forEach(([x, y, r]) => { ell(g, x, y, r, r); g.fill(); g.stroke(); });
+      const shapes = [
+        () => { g.beginPath(); g.moveTo(-20, -54); g.quadraticCurveTo(-58, -48, -80, -24 + wag); g.quadraticCurveTo(-56, -22, -16, -24); g.closePath(); },
+        () => ell(g, 0, -42, 30, 29),
+        () => ell(g, 18, -77, 28, 25),
+        () => ell(g, 40, -68, 21, 15)
+      ];
+      g.lineWidth = 6; g.strokeStyle = OC; shapes.forEach(f => { f(); g.stroke(); });
+      g.fillStyle = PU; shapes.forEach(f => { f(); g.fill(); });
+      g.fillStyle = TUM; ell(g, 10, -38, 17, 21); g.fill();
+      g.strokeStyle = 'rgba(164,123,240,0.35)'; g.lineWidth = 2;
+      [-46, -36, -26].forEach(y => { g.beginPath(); g.moveTo(1, y); g.quadraticCurveTo(10, y + 3, 20, y); g.stroke(); });
+      g.fillStyle = 'rgba(255,255,255,0.3)';
+      [[-15, -48, 4], [-7, -58, 3], [-40, -34, 3], [8, -92, 3]].forEach(([x, y, r]) => { ell(g, x, y, r, r); g.fill(); });
+      g.restore();
+      if(o.legs) leg(g, 8, o.l1 || 0, PU);
+      g.save(); g.translate(0, bob);
+      const happy = o.happy;
+      [[13, -85], [31, -86]].forEach(([x, y]) => {
+        if(happy){
+          g.strokeStyle = '#2B1B45'; g.lineWidth = 3.4;
+          g.beginPath(); g.arc(x, y + 4, 6.5, Math.PI*1.15, Math.PI*1.85); g.stroke();
+        } else {
+          const ey = o.blink ? 0.15 : 1;
+          g.fillStyle = '#fff'; ell(g, x, y, 8.5, 10.5*ey); g.fill();
+          g.strokeStyle = OC; g.lineWidth = 2.2; g.stroke();
+          if(ey > 0.5){
+            const lx = o.lookX == null ? 2 : o.lookX, ly = o.lookY == null ? 1.5 : o.lookY;
+            g.fillStyle = '#2B1B45'; ell(g, x + lx, y + ly, 5.3, 6.2); g.fill();
+            g.fillStyle = '#fff'; ell(g, x + lx + 1.8, y + ly - 3.5, 2.1, 2.1); g.fill(); ell(g, x + lx - 1.5, y + ly + 2.5, 1.1, 1.1); g.fill();
+          }
+        }
+      });
+      g.fillStyle = OC; ell(g, 53, -74, 1.9, 1.5); g.fill(); ell(g, 57.5, -71, 1.7, 1.3); g.fill();
+      g.fillStyle = 'rgba(255,120,180,0.55)'; ell(g, 40, -61, 6.5, 3.8); g.fill();
+      if(o.open){
+        g.fillStyle = '#5B1F4F'; ell(g, 46, -60, 10, 8); g.fill(); g.strokeStyle = OC; g.lineWidth = 2.5; g.stroke();
+        g.fillStyle = '#FF7FAE'; ell(g, 46, -56, 6, 3); g.fill();
+        g.fillStyle = '#fff'; ell(g, 40, -66, 2.2, 2.6); g.fill(); ell(g, 52, -66, 2.2, 2.6); g.fill();
+      } else {
+        g.fillStyle = '#6B2A63';
+        g.beginPath(); g.moveTo(32, -63); g.quadraticCurveTo(46, -49, 58, -62); g.quadraticCurveTo(46, -57, 32, -63); g.fill();
+        g.strokeStyle = OC; g.lineWidth = 2.4;
+        g.beginPath(); g.moveTo(31, -63); g.quadraticCurveTo(46, -49, 59, -63); g.stroke();
+        g.fillStyle = '#fff'; g.beginPath(); g.moveTo(49, -58.5); g.lineTo(53, -59.5); g.lineTo(51.5, -55.5); g.closePath(); g.fill();
+      }
+      // the little orange hard hat
+      if(o.hat){
+        g.fillStyle = '#FF922B'; g.strokeStyle = OC; g.lineWidth = 3.2;
+        g.beginPath(); g.ellipse(16, -101, 25, 19, -0.06, Math.PI, TAU); g.closePath(); g.fill(); g.stroke();
+        g.fillStyle = '#FF922B'; rr(g, -9, -104, 58, 7.5, 3.7); g.fill(); g.stroke();
+        g.strokeStyle = '#E8590C'; g.lineWidth = 4; g.beginPath(); g.moveTo(16, -118); g.quadraticCurveTo(17, -110, 16, -105); g.stroke();
+        g.fillStyle = 'rgba(255,255,255,0.55)'; ell(g, 6, -110, 6, 3.2, -0.5); g.fill();
+      }
+      g.restore();
+    }
+    if(!o.noArm){
+      g.save(); g.translate(0, bob);
+      g.save(); g.translate(24, -46); g.rotate(o.armA == null ? 0.35 : o.armA);
+      g.strokeStyle = OC; g.lineWidth = 11; line(g, 0, 0, 13, 3);
+      g.strokeStyle = PU; g.lineWidth = 6.5; line(g, 0, 0, 13, 3);
+      g.fillStyle = '#fff'; ell(g, 17, 1, 2.3, 2.3); g.fill(); ell(g, 16, 6, 2.3, 2.3); g.fill();
+      g.restore(); g.restore();
+    }
+    g.restore();
+  }
+  function drawBone(g, len){
+    const h = len*0.15, r = len*0.13, e = len/2 - r*0.6;
+    g.fillStyle = '#FFF6E0'; g.strokeStyle = O; g.lineWidth = Math.max(0.02, len*0.05);
+    [[-e, -r*0.7], [-e, r*0.7], [e, -r*0.7], [e, r*0.7]].forEach(([x, y]) => { ell(g, x, y, r, r); g.fill(); g.stroke(); });
+    rr(g, -e, -h/2, e*2, h, h/2); g.fill(); g.stroke();
+    g.fillStyle = '#FFF6E0'; [[-e, -r*0.7], [-e, r*0.7], [e, -r*0.7], [e, r*0.7]].forEach(([x, y]) => { ell(g, x, y, r - g.lineWidth/2, r - g.lineWidth/2); g.fill(); });
+    g.fillRect(-e, -h/2 + g.lineWidth/2, e*2, h - g.lineWidth);
+    g.fillStyle = 'rgba(214,190,150,0.6)'; rr(g, -e*0.7, h*0.05, e*1.4, h*0.3, h*0.15); g.fill();
+  }
+
+  // ----- the big yellow digger with Chomper in the cab (facing right, bottom of the tracks at 0,0) -----
+  const YEL = '#FFC21A', YELD = '#E8A200';
+  function beam(g, x1, y1, x2, y2, w){
+    g.save(); g.translate(x1, y1); g.rotate(Math.atan2(y2 - y1, x2 - x1));
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    g.fillStyle = YEL; rr(g, -w/2, -w/2, len + w, w, w/2); g.fill(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+    g.strokeStyle = YELD; g.lineWidth = 4; line(g, w*0.5, w*0.18, len - w*0.3, w*0.18);
+    g.restore();
+  }
+  function drawBucket(g, x, y, a, load){
+    g.save(); g.translate(x, y); g.rotate(a);
+    g.lineJoin = 'round';
+    const P = () => { g.beginPath(); g.moveTo(-30, 8); g.quadraticCurveTo(-34, 56, 4, 58); g.quadraticCurveTo(38, 58, 44, 22); g.lineTo(50, 8); g.closePath(); };
+    if(load){
+      g.fillStyle = '#8A5A34'; g.strokeStyle = O; g.lineWidth = 3.5;
+      g.beginPath(); g.moveTo(-30, 9); g.quadraticCurveTo(-26, -12, -10, -10); g.quadraticCurveTo(0, -24, 14, -14); g.quadraticCurveTo(30, -22, 38, -6); g.quadraticCurveTo(48, -2, 50, 9); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.18)'; ell(g, -8, -6, 6, 3); g.fill(); ell(g, 22, -8, 5, 3); g.fill();
+      if(load === 2){ g.fillStyle = '#FFD43B'; ell(g, 6, -12, 7, 6); g.fill(); g.lineWidth = 2.5; g.stroke(); g.fillStyle = '#FFF6E0'; ell(g, 28, -12, 9, 4, -0.3); g.fill(); g.stroke(); }
+    }
+    g.fillStyle = '#FFB000'; P(); g.fill(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+    g.fillStyle = 'rgba(0,0,0,0.12)'; g.save(); P(); g.clip(); g.fillRect(-40, 40, 100, 30); g.restore();
+    g.fillStyle = '#DEE2E6'; g.lineWidth = 3;
+    [[44, 12], [47, 22], [42, 32]].forEach(([tx, ty]) => { poly(g, [[tx - 4, ty - 5], [tx + 9, ty], [tx - 4, ty + 5]]); g.fill(); g.stroke(); });
+    g.fillStyle = '#FFC21A'; poly(g, [[-8, -8], [8, -8], [12, 10], [-18, 10]]); g.fill(); g.lineWidth = 4; g.stroke();
+    g.fillStyle = '#ADB5C7'; ell(g, 0, 0, 7, 7); g.fill(); g.lineWidth = 3; g.stroke();
+    g.restore();
+  }
+  // o: reach 0..1 (arm stretched out), curl (bucket angle), lift 0..1 (bucket held up high), load, bounce, happy, tread
+  function drawDigger(g, o){
+    const b = o.bounce || 0;
+    g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
+    // tracks
+    g.fillStyle = '#4A4360'; rr(g, -120, -50, 240, 50, 25); g.fill(); g.lineWidth = 5; g.strokeStyle = O; g.stroke();
+    g.fillStyle = '#2F2A40'; const tOff = ((o.tread || 0) % 20 + 20) % 20;
+    for(let x = -100 + tOff; x <= 100; x += 20){ rr(g, x - 5, -3, 10, 5, 2); g.fill(); rr(g, x - 5, -52, 10, 5, 2); g.fill(); }
+    [-90, -32, 32, 90].forEach(x => { g.fillStyle = '#ADB5C7'; ell(g, x, -25, 16, 16); g.fill(); g.lineWidth = 3.5; g.strokeStyle = O; g.stroke(); g.fillStyle = '#6C6485'; ell(g, x, -25, 6, 6); g.fill(); });
+    g.translate(0, b);
+    // body
+    g.fillStyle = YEL; rr(g, -116, -124, 222, 78, 14); g.fill();
+    g.save(); rr(g, -116, -124, 222, 78, 14); g.clip();
+    g.fillStyle = YELD; g.fillRect(-120, -64, 230, 20);
+    g.fillStyle = O; for(let i = 0; i < 4; i++){ poly(g, [[70 + i*16, -46], [80 + i*16, -46], [94 + i*16, -64], [84 + i*16, -64]]); g.fill(); }
+    g.restore();
+    g.lineWidth = 5; g.strokeStyle = O; rr(g, -116, -124, 222, 78, 14); g.stroke();
+    // engine and puffing pipe
+    g.fillStyle = YEL; rr(g, -8, -150, 96, 30, 10); g.fill(); g.stroke();
+    g.strokeStyle = YELD; g.lineWidth = 4; [16, 30, 44].forEach(x => line(g, x, -142, x, -128));
+    g.fillStyle = '#868E96'; rr(g, 58, -192, 14, 46, 5); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+    g.fillStyle = '#495057'; rr(g, 55, -198, 20, 9, 3); g.fill(); g.stroke();
+    // cab
+    g.fillStyle = YEL; rr(g, -124, -266, 120, 148, 18); g.fill(); g.lineWidth = 5; g.stroke();
+    const ix = -114, iy = -254, iw = 100, ih = 116;
+    g.fillStyle = '#DDF3FF'; rr(g, ix, iy, iw, ih, 10); g.fill();
+    g.save(); rr(g, ix, iy, iw, ih, 10); g.clip();
+    g.fillStyle = '#E03131'; rr(g, -118, -196, 26, 64, 10); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+    const sitBob = Math.sin(clock*2.4)*1.2 + (o.moving ? Math.sin(clock*25)*1.4 : 0);
+    g.save(); g.translate(-88, -120); g.scale(0.92, 0.92);
+    drawChomperFig(g, {hat: true, happy: o.happy, open: o.open, blink: o.blink, bob: sitBob, noArm: true, lookX: 2.6, lookY: o.lookY == null ? 1 : o.lookY, dance: o.happy});
+    g.restore();
+    // dashboard, levers and Chomper's hand
+    g.fillStyle = '#495057'; rr(g, -70, -150, 60, 22, 6); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+    const armA = o.happy ? -0.7 + Math.sin(clock*22)*0.5 : 0.55 + (o.moving || o.reach > 0.05 ? Math.sin(clock*18)*0.3 : 0);
+    const S = 0.92*1.1, hx = -88 + (24 + Math.cos(armA)*16)*S, hy = -120 + (-46 + sitBob + Math.sin(armA)*16)*S;
+    [[-46, '#FF6B6B', 0], [-30, '#4DABF7', 1]].forEach(([bx, col, i]) => {
+      const lx = o.happy ? bx + 6 : hx + i*6, ly = o.happy ? -176 : hy + i*4;
+      g.strokeStyle = O; g.lineWidth = 7; line(g, bx, -148, lx, ly); g.strokeStyle = '#CED4DA'; g.lineWidth = 3.5; line(g, bx, -148, lx, ly);
+      g.fillStyle = col; ell(g, lx, ly, 6, 6); g.fill(); g.lineWidth = 2.5; g.strokeStyle = O; g.stroke();
+    });
+    g.save(); g.translate(-88, -120); g.scale(0.92, 0.92);
+    drawChomperFig(g, {onlyArm: true, armA, bob: sitBob});
+    g.restore();
+    g.fillStyle = 'rgba(255,255,255,0.35)'; poly(g, [[ix + 64, iy], [ix + 84, iy], [ix + 40, iy + ih], [ix + 20, iy + ih]]); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.22)'; poly(g, [[ix + 90, iy], [ix + 98, iy], [ix + 56, iy + ih], [ix + 48, iy + ih]]); g.fill();
+    g.restore();
+    g.lineWidth = 4; g.strokeStyle = O; rr(g, ix, iy, iw, ih, 10); g.stroke();
+    // flashing light on the roof
+    const flash = (o.moving || o.reach > 0.05 || o.happy) && Math.sin(clock*10) > 0;
+    g.fillStyle = flash ? '#FFD43B' : '#FF922B'; g.beginPath(); g.ellipse(-64, -266, 14, 12, 0, Math.PI, TAU); g.closePath(); g.fill(); g.lineWidth = 3.5; g.stroke();
+    if(flash){ g.fillStyle = 'rgba(255,212,59,0.35)'; ell(g, -64, -272, 30, 20); g.fill(); }
+    // the arm: boom up from the body, stick down to the bucket
+    const r = o.reach || 0, lift = o.lift || 0;
+    const PVX = 72, PVY = -128;
+    const ex = lerp(lerp(138, 168, r), 150, lift), ey = lerp(lerp(-226, -196, r), -280, lift);
+    const wx = lerp(lerp(214, 262, r), 262, lift), wy = lerp(lerp(-112, -52, r), -250, lift);
+    g.strokeStyle = O; g.lineWidth = 14; line(g, 40, -100, lerp(PVX, ex, 0.55) + 6, lerp(PVY, ey, 0.55) + 18);
+    g.strokeStyle = '#868E96'; g.lineWidth = 8; line(g, 40, -100, lerp(PVX, ex, 0.55) + 6, lerp(PVY, ey, 0.55) + 18);
+    beam(g, PVX, PVY, ex, ey, 30);
+    beam(g, ex, ey, wx, wy, 22);
+    [[PVX, PVY, 10], [ex, ey, 9]].forEach(([x, y, rad]) => { g.fillStyle = '#ADB5C7'; ell(g, x, y, rad, rad); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke(); });
+    drawBucket(g, wx, wy, o.curl || 0, o.load);
+    g.restore();
+  }
+
+  // ----- Tipper the dump truck (orange, facing right, wheels on 0) - the same Tipper as in Chomper's Digger -----
+  function eyeIn(g, x, y, s, happy, lookX, lookY, blink){
+    if(happy){ g.strokeStyle = O; g.lineWidth = 4; g.beginPath(); g.arc(x, y + s*0.4, s*0.75, Math.PI*1.1, Math.PI*1.9); g.stroke(); return; }
+    const bl = blink ? 0.12 : 1;
+    g.fillStyle = '#fff'; ell(g, x, y, s*0.8, s*bl); g.fill(); g.strokeStyle = O; g.lineWidth = 3; g.stroke();
+    if(bl > 0.5){
+      g.fillStyle = '#2B1B45'; ell(g, x + (lookX || 0)*s*0.3, y + (lookY || 0)*s*0.35, s*0.45, s*0.52); g.fill();
+      g.fillStyle = '#fff'; ell(g, x + (lookX || 0)*s*0.3 + s*0.15, y + (lookY || 0)*s*0.35 - s*0.2, s*0.16, s*0.16); g.fill();
+    }
+  }
+  function smile(g, x, y, open){
+    g.fillStyle = 'rgba(255,120,180,0.5)'; ell(g, x - 16, y - 16, 8, 4.5); g.fill();
+    g.strokeStyle = O; g.lineWidth = 3.5; g.lineCap = 'round';
+    if(open){ g.fillStyle = '#6B2A63'; g.beginPath(); g.moveTo(x - 12, y - 6); g.quadraticCurveTo(x, y + 10*open, x + 10, y - 6); g.closePath(); g.fill(); g.stroke(); }
+    else { g.beginPath(); g.moveTo(x - 12, y - 6); g.quadraticCurveTo(x, y + 5, x + 10, y - 6); g.stroke(); }
+  }
+  function wheel(g, x, y, r, spin, hub){
+    g.fillStyle = '#3A3450'; ell(g, x, y, r, r); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+    g.fillStyle = hub || '#E9ECF5'; ell(g, x, y, r*0.52, r*0.52); g.fill(); g.lineWidth = 3; g.stroke();
+    g.fillStyle = '#ADB5C7'; for(let i = 0; i < 5; i++){ const a = spin + i*TAU/5; ell(g, x + Math.cos(a)*r*0.3, y + Math.sin(a)*r*0.3, 2.4, 2.4); g.fill(); }
+  }
+  function drawTipper(g, o){
+    g.save(); g.lineJoin = 'round'; g.lineCap = 'round';
+    g.translate(0, o.bounce || 0);
+    g.fillStyle = '#495057'; rr(g, -122, -48, 236, 18, 6); g.fill(); g.lineWidth = 4; g.strokeStyle = O; g.stroke();
+    g.save(); g.translate(-120, -46); g.rotate(-(o.trayA || 0)); g.translate(120, 46);
+    // the treasure heap in the tray
+    if(o.heap > 0.02){
+      const hgt = 10 + o.heap*20;
+      g.fillStyle = '#8A5A34'; g.strokeStyle = O; g.lineWidth = 3.5;
+      g.beginPath(); g.moveTo(-122, -118);
+      for(let i = 0; i <= 6; i++){ const x = -122 + i*(134/6), bump = Math.sin(i*1.7)*4; g.quadraticCurveTo(x - 11, -118 - hgt - bump, x, -118 - hgt*Math.sin(Math.PI*(0.15 + 0.7*i/6)) - bump); }
+      g.lineTo(12, -116); g.closePath(); g.fill(); g.stroke();
+      // gold glinting in the heap
+      g.fillStyle = '#FFD43B'; [[-90, -126], [-48, -132], [-14, -124]].forEach(([x, y], i) => { if(o.heap > i*0.3){ ell(g, x, y - o.heap*6, 7, 5.5); g.fill(); g.lineWidth = 2.5; g.stroke(); } });
+    }
+    const T = () => { g.beginPath(); g.moveTo(-126, -122); g.lineTo(14, -122); g.lineTo(18, -140); g.lineTo(32, -140); g.lineTo(28, -118); g.lineTo(12, -46); g.lineTo(-120, -46); g.closePath(); };
+    g.fillStyle = '#FF922B'; T(); g.fill();
+    g.save(); T(); g.clip(); g.fillStyle = '#F76707'; g.fillRect(-130, -76, 170, 30); g.fillStyle = 'rgba(255,255,255,0.25)'; g.fillRect(-130, -120, 170, 8); g.restore();
+    g.lineWidth = 5; g.strokeStyle = O; T(); g.stroke();
+    g.strokeStyle = '#E8590C'; g.lineWidth = 4; [-94, -60, -26].forEach(x => line(g, x, -114, x - 1, -80));
+    g.restore();
+    const C = () => { g.beginPath(); g.moveTo(24, -30); g.lineTo(26, -150); g.quadraticCurveTo(26, -164, 40, -164); g.lineTo(78, -164); g.quadraticCurveTo(90, -164, 96, -154); g.lineTo(118, -108); g.quadraticCurveTo(126, -102, 126, -86); g.lineTo(126, -30); g.closePath(); };
+    g.fillStyle = '#FF922B'; C(); g.fill();
+    g.save(); C(); g.clip(); g.fillStyle = '#F76707'; g.fillRect(20, -62, 110, 32); g.restore();
+    g.lineWidth = 5; g.strokeStyle = O; C(); g.stroke();
+    g.fillStyle = '#C5ECFF'; poly(g, [[36, -152], [76, -152], [98, -110], [36, -110]]); g.fill(); g.lineWidth = 4; g.stroke();
+    g.fillStyle = 'rgba(255,255,255,0.7)'; poly(g, [[44, -110], [58, -152], [66, -152], [52, -110]]); g.fill();
+    eyeIn(g, 64, -128, 15, o.happy, o.lookX == null ? -0.6 : o.lookX, o.lookY == null ? 0.2 : o.lookY, o.blink);
+    smile(g, 110, -56, o.honk ? 0.8 + Math.abs(Math.sin(clock*20))*0.4 : 0);
+    g.fillStyle = '#FFF3B0'; ell(g, 122, -82, 7, 9); g.fill(); g.lineWidth = 3; g.strokeStyle = O; g.stroke();
+    g.fillStyle = '#DDE3EE'; rr(g, 112, -44, 22, 12, 6); g.fill(); g.stroke();
+    g.fillStyle = o.honk && Math.sin(clock*14) > 0 ? '#FFD43B' : '#FAB005'; g.beginPath(); g.ellipse(58, -164, 10, 8, 0, Math.PI, TAU); g.closePath(); g.fill(); g.lineWidth = 3; g.stroke();
+    [-86, -34, 88].forEach(x => wheel(g, x, -26, 26, o.wheel || 0, '#FFD8A8'));
+    g.restore();
+  }
+
+  // ----- Lenny the Lemur, the site boss (with his own yellow hard hat) - feet at 0,0 -----
+  function drawLenny(g, o){
+    const grey = '#9A9AA8', dark = '#55556A';
+    g.save(); g.translate(0, -38 - (o.hop || 0));
+    const sway = reduced ? 0 : Math.sin(clock*2.2)*14;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      pts.push([(1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway), (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66)]);
+    }
+    g.lineCap = 'round';
+    for(let i = 0; i < 14; i++){ g.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6'; g.lineWidth = 10 - i*0.25; g.beginPath(); g.moveTo(pts[i][0], pts[i][1]); g.lineTo(pts[i+1][0], pts[i+1][1]); g.stroke(); }
+    g.fillStyle = grey;
+    g.beginPath(); g.ellipse(-9, 26, 7, 11, 0.15, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(9, 26, 7, 11, -0.15, 0, TAU); g.fill();
+    g.fillStyle = '#2B2B35';
+    g.beginPath(); g.ellipse(-11, 35, 7, 4, 0, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(11, 35, 7, 4, 0, 0, TAU); g.fill();
+    const b = reduced ? 0 : Math.sin(clock*6)*3;
+    // one arm waves all the time; both go up for a cheer
+    const wave = reduced ? 0 : Math.sin(clock*7)*8;
+    const hands = o.cheer ? [[-30, -46 + b], [30, -46 - b]] : [[-30, 4 + b*0.3], [32 + wave*0.4, -44 + wave]];
+    g.strokeStyle = grey; g.lineWidth = 8;
+    g.beginPath(); g.moveTo(-13, -14); g.lineTo(hands[0][0], hands[0][1]); g.moveTo(13, -14); g.lineTo(hands[1][0], hands[1][1]); g.stroke();
+    g.fillStyle = grey; g.beginPath(); g.ellipse(0, 2, 18, 24, 0, 0, TAU); g.fill();
+    g.fillStyle = '#E9E9EF'; g.beginPath(); g.ellipse(0, 6, 11, 16, 0, 0, TAU); g.fill();
+    hands.forEach(h => { g.fillStyle = dark; g.beginPath(); g.arc(h[0], h[1], 6, 0, TAU); g.fill(); });
+    g.fillStyle = dark;
+    g.beginPath(); g.arc(-14, -52, 7, 0, TAU); g.fill();
+    g.beginPath(); g.arc(14, -52, 7, 0, TAU); g.fill();
+    g.fillStyle = grey; g.beginPath(); g.arc(0, -36, 18, 0, TAU); g.fill();
+    g.fillStyle = '#F4F4F6'; g.beginPath(); g.ellipse(0, -31, 14, 12, 0, 0, TAU); g.fill();
+    g.fillStyle = '#2B2B35';
+    g.beginPath(); g.ellipse(-7, -36, 6, 6.5, -0.3, 0, TAU); g.fill();
+    g.beginPath(); g.ellipse(7, -36, 6, 6.5, 0.3, 0, TAU); g.fill();
+    g.fillStyle = '#FF9F1C';
+    g.beginPath(); g.arc(-7, -36, 4.2, 0, TAU); g.fill();
+    g.beginPath(); g.arc(7, -36, 4.2, 0, TAU); g.fill();
+    g.fillStyle = '#111';
+    g.beginPath(); g.arc(-7 + 0.8, -36 + 0.6, 2, 0, TAU); g.fill();
+    g.beginPath(); g.arc(7 + 0.8, -36 + 0.6, 2, 0, TAU); g.fill();
+    g.fillStyle = '#2B2B35'; g.beginPath(); g.ellipse(0, -26, 4, 3, 0, 0, TAU); g.fill();
+    g.strokeStyle = '#2B2B35'; g.lineWidth = 1.6;
+    if(o.cheer){ g.fillStyle = '#E05A7A'; g.beginPath(); g.arc(0, -23, 4.5, 0.05*Math.PI, 0.95*Math.PI); g.closePath(); g.fill(); }
+    else { g.beginPath(); g.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI); g.stroke(); }
+    // the boss's yellow hard hat
+    g.fillStyle = '#FFD43B'; g.strokeStyle = O; g.lineWidth = 2.6;
+    g.beginPath(); g.ellipse(0, -50, 17, 13, 0, Math.PI, TAU); g.closePath(); g.fill(); g.stroke();
+    rr(g, -22, -52, 44, 6, 3); g.fill(); g.stroke();
+    g.strokeStyle = '#E8A200'; g.lineWidth = 3; line(g, 0, -62, 0, -53);
+    g.restore();
+  }
+
+  // ----- things to find -----
+  function drawNugget(g, r, ph){
+    g.save(); g.lineJoin = 'round';
+    g.fillStyle = '#FFC21A'; g.strokeStyle = O; g.lineWidth = r*0.16;
+    poly(g, [[-r, 0.2*r], [-0.7*r, -0.5*r], [-0.1*r, -0.85*r], [0.6*r, -0.6*r], [r, 0.05*r], [0.7*r, 0.65*r], [-0.2*r, 0.8*r], [-0.8*r, 0.6*r]]); g.fill(); g.stroke();
+    g.fillStyle = '#FFE066'; poly(g, [[-0.6*r, -0.3*r], [-0.1*r, -0.6*r], [0.4*r, -0.4*r], [0.1*r, -0.05*r], [-0.4*r, 0.05*r]]); g.fill();
+    g.fillStyle = '#E8A200'; ell(g, 0.35*r, 0.35*r, 0.18*r, 0.12*r); g.fill(); ell(g, -0.45*r, 0.35*r, 0.12*r, 0.09*r); g.fill();
+    const tw = reduced ? 0.6 : (Math.sin(clock*4 + (ph || 0)) + 1)/2;
+    if(tw > 0.3) twinkle(g, 0.55*r, -0.7*r, r*0.45*tw, '#fff');
+    g.restore();
+  }
+  function drawHat(g, r){
+    g.save(); g.lineJoin = 'round';
+    g.fillStyle = '#FFD43B'; g.strokeStyle = O; g.lineWidth = r*0.14;
+    g.beginPath(); g.ellipse(0, 0.15*r, 0.82*r, 0.75*r, 0, Math.PI, TAU); g.closePath(); g.fill(); g.stroke();
+    rr(g, -r, 0.05*r, 2*r, 0.3*r, 0.15*r); g.fill(); g.stroke();
+    g.strokeStyle = '#E8A200'; g.lineWidth = r*0.16; line(g, 0, -0.55*r, 0, 0);
+    g.fillStyle = 'rgba(255,255,255,0.6)'; ell(g, -0.38*r, -0.28*r, 0.2*r, 0.1*r, -0.6); g.fill();
+    g.restore();
+  }
+  function twinkle(g, x, y, r, col){
+    g.fillStyle = col; g.beginPath();
+    g.moveTo(x, y - r); g.quadraticCurveTo(x, y, x + r, y); g.quadraticCurveTo(x, y, x, y + r); g.quadraticCurveTo(x, y, x - r, y); g.quadraticCurveTo(x, y, x, y - r); g.fill();
+  }
+  // little pictures for the score pills and panels
+  const iconCache = {};
+  function icon(id){
+    if(iconCache[id]) return iconCache[id];
+    const c = document.createElement('canvas'); c.width = c.height = 64;
+    const g = c.getContext('2d'); g.translate(32, 34);
+    if(id === 'nug'){ const sv = clock; clock = 1.2; drawNugget(g, 24, 0); clock = sv; }
+    else if(id === 'hat') drawHat(g, 26);
+    else if(id === 'bone'){ g.rotate(-0.5); drawBone(g, 54); }
+    else if(id === 'bone-off'){ g.rotate(-0.5); g.globalAlpha = 0.25; drawBone(g, 54); }
+    return (iconCache[id] = c.toDataURL());
+  }
+
+  // ===== LAYOUT (works out how big the maze can be on this screen) =====
+  let lastSize = '';
+  function layout(force){
+    const st = getComputedStyle(stage);
+    const pw = stage.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
+    const ph = stage.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom);
+    const key = pw + 'x' + ph + ':' + NX + ':' + (window.devicePixelRatio || 1);
+    if(!force && key === lastSize) return;
+    lastSize = key;
+    // Tipper's parking bay goes beside the maze on wide screens, underneath it on tall ones
+    const cR = Math.min(pw/(NX + BAY + PAD*2), ph/(NY + PAD*2));
+    const cB = Math.min(pw/(NX + PAD*2), ph/(NY + BAY + PAD*2));
+    const bay = cR >= cB*0.97 ? 'right' : 'bottom';
+    const cs = Math.max(6, Math.floor((bay === 'right' ? cR : cB)*4)/4);
+    const W = Math.round(cs*(NX + PAD*2 + (bay === 'right' ? BAY : 0)));
+    const H = Math.round(cs*(NY + PAD*2 + (bay === 'bottom' ? BAY : 0)));
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    L = {cs, ox: cs*PAD, oy: cs*PAD, bay, W, H, dpr};
+    board.style.width = W + 'px'; board.style.height = H + 'px';
+    cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
+  }
+  if(window.ResizeObserver) new ResizeObserver(() => layout()).observe(stage);
+  addEventListener('resize', () => layout());
+
+  // where things are, in maze squares (0,0 = top-left corner of the maze)
+  function tipperSpot(){
+    return L.bay === 'right' ? {x: NX + BAY/2 + 0.02, y: NY - 0.06, s: 1.42/260} : {x: NX - 1.25, y: NY + BAY - 0.12, s: 1.42/260};
+  }
+  function lennySpot(){
+    return L.bay === 'right' ? {x: NX + BAY/2 + 0.05, y: 1.45, s: 1.15/110} : {x: 0.75, y: NY + BAY - 0.08, s: 1.15/110};
+  }
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.gain.value = sfxOn ? 1 : 0; sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.26 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.02);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  const now = () => actx ? actx.currentTime : 0;
+  function hornAt(freqs, d, len, vol){
+    if(!audio()) return;
+    const t = actx.currentTime + d, g = actx.createGain(), lp = actx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 1600;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.02); g.gain.setValueAtTime(vol, t + len - 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+    lp.connect(g).connect(sfxBus);
+    freqs.forEach(f => { const o = actx.createOscillator(); o.type = 'square'; o.frequency.setValueAtTime(f*1.04, t); o.frequency.exponentialRampToValueAtTime(f, t + 0.05); o.connect(lp); o.start(t); o.stop(t + len + 0.02); });
+  }
+  const sfx = {
+    putt(){ if(!audio()) return; tone(rand(68, 78), 0.09, 'triangle', 0.13, 44); noise(now(), 0.07, 'lowpass', 420, 1, 0.05, 0.005); },
+    scoop(){ if(!audio()) return; const t = now();
+      noise(t, 0.3, 'bandpass', 600, 1.2, 0.16, 0.02, null, 2200);       // shhhk into the dirt
+      tone(180, 0.22, 'triangle', 0.12, 420, 0.02);                        // whoop up
+      noise(t + 0.22, 0.22, 'lowpass', 500, 0.8, 0.14, 0.01);             // flump
+      [0.26, 0.31, 0.37, 0.44].forEach(d => noise(t + d, 0.05, 'bandpass', rand(1400, 2600), 2, 0.04, 0.004)); },
+    bump(){ if(!audio()) return; const t = now(), o = actx.createOscillator(), g = actx.createGain();
+      o.type = 'sine'; o.frequency.setValueAtTime(240, t); o.frequency.exponentialRampToValueAtTime(130, t + 0.16);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.2, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.2);
+      o.connect(g).connect(sfxBus); o.start(t); o.stop(t + 0.22); },
+    clonk(){ if(!audio()) return; tone(520, 0.12, 'square', 0.04, 380); tone(160, 0.2, 'sine', 0.15, 90); },
+    ding(n){ const f = 1046*Math.pow(2, Math.min(n, 8)/12); tone(f, 0.6, 'sine', 0.14); tone(f*1.5, 0.7, 'sine', 0.07, null, 0.09); tone(f*2, 0.4, 'sine', 0.03, null, 0.09); },
+    hat(){ [659, 880, 1175].forEach((f, i) => tone(f, 0.22, 'triangle', 0.12, null, i*0.07)); tone(1568, 0.4, 'sine', 0.05, null, 0.22); },
+    bone(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.7 : 0.2, 'triangle', 0.14, null, i*0.1)); [1568, 2093, 2637].forEach((f, i) => tone(f, 0.4, 'sine', 0.05, null, 0.7 + i*0.08)); },
+    splash(){ if(!audio()) return; noise(now(), 0.45, 'lowpass', 1800, 0.7, 0.13, 0.01, null, 500); for(let i = 0; i < 4; i++) tone(rand(300, 500), 0.1, 'sine', 0.06, rand(900, 1400), i*0.06); },
+    sparkle(){ [1319, 1568, 2093, 2637].forEach((f, i) => tone(f, 0.35, 'sine', 0.08, null, i*0.07)); tone(3136, 0.5, 'sine', 0.03, null, 0.3); },
+    button(){ if(!audio()) return; tone(220, 0.12, 'square', 0.06, 160); [523, 659, 784, 1047].forEach((f, i) => tone(f, 0.25, 'triangle', 0.12, null, 0.12 + i*0.09)); noise(now() + 0.15, 0.6, 'bandpass', 900, 1, 0.05, 0.1, null, 2000); },
+    beep(){ hornAt([659, 831], 0, 0.16, 0.11); hornAt([659, 831], 0.24, 0.22, 0.11); },
+    vroom(){ if(!audio()) return; const t = now(); const o = actx.createOscillator(), g = actx.createGain(), lp = actx.createBiquadFilter();
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(190, t + 0.9); lp.type = 'lowpass'; lp.frequency.value = 700;
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.1, t + 0.1); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
+      o.connect(lp).connect(g).connect(sfxBus); o.start(t); o.stop(t + 1.15); },
+    tip(){ if(!audio()) return; noise(now(), 0.9, 'lowpass', 380, 0.8, 0.12, 0.1, null, 160); for(let i = 0; i < 6; i++) tone(rand(900, 1500), 0.12, 'sine', 0.05, null, 0.15 + i*0.08); },
+    cheer(){ if(!audio()) return; for(let i = 0; i < 7; i++){ const f = rand(520, 900); tone(f, 0.35, 'triangle', 0.04, f*1.5, i*0.06 + rand(0, 0.1)); } noise(now(), 1.2, 'bandpass', 1500, 0.6, 0.05, 0.3); },
+    win(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.8 : 0.2, 'triangle', 0.13, null, i*0.11)); [262, 330, 392].forEach(f => tone(f, 1.2, 'sine', 0.06, null, 0.66)); },
+    giggle(){ [880, 740, 988, 784, 1047].forEach((f, i) => tone(f, 0.08, 'triangle', 0.09, f*0.85, i*0.085)); },
+    tap(){ tone(660, 0.07, 'triangle', 0.08); }
+  };
+  // background music: the happy, bouncy building-site tune from Chomper's Digger
+  const ROOTS = [48, 53, 55, 48, 45, 53, 55, 48];
+  const MELODY = [
+    72,0,74,76,79,0,76,0,   77,0,76,74,72,0,69,0,
+    71,0,74,0,79,77,76,74,  72,0,76,0,72,0,0,0,
+    76,0,79,0,81,79,76,0,   77,0,81,0,79,0,77,0,
+    76,74,72,0,74,0,79,0,   72,0,76,79,72,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+  const stepLen = () => 60/100/2;
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = ROOTS[bar], d = t - actx.currentTime, S = stepLen();
+    if(beat === 0 || beat === 4) tone(hz(root - 12 + (beat === 4 ? 7 : 0)), S*1.6, 'triangle', 0.26, null, d, musicBus);
+    if(beat === 2 || beat === 6) [0, root === 45 ? 3 : 4, 7].forEach(n => tone(hz(root + 12 + n), 0.16, 'sine', 0.035, null, d, musicBus));
+    const m = MELODY[i];
+    if(m){ tone(hz(m), S*1.5, 'triangle', 0.07, null, d, musicBus); tone(hz(m + 12), 0.07, 'sine', 0.025, null, d, musicBus); }
+    if(beat % 2 === 1) noise(t, 0.035, 'highpass', 7000, 0.7, 0.016, 0.003, musicBus);
+    if(beat === 0 || beat === 4) tone(80, 0.12, 'sine', 0.2, 40, d, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){ playStep(mStep, mNext); mNext += stepLen(); mStep = (mStep + 1) % 64; }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  document.addEventListener('visibilitychange', () => {
+    held.length = 0; paintPad();
+    if(!actx) return;
+    if(document.hidden) actx.suspend(); else actx.resume();
+  });
+  addEventListener('blur', () => { held.length = 0; paintPad(); });
+
+  const musicBtn = $('musicBtn'), sfxBtn = $('sfxBtn');
+  function paintSoundBtns(){
+    // the words sit in a span so phones can show just the picture (screen readers still hear them)
+    musicBtn.innerHTML = '🎵<span class="lbl"> Music ' + (musicOn ? 'on' : 'off') + '</span>';
+    musicBtn.setAttribute('aria-pressed', musicOn); musicBtn.classList.toggle('off', !musicOn);
+    sfxBtn.innerHTML = (sfxOn ? '🔊' : '🔈') + '<span class="lbl"> Sounds ' + (sfxOn ? 'on' : 'off') + '</span>';
+    sfxBtn.setAttribute('aria-pressed', sfxOn); sfxBtn.classList.toggle('off', !sfxOn);
+    if(actx){
+      musicBus.gain.cancelScheduledValues(actx.currentTime); musicBus.gain.setTargetAtTime(musicOn ? 0.26 : 0, actx.currentTime, 0.1);
+      sfxBus.gain.setTargetAtTime(sfxOn ? 1 : 0, actx.currentTime, 0.05);
+    }
+  }
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save(KEY + 'music', musicOn); wake(); startMusic(); paintSoundBtns(); musicBtn.blur(); });
+  sfxBtn.addEventListener('click', () => { sfxOn = !sfxOn; save(KEY + 'sfx', sfxOn); wake(); startMusic(); paintSoundBtns(); sfxBtn.blur(); });
+  paintSoundBtns();
+
+  // ===== HUD =====
+  function updateHud(bumpId){
+    const n = items.filter(i => i.kind === 'nug'), h = items.filter(i => i.kind === 'hat'), b = items.find(i => i.kind === 'bone');
+    const gn = n.filter(i => i.got).length, gh = h.filter(i => i.got).length;
+    lvlPill.textContent = 'Level ' + (level + 1);
+    nugPill.innerHTML = '<img alt="" src="' + icon('nug') + '">' + gn + '/' + n.length;
+    nugPill.setAttribute('aria-label', 'Gold nuggets: ' + gn + ' of ' + n.length);
+    hatPill.innerHTML = '<img alt="" src="' + icon('hat') + '">' + gh + '/' + h.length;
+    hatPill.setAttribute('aria-label', 'Hard hats: ' + gh + ' of ' + h.length);
+    bonePill.innerHTML = '<img alt="" src="' + icon(b && b.got ? 'bone' : 'bone-off') + '">' + (b && b.got ? '✓' : '');
+    bonePill.setAttribute('aria-label', 'Dinosaur bone: ' + (b && b.got ? 'found' : 'not found yet'));
+    nugPill.classList.toggle('done', gn === n.length); hatPill.classList.toggle('done', gh === h.length); bonePill.classList.toggle('done', !!(b && b.got));
+    const el = {nug: nugPill, hat: hatPill, bone: bonePill}[bumpId];
+    if(el){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  }
+
+  // ===== STARTING A LEVEL =====
+  function startLevel(i, seed){
+    level = clamp(i, 0, LEVELS.length - 1); lv = LEVELS[level];
+    prog.cur = level; saveProg();
+    const R = rng(seed != null ? seed : (Math.random()*1e9)|0);
+    NX = NY = lv.n;
+    layout(true);
+    makeMaze(R);
+    placeThings(R);
+    Object.assign(dig, {x: 0, y: 0, fx: 0, fy: 0, face: 1, tilt: 0, dir: 1, roll: null, move: null, scoop: null, bumpT: 0, happyT: 0, lastDir: 1});
+    queued = null; held.length = 0; paintPad();
+    gateOpen = !lv.button; gateA = gateOpen ? 1 : 0;
+    Object.assign(tip, {st: 'wait', t: 0, dx: 0, trayA: 0, heap: 0, happyT: 0, honkT: 0, wheel: 0, bounce: 0});
+    tracks = []; parts = []; words = []; flyers = []; hint = null; digs = 0;
+    phase = 'play'; endT = 0; newBone = false; skeletonJustDone = false;
+    overlay.hidden = true;
+    updateHud();
+    lennySay(lv.say, 4);
+    lenny.cheerT = 1;
+  }
+  function lennySay(text, dur){ lenny.say = text; lenny.sayT = dur || 2.6; }
+
+  // ===== DRIVING =====
+  const SPEED = 4.2;                         // squares per second
+  function heldDir(){ return held.length ? held[held.length - 1] : null; }
+  function junction(x, y, from){
+    // a "junction" is a square with more than one new way to go (a dirt wall you could dig counts as a way to go,
+    // so the digger stops beside it and little ones can choose to dig there)
+    let c = 0; for(let d = 0; d < 4; d++){ if(d === (from + 2) % 4) continue; const t = wallType(x, y, d); if(t === OPEN || t === DIRT) c++; }
+    return c >= 2;
+  }
+  function request(d){
+    if(phase !== 'play') return;
+    wake(); startMusic();
+    if(dig.move){
+      // turning right round: go straight back the way we came
+      if(d === (dig.move.d + 2) % 4){
+        const m = dig.move;
+        dig.move = {fx: m.tx, fy: m.ty, tx: m.fx, ty: m.fy, d, t: 1 - m.t};
+        dig.x = m.tx; dig.y = m.ty; dig.roll = d; faceTo(d); queued = null; puff();
+        return;
+      }
+      queued = d; return;
+    }
+    if(dig.scoop){ queued = d; return; }
+    tryGo(d, true);
+  }
+  function faceTo(d){
+    if(d === 1) dig.face = 1; else if(d === 3) dig.face = -1;
+    dig.tilt = d === 0 ? -0.2 : d === 2 ? 0.2 : 0;
+    dig.dir = d;
+  }
+  // try to drive (or dig) one way; returns true if the digger set off
+  function tryGo(d, fresh){
+    const t = wallType(dig.x, dig.y, d);
+    if(t === OPEN){ startMove(d); return true; }
+    if(t === DIRT){ startScoop(d); return true; }
+    if(fresh){
+      faceTo(d);
+      dig.bumpT = 0.35; dig.bumpDir = d;
+      if(t === GATE && !gateOpen){ sfx.clonk(); lennySay('Find the big red button to open the gate!', 3); }
+      else if(t === ROCK){ sfx.bump(); if(Math.random() < 0.35) lennySay('Rocks are too hard to dig!', 2); }
+      else sfx.bump();
+    }
+    return false;
+  }
+  function startMove(d){
+    if(d !== dig.lastDir) puff();
+    faceTo(d); dig.lastDir = d;
+    dig.move = {fx: dig.x, fy: dig.y, tx: dig.x + DX[d], ty: dig.y + DY[d], d, t: 0};
+    dig.roll = d;
+  }
+  function startScoop(d){
+    faceTo(d); dig.lastDir = d;
+    dig.scoop = {d, t: 0, done: false};
+    dig.roll = d;
+  }
+  function puff(){
+    if(reduced) return;
+    for(let i = 0; i < 5; i++) parts.push({kind: 'dust', x: dig.fx + 0.5 - dig.face*0.35 + rand(-0.1, 0.1), y: dig.fy + 0.82 + rand(-0.05, 0.05), vx: -dig.face*rand(0.2, 0.7), vy: rand(-0.5, -0.1), z: 0, vz: 0, r: rand(0.07, 0.13), life: 1, decay: rand(1.3, 2)});
+  }
+  function arrive(){
+    const x = dig.x, y = dig.y;
+    // collect anything here
+    items.forEach(it => {
+      if(it.got || it.x !== x || it.y !== y) return;
+      it.got = true;
+      burst(x + 0.5, y + 0.5, it.kind === 'bone' ? ['#FFF6E0', '#FFD43B', '#FF9ACB'] : ['#FFD43B', '#FFF3B0', '#FFC21A'], it.kind === 'bone' ? 26 : 14);
+      if(it.kind === 'nug'){ const n = items.filter(i => i.kind === 'nug' && i.got).length; sfx.ding(n); popWord('Ding!', x + 0.5, y + 0.2, '#E8A200'); }
+      else if(it.kind === 'hat'){ sfx.hat(); popWord('A hard hat!', x + 0.5, y + 0.2, '#E8A200'); }
+      else { sfx.bone(); popWord('A dino bone!', x + 0.5, y + 0.1, '#FF4F9A'); dig.happyT = 2.2; lenny.cheerT = 2; lennySay('Wow, a dinosaur bone!', 2.5); }
+      updateHud(it.kind);
+    });
+    // splash!
+    puddles.forEach(p => { if(p.x === x && p.y === y){ p.splashT = 1; sfx.splash(); splash(x + 0.5, y + 0.5); if(Math.random() < 0.5) popWord('Splash!', x + 0.5, y + 0.2, '#1C7ED6'); } });
+    // the big red button opens the gate
+    if(button && !button.pressed && button.x === x && button.y === y){
+      button.pressed = true; gateOpen = true; sfx.button();
+      popWord('Click!', x + 0.5, y + 0.2, '#E03131');
+      lenny.cheerT = 2.6; lennySay('Hooray! The gate is open!', 3);
+      setTimeout(() => { if(phase === 'play') sfx.cheer(); }, 350);
+    }
+    // made it to Tipper!
+    if(x === NX - 1 && y === NY - 1 && gateOpen){ finish(); return; }
+    if(x === NX - 1 && y === NY - 1 && !gateOpen){ lennySay('The gate is shut! Find the big red button!', 3); }
+    decide(true);
+  }
+  // what to do next after arriving somewhere
+  function decide(arrived){
+    const want = queued !== null ? queued : heldDir();
+    if(want !== null){
+      const t = wallType(dig.x, dig.y, want);
+      if(t === OPEN || t === DIRT){ queued = null; tryGo(want, false); return; }
+    }
+    // keep rolling along a corridor until a turn or a junction
+    const f = dig.roll;
+    if(arrived && f !== null && isOpen(dig.x, dig.y, f) && !junction(dig.x, dig.y, f)){ startMove(f); return; }
+    dig.roll = null;
+    if(want !== null && queued !== null){ tryGo(want, true); }
+    queued = null;
+  }
+
+  // ===== PARTICLES AND WORDS =====
+  function burst(x, y, cols, n){
+    if(reduced) n = Math.min(n, 6);
+    for(let i = 0; i < n; i++){ const a = rand(0, TAU), sp = rand(0.6, 2.2); parts.push({kind: 'spark', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, z: 0, vz: 0, r: rand(0.04, 0.08), col: cols[i % cols.length], life: 1, decay: rand(1.2, 1.8)}); }
+  }
+  function dirtFly(x, y, d){
+    const n = reduced ? 6 : 18;
+    for(let i = 0; i < n; i++){
+      const a = Math.atan2(DY[d], DX[d]) + rand(-1.3, 1.3), sp = rand(0.6, 2.4);
+      parts.push({kind: 'dirt', x: x + rand(-0.2, 0.2), y: y + rand(-0.2, 0.2), vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, z: rand(0, 0.1), vz: rand(1.6, 3.4), r: rand(0.05, 0.11), col: ['#8A5A34', '#A56B3B', '#6E4426', '#C58A52'][i % 4], life: 1, decay: rand(0.5, 0.8)});
+    }
+  }
+  function splash(x, y){
+    const n = reduced ? 5 : 14;
+    for(let i = 0; i < n; i++){ const a = rand(0, TAU), sp = rand(0.5, 1.6); parts.push({kind: 'drop', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp, z: 0, vz: rand(1.2, 2.6), r: rand(0.04, 0.07), col: i % 3 ? '#74C0FC' : '#A5D8FF', life: 1, decay: rand(0.9, 1.4)}); }
+  }
+  function confetti(x, y, n){
+    const cols = ['#FF4F9A', '#FFD43B', '#7B4FD6', '#51CF66', '#4DABF7', '#FF922B'];
+    for(let i = 0; i < (reduced ? 10 : n); i++){ const a = rand(-Math.PI*0.9, -Math.PI*0.1), sp = rand(2, 5); parts.push({kind: 'conf', x, y, vx: Math.cos(a)*sp*0.7, vy: Math.sin(a)*sp, z: 0, vz: 0, r: rand(0.06, 0.1), col: cols[i % cols.length], rot: rand(0, TAU), spin: rand(-8, 8), life: 1, decay: rand(0.35, 0.55)}); }
+  }
+  function popWord(text, x, y, col){ words.push({text, x, y, t: 0, col: col || '#FF4F9A'}); }
+
+  // ===== HINT: a sparkly path to the nearest thing still to find (or the way out) =====
+  function showHint(){
+    if(phase !== 'play') return;
+    wake(); startMusic();
+    const sx = dig.move ? dig.move.tx : dig.x, sy = dig.move ? dig.move.ty : dig.y;
+    const prev = Array.from({length: NY}, () => new Array(NX).fill(null));
+    const seen = Array.from({length: NY}, () => new Array(NX).fill(false));
+    const targets = new Set(items.filter(i => !i.got).map(i => i.x + ',' + i.y));
+    if(!targets.size){
+      if(!gateOpen && button) targets.add(button.x + ',' + button.y);
+      else targets.add((NX - 1) + ',' + (NY - 1));
+    }
+    const q = [[sx, sy]]; seen[sy][sx] = true; let end = null;
+    if(targets.has(sx + ',' + sy) && targets.size > 1) targets.delete(sx + ',' + sy);
+    while(q.length){
+      const [x, y] = q.shift();
+      if(targets.has(x + ',' + y)){ end = [x, y]; break; }
+      for(let d = 0; d < 4; d++){
+        if(!isOpen(x, y, d)) continue;
+        const nx = x + DX[d], ny = y + DY[d];
+        if(!seen[ny][nx]){ seen[ny][nx] = true; prev[ny][nx] = [x, y]; q.push([nx, ny]); }
+      }
+    }
+    if(!end) return;
+    const path = [];
+    for(let p = end; p; p = prev[p[1]][p[0]]) path.unshift(p);
+    hint = {path, t: 3.2};
+    sfx.sparkle();
+  }
+
+  // ===== THE END OF A LEVEL: tip the treasure into Tipper =====
+  function finish(){
+    phase = 'end'; endT = 0;
+    dig.move = null; dig.scoop = null; dig.roll = null; queued = null; held.length = 0; paintPad();
+    hint = null;
+    faceTo(L.bay === 'right' ? 1 : 3);
+    dig.tilt = L.bay === 'right' ? 0 : 0.12;
+    const total = items.length, got = items.filter(i => i.got).length;
+    endStars = got === total ? 3 : got >= Math.ceil(total/2) ? 2 : 1;
+    const bone = items.find(i => i.kind === 'bone');
+    const hadAll = prog.bones.every(b => b);
+    newBone = !!(bone && bone.got && !prog.bones[level]);
+    if(bone && bone.got) prog.bones[level] = 1;
+    skeletonJustDone = !hadAll && prog.bones.every(b => b);
+    prog.stars[level] = Math.max(prog.stars[level], endStars);
+    if(level + 2 > prog.unlocked) prog.unlocked = Math.min(6, level + 2);
+    prog.cur = Math.min(5, level + 1);
+    saveProg();
+    // the things Chomper found fly into Tipper's tray
+    const found = items.filter(i => i.got);
+    found.forEach((it, i) => flyers.push({kind: it.kind, t: -0.45 - i*0.12, dur: 0.75}));
+    if(!found.length) flyers.push({kind: 'dirt', t: -0.45, dur: 0.75});
+  }
+  function updateEnd(dt){
+    const t0 = endT; endT += dt;
+    const at = s => t0 < s && endT >= s;
+    if(at(0.25)) sfx.tip();
+    if(at(0.5)) lennySay(endStars === 3 ? 'You found everything! Super digging!' : 'Great driving, Chomper!', 3.5);
+    tip.heap = clamp(flyers.filter(f => f.t >= f.dur).length/Math.max(1, flyers.length), 0, 1);
+    if(at(1.6)){ tip.honkT = 0.9; tip.happyT = 3; sfx.beep(); const p = tipperSpot(); popWord('Beep beep!', p.x + 0.2, p.y - 1.15, '#E8590C'); }
+    if(at(2.1)){ sfx.vroom(); sfx.win(); lenny.cheerT = 3; dig.happyT = 3;
+      for(let i = 0; i < 3; i++) confetti(rand(0.25, 0.75)*NX, NY*0.55, 28); }
+    if(endT > 2.1){ tip.st = 'go'; tip.dx += dt*ease((endT - 2.1)/0.8)*3.4; tip.wheel += dt*12; }
+    if(at(2.6)) sfx.cheer();
+    if(at(3.6)){ if(skeletonJustDone) showBones('finale'); else showEnd(); }
+  }
+
+  // ===== PANELS =====
+  const starSvg = on => '<svg viewBox="0 0 24 24" aria-hidden="true"' + (on ? ' class="on"' : '') + '><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.5L12 17.2 6.1 20.4l1.3-6.5L2.5 9.3l6.6-.8z" fill="' + (on ? '#FFC21A' : '#EEE6D2') + '" stroke="' + (on ? '#E8A200' : '#D9CFB6') + '" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+  let panelAt = 0;
+  function showPanel(html){
+    panel.innerHTML = html;
+    overlay.hidden = false; panelAt = performance.now();
+    const b = $('ovBtn'); if(b) setTimeout(() => { try { b.focus({preventScroll: true}); } catch(e){} }, 30);
+  }
+  function heroPic(){
+    // a little picture of Chomper in the digger with Tipper, for the start panel
+    const c = document.createElement('canvas'); c.width = 600; c.height = 300;
+    const g = c.getContext('2d');
+    g.fillStyle = '#FFF4D6'; rr(g, 0, 0, 600, 300, 30); g.fill();
+    g.fillStyle = '#F2D592'; rr(g, 0, 210, 600, 90, 0); g.fill();
+    g.fillStyle = '#A56B3B'; g.strokeStyle = O; g.lineWidth = 4;
+    [[300, 236, 42], [336, 226, 30], [270, 228, 26]].forEach(([x, y, r]) => { ell(g, x, y, r, r*0.75); g.fill(); g.stroke(); });
+    g.save(); g.translate(150, 262); g.scale(0.72, 0.72); drawDigger(g, {reach: 0.7, curl: 0.2, load: 1, happy: true}); g.restore();
+    g.save(); g.translate(500, 262); g.scale(0.62, 0.62); drawTipper(g, {happy: true, heap: 0.6}); g.restore();
+    return c.toDataURL();
+  }
+  let heroUrl = null;
+  function levelButtons(){
+    return '<div class="levels">' + LEVELS.map((L2, i) => {
+      const locked = i + 1 > prog.unlocked && !TEST_ALL;
+      const st = prog.stars[i];
+      return '<button type="button" data-lv="' + i + '"' + (locked ? ' disabled' : '') + (i === prog.cur ? ' class="now"' : '') + ' aria-label="Level ' + (i + 1) + ': ' + L2.name + (locked ? ', locked' : ', ' + st + ' stars') + '">' +
+        (prog.bones[i] ? '<img class="bn" alt="" src="' + icon('bone') + '">' : '') +
+        '<span class="num">' + (locked ? '🔒' : (i + 1)) + '</span><span class="nm">' + L2.icon + ' ' + L2.name + '</span>' +
+        '<span class="st"><i>' + '★'.repeat(st) + '</i>' + '★'.repeat(3 - st) + '</span></button>';
+    }).join('') + '</div>';
+  }
+  let TEST_ALL = false;
+  function showMenu(){
+    phaseBefore = phase;
+    if(!heroUrl) heroUrl = heroPic();
+    const cur = clamp(prog.cur, 0, prog.unlocked - 1);
+    const bones = prog.bones.filter(b => b).length;
+    showPanel('<h2>Chomper\'s Digger Maze</h2>' +
+      '<img class="hero" alt="" src="' + heroUrl + '">' +
+      '<p>Drive Chomper\'s digger through the maze to Tipper. <b>Brown dirt walls can be dug!</b></p>' +
+      '<button id="ovBtn" type="button" data-go="lv' + cur + '">' + (prog.stars.some(s => s) ? 'Play level ' + (cur + 1) + ' ▶' : 'Let\'s dig! ▶') + '</button>' +
+      levelButtons() +
+      '<button class="ghost" type="button" data-go="bones">🦴 Dino bones (' + bones + ' of 6)</button>' +
+      '<div class="key"><span>⬅️ ➡️ Arrows or swipe</span><span>drive</span><span><b>Brown dirt</b></span><span>dig right through!</span><span>Gold, hats and a bone</span><span>collect them all for 3 stars</span></div>');
+  }
+  let phaseBefore = 'menu';
+  function showEnd(){
+    const n = items.filter(i => i.kind === 'nug'), h = items.filter(i => i.kind === 'hat'), b = items.find(i => i.kind === 'bone');
+    const last = level === LEVELS.length - 1;
+    const msg = endStars === 3 ? 'You found everything!' : endStars === 2 ? 'Great digging! Can you find everything next time?' : 'You made it to Tipper! Use the hint hard hat to find treasure.';
+    showPanel('<h2>' + (endStars === 3 ? 'Super digging!' : 'Hooray!') + ' Level ' + (level + 1) + ' done!</h2>' +
+      '<div class="stars" aria-label="' + endStars + ' stars">' + [0, 1, 2].map(i => starSvg(i < endStars)).join('') + '</div>' +
+      '<div class="got" aria-label="What you found">' +
+        '<span><img alt="Gold nuggets" src="' + icon('nug') + '">' + n.filter(i => i.got).length + '/' + n.length + '</span>' +
+        '<span><img alt="Hard hats" src="' + icon('hat') + '">' + h.filter(i => i.got).length + '/' + h.length + '</span>' +
+        '<span><img alt="Dinosaur bone" src="' + icon(b && b.got ? 'bone' : 'bone-off') + '">' + (b && b.got ? '✓' : '') + '</span></div>' +
+      '<p>' + msg + (newBone ? ' The ' + BONES[level].toLowerCase() + ' bone is on the Dino bones shelf!' : '') + '</p>' +
+      '<button id="ovBtn" type="button" data-go="' + (last ? 'menu' : 'lv' + (level + 1)) + '">' + (last ? 'All levels done! 🗺️' : 'Next level ▶') + '</button>' +
+      '<div class="row"><button class="ghost" type="button" data-go="lv' + level + '">🔁 Again</button><button class="ghost" type="button" data-go="menu">🗺️ Levels</button><button class="ghost" type="button" data-go="bones-end">🦴 Bones</button></div>');
+    // share this level's result (the panel is rebuilt each time, so there's only ever one share button)
+    if(window.LR && LR.shareButton){
+      const old = panel.querySelector('.lr-share'); if(old) old.remove();
+      const sb = LR.shareButton('I dug through level ' + (level + 1) + ' of Chomper\'s Digger Maze and got ' + endStars + ' star' + (endStars === 1 ? '' : 's') + '! 🚜', 'Share my dig');
+      panel.appendChild(sb);
+    }
+  }
+  function showBones(mode){
+    const n = prog.bones.filter(b => b).length, all = n === 6;
+    showPanel('<h2>' + (mode === 'finale' ? 'A whole dinosaur!' : 'Dino bones') + '</h2>' +
+      '<canvas class="skel" id="skel" width="800" height="460" aria-label="Dinosaur skeleton: ' + n + ' of 6 bones found"></canvas>' +
+      (all ? '<p class="say">Chomper: "That\'s my great-great-grandad!"</p>' : '<p>' + n + ' of 6 bones found. There is one bone hiding in every level!</p>') +
+      '<button id="ovBtn" type="button" data-go="' + (mode === 'finale' ? 'end' : mode === 'end' ? 'end' : 'menu') + '">' + (mode === 'finale' ? 'Hooray! ▶' : '◀ Back') + '</button>');
+    const c = $('skel'); drawSkeletonPanel(c.getContext('2d'), all, mode === 'finale');
+    if(mode === 'finale'){ sfx.bone(); setTimeout(sfx.giggle, 900); }
+  }
+  panel.addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b || b.classList.contains('lr-share')) return;
+    wake(); startMusic();
+    if(b.dataset.lv != null){ startLevel(+b.dataset.lv); return; }
+    const go = b.dataset.go || '';
+    if(go.startsWith('lv')){ startLevel(+go.slice(2)); return; }
+    if(go === 'menu') showMenu();
+    else if(go === 'bones') showBones('menu');
+    else if(go === 'bones-end') showBones('end');
+    else if(go === 'end') showEnd();
+    else if(go === 'resume'){ overlay.hidden = true; phase = 'play'; }
+  });
+  $('lvlBtn').addEventListener('click', () => {
+    wake(); startMusic(); $('lvlBtn').blur();
+    if(phase === 'end') return;
+    showMenu();
+    if(phase === 'play'){
+      // a "Keep driving" button, so the levels button works like a pause
+      const keep = document.createElement('button'); keep.type = 'button'; keep.className = 'ghost'; keep.dataset.go = 'resume'; keep.textContent = '▶ Keep driving level ' + (level + 1);
+      panel.insertBefore(keep, panel.querySelector('.levels'));
+      phase = 'paused';
+    }
+  });
+  $('hintBtn').addEventListener('click', () => { showHint(); $('hintBtn').blur(); });
+
+  // ----- the dinosaur skeleton (each level's bone is one piece) -----
+  function boneSeg(g, x1, y1, x2, y2, w){
+    // a bone with knobbly ends
+    const a = Math.atan2(y2 - y1, x2 - x1), len = Math.hypot(x2 - x1, y2 - y1);
+    g.save(); g.translate(x1, y1); g.rotate(a);
+    const r = w*0.62;
+    const path = () => { g.beginPath(); ell(g, 0, -r*0.6, r, r); ell(g, 0, r*0.6, r, r); };
+    [[0], [len]].forEach(([x]) => { g.save(); g.translate(x, 0); ell(g, 0, -r*0.6, r, r); g.fill(); g.stroke(); ell(g, 0, r*0.6, r, r); g.fill(); g.stroke(); g.restore(); });
+    rr(g, 0, -w/2, len, w, w/2); g.fill(); g.stroke();
+    g.save(); g.lineWidth = 0; [[0], [len]].forEach(([x]) => { ell(g, x, -r*0.6, r - 2.5, r - 2.5); g.fill(); ell(g, x, r*0.6, r - 2.5, r - 2.5); g.fill(); }); g.fillRect(0, -w/2 + 2.5, len, w - 5); g.restore();
+    g.restore();
+  }
+  function vert(g, x, y, r){ ell(g, x, y, r, r*0.8); g.fill(); g.stroke(); }
+  const SKEL = [
+    // 0 tail
+    g => { for(let i = 0; i < 9; i++){ const u = i/8; vert(g, lerp(40, 196, u), 170 - Math.sin(u*Math.PI*0.5)*44 - u*6, lerp(7, 15, u)); } },
+    // 1 back leg
+    g => { boneSeg(g, 222, 130, 206, 196, 15); boneSeg(g, 206, 196, 232, 252, 12); boneSeg(g, 232, 252, 270, 262, 9); boneSeg(g, 232, 258, 252, 270, 7); },
+    // 2 little arm
+    g => { boneSeg(g, 318, 128, 334, 160, 8); boneSeg(g, 334, 160, 352, 166, 6); },
+    // 3 ribs and back
+    (g, on) => { const rib = () => [250, 272, 294, 314].forEach((x, i) => { g.beginPath(); g.moveTo(x, 112 - i*3); g.quadraticCurveTo(x - 10, 150, x + 6, 170 - i*6); g.stroke(); });
+      g.save(); if(on){ g.lineWidth = 9; rib(); g.lineWidth = 5; g.strokeStyle = '#FFF6E0'; g.setLineDash([]); rib(); } else rib(); g.restore();
+      ell(g, 222, 124, 26, 18); g.fill(); g.stroke();
+      for(let i = 0; i < 6; i++) vert(g, lerp(218, 330, i/5), 110 - i*5, 13); },
+    // 4 neck
+    g => { for(let i = 0; i < 4; i++) vert(g, lerp(344, 380, i/3), lerp(84, 54, i/3), 11); },
+    // 5 head
+    (g, on) => { g.beginPath(); g.moveTo(372, 52); g.quadraticCurveTo(376, 10, 420, 12); g.quadraticCurveTo(470, 14, 476, 40); g.quadraticCurveTo(478, 60, 452, 64); g.lineTo(392, 70); g.quadraticCurveTo(372, 70, 372, 52); g.closePath(); g.fill(); g.stroke();
+      if(!on) return;
+      g.save(); g.fillStyle = '#5A4A6E'; ell(g, 418, 32, 10, 11); g.fill(); g.fillStyle = '#fff'; ell(g, 421, 28, 3.5, 3.5); g.fill(); ell(g, 456, 30, 3, 2.4); g.fillStyle = '#5A4A6E'; g.fill(); g.restore();
+      g.save(); g.lineWidth = 3; g.beginPath(); g.moveTo(398, 56); g.quadraticCurveTo(430, 66, 466, 50); g.stroke();
+      g.fillStyle = '#fff'; [406, 420, 434, 448].forEach(x => { poly(g, [[x, 58 + (x - 406)*0.02], [x + 5, 59], [x + 2.5, 66]]); g.fill(); g.stroke(); }); g.restore(); }
+  ];
+  function drawSkeletonPanel(g, all, finale){
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, 800, 460);
+    g.save(); g.scale(800/500, 800/500);
+    if(all){ g.translate(64, 12); g.scale(0.87, 0.87); }
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    // the ground
+    g.fillStyle = '#F1DDB4'; ell(g, 250, 272, 230, 14); g.fill();
+    SKEL.forEach((f, i) => {
+      g.save();
+      if(prog.bones[i]){ g.fillStyle = '#FFF6E0'; g.strokeStyle = O; g.lineWidth = 3.5; }
+      else { g.fillStyle = 'rgba(255,255,255,0)'; g.strokeStyle = 'rgba(138,90,52,0.35)'; g.lineWidth = 2.5; g.setLineDash([5, 6]); }
+      f(g, !!prog.bones[i]);
+      g.restore();
+    });
+    if(all){
+      // Chomper, very proud of great-great-grandad
+      g.save(); g.translate(-4, 300); g.scale(0.85, 0.85); drawChomperFig(g, {legs: true, hat: true, happy: true, armA: -0.9, dance: finale}); g.restore();
+      g.fillStyle = '#FF4F9A'; [[120, 40], [300, 26], [180, 70]].forEach(([x, y], i) => twinkle(g, x, y, 9 - i*2, i % 2 ? '#FFD43B' : '#FF4F9A'));
+    }
+    g.restore();
+  }
+
+  // ===== KEYBOARD, TOUCH AND MOUSE =====
+  const keyMap = {ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3, w: 0, d: 1, s: 2, a: 3, W: 0, D: 1, S: 2, A: 3};
+  addEventListener('keydown', e => {
+    if(!overlay.hidden){
+      // Enter or Space presses the big pink button (unless another button has been picked with Tab)
+      if((e.key === 'Enter' || e.key === ' ') && !(document.activeElement && document.activeElement.closest && document.activeElement.closest('#panel button'))){
+        const b = $('ovBtn'); if(b){ e.preventDefault(); b.click(); }
+      }
+      return;
+    }
+    const d = keyMap[e.key];
+    if(d != null){
+      e.preventDefault();
+      if(e.repeat) return;
+      if(!held.includes(d)) held.push(d);
+      request(d);
+    } else if(e.key === 'h' || e.key === 'H') showHint();
+  });
+  addEventListener('keyup', e => {
+    const d = keyMap[e.key];
+    if(d != null){ const i = held.indexOf(d); if(i >= 0) held.splice(i, 1); }
+  });
+  // on-screen arrows: press and hold to keep driving
+  const padBtns = [...document.querySelectorAll('.pad button')];
+  function paintPad(){ padBtns.forEach(b => b.classList.toggle('on', held.includes(+b.dataset.d))); }
+  padBtns.forEach(b => {
+    const d = +b.dataset.d;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      try { b.setPointerCapture(e.pointerId); } catch(err){}
+      if(!held.includes(d)) held.push(d);
+      paintPad(); request(d);
+    });
+    const up = () => { const i = held.indexOf(d); if(i >= 0) held.splice(i, 1); paintPad(); };
+    ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev => b.addEventListener(ev, up));
+    b.addEventListener('click', e => e.preventDefault());
+    b.addEventListener('contextmenu', e => e.preventDefault());
+  });
+  // swipe on the maze (or tap a spot next to the digger to drive that way)
+  let sw = null;
+  board.addEventListener('pointerdown', e => {
+    if(phase !== 'play') return;
+    sw = {x: e.clientX, y: e.clientY, moved: false};
+    try { board.setPointerCapture(e.pointerId); } catch(err){}
+  });
+  board.addEventListener('pointermove', e => {
+    if(!sw) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y, th = Math.max(18, L.cs*0.45);
+    if(Math.abs(dx) > th || Math.abs(dy) > th){
+      request(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+      sw.x = e.clientX; sw.y = e.clientY; sw.moved = true;
+    }
+  });
+  board.addEventListener('pointerup', e => {
+    if(!sw) return;
+    if(!sw.moved){
+      const r = board.getBoundingClientRect();
+      const px = (e.clientX - r.left - L.ox)/L.cs - (dig.fx + 0.5), py = (e.clientY - r.top - L.oy)/L.cs - (dig.fy + 0.5);
+      if(Math.hypot(px, py) > 0.45) request(Math.abs(px) > Math.abs(py) ? (px > 0 ? 1 : 3) : (py > 0 ? 2 : 0));
+    }
+    sw = null;
+  });
+  board.addEventListener('pointercancel', () => { sw = null; });
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt;
+    // blinking
+    dig.blinkT -= dt; if(dig.blinkT < 0){ dig.blink = 0.13; dig.blinkT = rand(2, 4.5); }
+    if(dig.blink > 0) dig.blink -= dt;
+    dig.happyT = Math.max(0, dig.happyT - dt);
+    dig.bumpT = Math.max(0, dig.bumpT - dt);
+    lenny.sayT = Math.max(0, lenny.sayT - dt); lenny.cheerT = Math.max(0, lenny.cheerT - dt);
+    lenny.hop = lenny.cheerT > 0 && !reduced ? Math.abs(Math.sin(clock*9))*10 : 0;
+    tip.happyT = Math.max(0, tip.happyT - dt); tip.honkT = Math.max(0, tip.honkT - dt);
+    tip.bounce = tip.honkT > 0 && !reduced ? -Math.abs(Math.sin(clock*18))*5 : 0;
+    if(hint){ hint.t -= dt; if(hint.t <= 0) hint = null; }
+    gateA = lerp(gateA, gateOpen ? 1 : 0, 1 - Math.pow(0.02, dt));
+    if(button) button.t += dt;
+    puddles.forEach(p => p.splashT = Math.max(0, p.splashT - dt*1.4));
+
+    if(phase === 'play'){
+      // driving along
+      if(dig.move){
+        const m = dig.move;
+        m.t += dt*SPEED;
+        dig.tread += dt*SPEED*30;
+        dig.puttT -= dt; if(dig.puttT <= 0){ sfx.putt(); dig.puttT = 0.12; }
+        if(m.t >= 1){
+          tracks.push({x1: m.fx, y1: m.fy, x2: m.tx, y2: m.ty, t: clock});
+          if(tracks.length > 700) tracks.shift();
+          dig.x = m.tx; dig.y = m.ty; dig.fx = m.tx; dig.fy = m.ty;
+          const over = (m.t - 1)/SPEED;
+          dig.move = null;
+          arrive();
+          if(dig.move && over > 0) dig.move.t = Math.min(0.9, over*SPEED);
+        } else { dig.fx = lerp(m.fx, m.tx, m.t); dig.fy = lerp(m.fy, m.ty, m.t); }
+      } else if(dig.scoop){
+        // scooping a dirt wall away
+        const s = dig.scoop;
+        s.t += dt/0.62;
+        if(!s.done && s.t >= 0.42){
+          s.done = true;
+          setWall(dig.x, dig.y, s.d, OPEN); digs++;
+          const wx = dig.x + 0.5 + DX[s.d]*0.5, wy = dig.y + 0.5 + DY[s.d]*0.5;
+          dirtFly(wx, wy, s.d); sfx.scoop();
+          popWord('Scoop!', wx, wy - 0.25, '#8A5A34');
+          if(digs === 1 && level === 0) lennySay('Great digging! A shortcut!', 2.6);
+        }
+        if(s.t >= 1){ dig.scoop = null; startMove(s.d); }
+      } else if(heldDir() !== null || queued !== null){
+        decide(false);
+      }
+    } else if(phase === 'end'){
+      updateEnd(dt);
+      flyers.forEach(f => f.t += dt);
+    }
+
+    // particles
+    parts = parts.filter(p => p.life > 0);
+    parts.forEach(p => {
+      p.x += p.vx*dt; p.y += p.vy*dt; p.life -= p.decay*dt;
+      if(p.kind === 'dirt' || p.kind === 'drop'){ p.vz -= 9*dt; p.z += p.vz*dt; if(p.z < 0){ p.z = 0; p.vz *= -0.3; p.vx *= 0.6; p.vy *= 0.6; } }
+      else if(p.kind === 'conf'){ p.vy += 3.2*dt; p.vx *= 0.99; p.rot += p.spin*dt; }
+      else if(p.kind === 'dust'){ p.r += dt*0.12; p.vx *= 0.95; p.vy *= 0.95; }
+      else { p.vx *= 0.93; p.vy *= 0.93; }
+    });
+    words = words.filter(w => (w.t += dt) < 1.3);
+  }
+
+  // ===== DRAWING =====
+  function render(g, Lo, poster){
+    const cs = Lo.cs, dpr = Lo.dpr;
+    const toPx = (x, y) => [Lo.ox + x*cs, Lo.oy + y*cs];
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // the ground around the maze
+    g.fillStyle = lv.edge; g.fillRect(0, 0, Lo.W, Lo.H);
+    // from here on, 1 unit = 1 maze square
+    g.setTransform(dpr*cs, 0, 0, dpr*cs, dpr*Lo.ox, dpr*Lo.oy);
+    const lw = Math.max(0.03, 1.6/cs);
+    // the parking bay: a little road where Tipper waits
+    g.fillStyle = '#B9B2A7';
+    if(Lo.bay === 'right'){ g.fillRect(NX, -PAD, BAY + PAD, NY + PAD*2); g.fillStyle = '#FFE066'; for(let y = 0.2; y < NY; y += 0.8) g.fillRect(NX + BAY*0.5 - 0.03, y, 0.06, 0.4); }
+    else { g.fillRect(-PAD, NY, NX + PAD*2, BAY + PAD); g.fillStyle = '#FFE066'; for(let x = 0.2; x < NX; x += 0.8) g.fillRect(x, NY + BAY*0.5 - 0.03, 0.4, 0.06); }
+    // the play mat: soft squares
+    g.fillStyle = lv.ground; g.fillRect(0, 0, NX, NY);
+    g.fillStyle = lv.ground2; for(let y = 0; y < NY; y++) for(let x = 0; x < NX; x++) if((x + y) % 2) g.fillRect(x, y, 1, 1);
+    // pebbles, grass and footprints
+    decor.forEach(d => {
+      if(d.kind === 'pebble'){ g.fillStyle = 'rgba(150,120,80,0.28)'; ell(g, d.x, d.y, d.r, d.r*0.7, d.rot); g.fill(); }
+      else if(d.kind === 'dot'){ g.fillStyle = 'rgba(255,255,255,0.4)'; ell(g, d.x, d.y, d.r*0.5, d.r*0.5); g.fill(); }
+      else if(d.kind === 'tuft'){ g.strokeStyle = 'rgba(90,150,60,0.55)'; g.lineWidth = 0.025; for(let i = -1; i <= 1; i++) line(g, d.x, d.y, d.x + i*0.05, d.y - 0.1 + Math.abs(i)*0.03); }
+      else if(d.kind === 'foot'){ g.save(); g.translate(d.x, d.y); g.rotate(d.rot); g.fillStyle = 'rgba(140,80,40,0.22)'; ell(g, 0, 0.05, 0.09, 0.07); g.fill(); [-0.6, 0, 0.6].forEach(a => { ell(g, Math.sin(a)*0.13, -Math.cos(a)*0.11, 0.03, 0.06, a); g.fill(); }); g.restore(); }
+    });
+    // muddy puddles
+    puddles.forEach(p => {
+      const cx = p.x + 0.5, cy = p.y + 0.5, wob = p.splashT > 0 ? Math.sin(clock*30)*0.03*p.splashT : 0;
+      g.fillStyle = '#9C7A50'; ell(g, cx, cy, p.rx + 0.05 + wob, p.ry + 0.04, p.rot); g.fill();
+      g.fillStyle = '#6FB8E0'; ell(g, cx, cy, p.rx + wob, p.ry, p.rot); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.55)'; ell(g, cx - p.rx*0.35, cy - p.ry*0.35, p.rx*0.3, p.ry*0.2, p.rot); g.fill();
+      if(p.splashT > 0){ g.strokeStyle = 'rgba(255,255,255,' + (p.splashT*0.8) + ')'; g.lineWidth = 0.03; ell(g, cx, cy, p.rx*(1.6 - p.splashT*0.6), p.ry*(1.6 - p.splashT*0.6), p.rot); g.stroke(); }
+    });
+    // tyre tracks (they fade slowly, so you can see where you've been)
+    g.lineCap = 'butt';
+    const tr = (x1, y1, x2, y2, a) => {
+      const dx = x2 - x1, dy = y2 - y1, nx = -dy*0.2, ny = dx*0.2;
+      g.globalAlpha = a; g.strokeStyle = '#7A5634'; g.lineWidth = 0.1; g.setLineDash([0.07, 0.06]);
+      [1, -1].forEach(s => line(g, x1 + 0.5 + nx*s, y1 + 0.5 + ny*s, x2 + 0.5 + nx*s, y2 + 0.5 + ny*s));
+    };
+    tracks.forEach(t => tr(t.x1, t.y1, t.x2, t.y2, 0.42*Math.max(0.3, 1 - (clock - t.t)/45)));
+    if(dig.move) tr(dig.move.fx, dig.move.fy, dig.fx, dig.fy, 0.42);
+    g.setLineDash([]); g.globalAlpha = 1; g.lineCap = 'round';
+    // the big red button
+    if(button){
+      const cx = button.x + 0.5, cy = button.y + 0.55;
+      g.fillStyle = shadowCol; ell(g, cx, cy + 0.12, 0.36, 0.14); g.fill();
+      g.fillStyle = '#FFD43B'; g.strokeStyle = O; g.lineWidth = lw; ell(g, cx, cy, 0.36, 0.26); g.fill(); g.stroke();
+      g.save(); ell(g, cx, cy, 0.36, 0.26); g.clip(); g.strokeStyle = '#2F2350'; g.lineWidth = 0.07; for(let i = -4; i <= 4; i++) line(g, cx + i*0.13 - 0.3, cy + 0.3, cx + i*0.13 + 0.3, cy - 0.3); g.restore();
+      g.strokeStyle = O; g.lineWidth = lw; ell(g, cx, cy, 0.36, 0.26); g.stroke();
+      const up = button.pressed ? 0.03 : 0.12 + (reduced ? 0 : Math.abs(Math.sin(button.t*3))*0.03);
+      g.fillStyle = '#C92A2A'; ell(g, cx, cy - 0.02, 0.24, 0.16); g.fill(); g.stroke();
+      g.fillStyle = button.pressed ? '#51CF66' : '#FA5252'; ell(g, cx, cy - up, 0.24, 0.16); g.fill(); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.6)'; ell(g, cx - 0.08, cy - up - 0.05, 0.08, 0.04); g.fill();
+      if(!button.pressed && !reduced){ g.strokeStyle = 'rgba(250,82,82,' + (0.5 - (button.t % 1.2)/2.4) + ')'; g.lineWidth = 0.05; ell(g, cx, cy, 0.36 + (button.t % 1.2)*0.3, 0.26 + (button.t % 1.2)*0.22); g.stroke(); }
+    }
+    // the sparkly hint path
+    if(hint){
+      const a = Math.min(1, hint.t*2), pts = [];
+      for(let i = 0; i < hint.path.length - 1; i++){ const [x1, y1] = hint.path[i], [x2, y2] = hint.path[i + 1]; for(let k = 0; k < 3; k++) pts.push([lerp(x1, x2, k/3) + 0.5, lerp(y1, y2, k/3) + 0.5]); }
+      const last = hint.path[hint.path.length - 1]; pts.push([last[0] + 0.5, last[1] + 0.5]);
+      const grow = Math.min(pts.length, Math.floor((3.2 - hint.t)*30) + 2);
+      g.globalAlpha = a;
+      for(let i = 1; i < grow; i++){
+        const [x, y] = pts[i], tw = reduced ? 1 : (Math.sin(clock*8 - i*0.7) + 1)/2;
+        g.fillStyle = i % 2 ? '#FF4F9A' : '#7B4FD6'; ell(g, x, y, 0.07 + tw*0.03, 0.07 + tw*0.03); g.fill();
+        if(i % 3 === 0) twinkle(g, x, y, 0.12 + tw*0.08, '#FFD43B');
+      }
+      // a twinkly ring round the thing it's pointing at
+      if(grow >= pts.length){ const [x, y] = pts[pts.length - 1], k = reduced ? 0.5 : (clock*1.5) % 1;
+        g.strokeStyle = '#FF4F9A'; g.lineWidth = 0.06; g.globalAlpha = a*(1 - k); ell(g, x, y, 0.3 + k*0.25, 0.3 + k*0.25); g.stroke(); g.globalAlpha = a; }
+      g.globalAlpha = 1;
+    }
+    // treasures
+    items.forEach(it => {
+      if(it.got) return;
+      const cx = it.x + 0.5, cy = it.y + 0.5, bob = reduced ? 0 : Math.sin(clock*3 + it.ph)*0.04;
+      g.fillStyle = shadowCol; ell(g, cx, cy + 0.24, 0.22, 0.07); g.fill();
+      g.save(); g.translate(cx, cy + bob);
+      if(it.kind === 'nug') drawNugget(g, 0.22, it.ph);
+      else if(it.kind === 'hat'){ g.rotate(-0.15); drawHat(g, 0.26); }
+      else {
+        const gl = reduced ? 0.5 : (Math.sin(clock*4) + 1)/2;
+        const grd = g.createRadialGradient(0, 0, 0, 0, 0, 0.5); grd.addColorStop(0, 'rgba(255,240,180,' + (0.55 + gl*0.3) + ')'); grd.addColorStop(1, 'rgba(255,240,180,0)');
+        g.fillStyle = grd; ell(g, 0, 0, 0.5, 0.5); g.fill();
+        g.rotate(-0.45); drawBone(g, 0.62);
+      }
+      g.restore();
+    });
+    // the walls: soft dirt mounds, wooden fences, grey rocks
+    for(let y = 0; y < NY; y++) for(let x = 0; x < NX; x++){
+      if(x < NX - 1 && wR[y][x]) drawWall(g, wR[y][x], x + 1, y, x + 1, y + 1, x*7 + y*13);
+      if(y < NY - 1 && wD[y][x]) drawWall(g, wD[y][x], x, y + 1, x + 1, y + 1, x*11 + y*5);
+    }
+    drawFrame(g);
+    // the exit gate (Big Red Button level), or a happy arrow pointing at Tipper
+    drawExit(g, lw);
+    // Tipper in the bay
+    {
+      const p = tipperSpot();
+      g.save(); g.beginPath(); g.rect(Lo.bay === 'right' ? NX : -PAD, Lo.bay === 'right' ? -PAD : NY, Lo.bay === 'right' ? BAY + PAD : NX + PAD*2, Lo.bay === 'right' ? NY + PAD*2 : BAY + PAD); g.clip();
+      g.fillStyle = shadowCol; ell(g, p.x + tip.dx, p.y - 0.02, 0.72, 0.08); g.fill();
+      g.translate(p.x + tip.dx, p.y); g.scale(p.s, p.s);
+      const lookX = clamp((dig.fx - p.x)*0.5, -1, 1), lookY = clamp((dig.fy - p.y)*0.4, -1, 1);
+      drawTipper(g, {heap: tip.heap, happy: tip.happyT > 0, honk: tip.honkT > 0, wheel: tip.wheel, bounce: tip.bounce, lookX, lookY, blink: dig.blink > 0});
+      g.restore();
+    }
+    // Lenny the site boss
+    {
+      const p = lennySpot();
+      g.save(); g.translate(p.x, p.y);
+      g.fillStyle = shadowCol; ell(g, 0, 0, 0.32, 0.07); g.fill();
+      // his little crate to stand on
+      g.fillStyle = '#E7B977'; g.strokeStyle = O; g.lineWidth = lw; rr(g, -0.3, -0.16, 0.6, 0.16, 0.03); g.fill(); g.stroke();
+      g.strokeStyle = '#C9944F'; g.lineWidth = lw*0.8; line(g, -0.26, -0.08, 0.26, -0.08);
+      g.translate(0, -0.16); g.scale(p.s, p.s);
+      drawLenny(g, {cheer: lenny.cheerT > 0, hop: lenny.hop});
+      g.restore();
+    }
+    // things flying from the bucket into Tipper
+    flyers.forEach(f => {
+      if(f.t < 0 || f.t > f.dur) return;
+      const u = f.t/f.dur, p = tipperSpot();
+      const sx0 = dig.fx + 0.5 + dig.face*0.75, sy0 = dig.fy + 0.05;
+      const tx = p.x - 0.32, ty = p.y - 0.8;
+      const x = lerp(sx0, tx, u), y = lerp(sy0, ty, u) - Math.sin(u*Math.PI)*0.9;
+      g.save(); g.translate(x, y); g.rotate(u*4);
+      if(f.kind === 'nug') drawNugget(g, 0.17, 0); else if(f.kind === 'hat') drawHat(g, 0.2); else if(f.kind === 'bone') drawBone(g, 0.5);
+      else { g.fillStyle = '#8A5A34'; ell(g, 0, 0, 0.15, 0.12); g.fill(); }
+      g.restore();
+    });
+    // the digger (with a little bump-wobble and scoop)
+    drawTheDigger(g, poster);
+    // dust, dirt, drops, sparkles and confetti
+    parts.forEach(p => {
+      g.globalAlpha = clamp(p.life*1.6, 0, 1);
+      if(p.kind === 'dirt' || p.kind === 'drop'){ g.fillStyle = 'rgba(70,45,20,0.15)'; ell(g, p.x, p.y, p.r, p.r*0.5); g.fill(); g.fillStyle = p.col; ell(g, p.x, p.y - p.z*0.35, p.r, p.r); g.fill(); g.strokeStyle = 'rgba(47,35,80,0.5)'; g.lineWidth = 0.015; g.stroke(); }
+      else if(p.kind === 'dust'){ g.globalAlpha = clamp(p.life*0.5, 0, 0.5); g.fillStyle = '#F1E3C6'; ell(g, p.x, p.y, p.r, p.r); g.fill(); }
+      else if(p.kind === 'conf'){ g.save(); g.translate(p.x, p.y); g.rotate(p.rot); g.fillStyle = p.col; g.fillRect(-p.r, -p.r*0.5, p.r*2, p.r); g.restore(); }
+      else { g.fillStyle = p.col; twinkle(g, p.x, p.y, p.r*1.6, p.col); }
+    });
+    g.globalAlpha = 1;
+    // words and Lenny's speech bubble (drawn in pixels so the text stays sharp)
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    words.forEach(w => {
+      const u = w.t/1.3, [x, y] = toPx(w.x, w.y - u*0.6);
+      const fs = clamp(cs*0.42, 15, 34);
+      g.globalAlpha = clamp((1 - u)*2, 0, 1);
+      g.font = fs + 'px ' + FONT; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.lineWidth = Math.max(3, fs*0.22); g.strokeStyle = '#fff'; g.lineJoin = 'round'; g.strokeText(w.text, x, y);
+      g.fillStyle = w.col; g.fillText(w.text, x, y);
+    });
+    g.globalAlpha = 1;
+    if(lenny.sayT > 0 && lenny.say && !poster) speech(g, Lo, lenny.say, Math.min(1, lenny.sayT*3));
+  }
+  function speech(g, Lo, text, a){
+    const cs = Lo.cs, p = lennySpot();
+    const fs = clamp(cs*0.34, 13, 22);
+    g.font = fs + 'px ' + FONT;
+    // wrap the words to fit
+    const maxW = Math.min(Lo.W - 16, Math.max(150, cs*3.6));
+    const lines = []; let cur = '';
+    text.split(' ').forEach(wd => { const t = cur ? cur + ' ' + wd : wd; if(g.measureText(t).width > maxW - 20 && cur){ lines.push(cur); cur = wd; } else cur = t; });
+    if(cur) lines.push(cur);
+    const bw = Math.min(maxW, Math.max(...lines.map(l => g.measureText(l).width)) + 22), bh = lines.length*fs*1.15 + 14;
+    // the bubble sits beside Lenny's head, with a little tail pointing at him
+    const lx = Lo.ox + p.x*cs, hy = Lo.oy + (p.y - 0.95)*cs;
+    const right = Lo.bay === 'right';
+    let bx = right ? lx - cs*0.5 - bw : lx + cs*0.5;
+    let by = hy - bh/2;
+    bx = clamp(bx, 6, Lo.W - bw - 6); by = clamp(by, 6, Lo.H - bh - 6);
+    g.globalAlpha = a;
+    g.fillStyle = '#fff'; g.strokeStyle = O; g.lineWidth = 2.5; g.lineJoin = 'round';
+    const ty = clamp(hy, by + 10, by + bh - 10);
+    const ex = right ? bx + bw : bx, tipX = right ? lx - cs*0.3 : lx + cs*0.3;
+    g.beginPath(); g.moveTo(ex, ty - 7); g.lineTo(tipX, ty + 4); g.lineTo(ex, ty + 6); g.closePath(); g.fill(); g.stroke();
+    rr(g, bx, by, bw, bh, 12); g.fill(); g.stroke();
+    g.fillRect(right ? ex - 4 : ex + 1, ty - 5, 3, 10);
+    g.fillStyle = O; g.textAlign = 'center'; g.textBaseline = 'middle';
+    lines.forEach((l, i) => g.fillText(l, bx + bw/2, by + 7 + fs*0.58 + i*fs*1.15));
+    g.globalAlpha = 1;
+  }
+  function drawTheDigger(g, poster){
+    const s = (posterSpr || (L.cs < 42 ? 1.62 : 1.42))/380;
+    let bx = 0, by = 0;
+    if(dig.bumpT > 0 && !reduced){ const k = Math.sin(dig.bumpT*40)*0.06*dig.bumpT/0.35; bx = DX[dig.bumpDir]*k; by = DY[dig.bumpDir]*k; }
+    const cx = dig.fx + 0.5 + bx, cy = dig.fy + 0.5 + by;
+    let reach = 0, curl = -0.25, lift = 0, load = 0, open = false;
+    if(dig.scoop){
+      const u = dig.scoop.t;
+      reach = u < 0.45 ? ease(u/0.45) : 1 - ease((u - 0.45)/0.55);
+      curl = u < 0.45 ? lerp(-0.25, 0.7, ease(u/0.45)) : lerp(0.7, -0.9, ease((u - 0.45)/0.4));
+      load = u > 0.45 ? 1 : 0; open = u > 0.4 && u < 0.85;
+    } else if(phase === 'end'){
+      lift = ease(endT/0.5); curl = endT < 0.45 ? -0.9 : lerp(-0.9, 1.6, ease((endT - 0.45)/0.6)); load = endT < 0.55 ? 2 : 0;
+    } else if(dig.move && !reduced){ curl = -0.25 + Math.sin(clock*9)*0.14; }
+    if(poster && poster.digger){ const pd = poster.digger; if(pd.reach != null) reach = pd.reach; if(pd.curl != null) curl = pd.curl; if(pd.load != null) load = pd.load; if(pd.open != null) open = pd.open; }
+    g.fillStyle = shadowCol; ell(g, cx, cy + 0.38, 0.62, 0.12); g.fill();
+    g.save(); g.translate(cx, cy + 0.38);
+    g.scale(dig.face, 1);
+    g.rotate(dig.tilt*(dig.face));
+    g.scale(s, s);
+    g.translate(-62, 0);
+    const bounce = dig.move && !reduced ? Math.sin(clock*30)*2 : 0;
+    drawDigger(g, {reach, curl, lift, load, bounce, tread: dig.tread*dig.face, happy: dig.happyT > 0 || phase === 'end', open, blink: dig.blink > 0, moving: !!dig.move, lookY: dig.dir === 2 ? 3 : dig.dir === 0 ? -1 : 1});
+    g.restore();
+  }
+  // one wall, along the edge from (x1,y1) to (x2,y2)
+  function drawWall(g, type, x1, y1, x2, y2, seed){
+    const horiz = y1 === y2, lw = 0.035;
+    g.lineJoin = 'round'; g.lineCap = 'round';
+    if(type === DIRT){
+      // a soft, lumpy dirt mound
+      const n = 3;
+      g.fillStyle = 'rgba(70,45,20,0.2)';
+      for(let i = 0; i < n; i++){ const u = (i + 0.5)/n; ell(g, lerp(x1, x2, u) + 0.02, lerp(y1, y2, u) + 0.07, 0.2, 0.17); g.fill(); }
+      g.strokeStyle = '#5E3A1E'; g.lineWidth = lw*1.4; g.fillStyle = '#A56B3B';
+      const bumps = [];
+      for(let i = 0; i < n; i++){ const u = (i + 0.5)/n, w = ((seed*7 + i*13) % 5)*0.012; bumps.push([lerp(x1, x2, u), lerp(y1, y2, u), 0.19 + w]); }
+      bumps.forEach(([x, y, r]) => { ell(g, x, y, r, r*0.9); g.stroke(); });
+      bumps.forEach(([x, y, r]) => { ell(g, x, y, r, r*0.9); g.fill(); });
+      g.fillStyle = '#C58A52'; bumps.forEach(([x, y, r]) => { ell(g, x - r*0.2, y - r*0.3, r*0.5, r*0.32); g.fill(); });
+      g.fillStyle = '#6E4426'; bumps.forEach(([x, y, r], i) => { ell(g, x + r*0.35, y + r*0.25, r*0.11, r*0.09); g.fill(); if(i === 1){ ell(g, x - r*0.4, y + r*0.35, r*0.08, r*0.07); g.fill(); } });
+    } else if(type === ROCK){
+      // grey boulders
+      const rocks = horiz ? [[lerp(x1, x2, 0.3), y1, 0.25], [lerp(x1, x2, 0.72), y1 + 0.02, 0.22]] : [[x1, lerp(y1, y2, 0.3), 0.25], [x1 + 0.02, lerp(y1, y2, 0.72), 0.22]];
+      g.fillStyle = 'rgba(40,40,60,0.2)'; rocks.forEach(([x, y, r]) => { ell(g, x + 0.03, y + 0.08, r, r*0.75); g.fill(); });
+      rocks.forEach(([x, y, r], i) => {
+        g.fillStyle = '#9AA0AE'; g.strokeStyle = '#4A4E5E'; g.lineWidth = lw*1.3;
+        g.beginPath(); for(let k = 0; k < 7; k++){ const a = k/7*TAU + seed + i, rr2 = r*(0.85 + ((seed + k*3 + i) % 4)*0.05); const px = x + Math.cos(a)*rr2, py = y + Math.sin(a)*rr2*0.85; k ? g.lineTo(px, py) : g.moveTo(px, py); } g.closePath(); g.fill(); g.stroke();
+        g.fillStyle = '#C3C8D2'; ell(g, x - r*0.25, y - r*0.3, r*0.42, r*0.25, -0.3); g.fill();
+        g.fillStyle = '#7C8292'; ell(g, x + r*0.3, y + r*0.25, r*0.12, r*0.08); g.fill();
+      });
+    } else {
+      // a fence that can't be dug: wooden sleepers in the sandpit, orange and white barriers on the building site
+      const t = 0.15, L2 = 1 + t;
+      g.save(); g.translate(horiz ? x1 - t/2 : x1, horiz ? y1 : y1 - t/2); if(!horiz) g.rotate(Math.PI/2);
+      g.fillStyle = 'rgba(70,45,20,0.18)'; rr(g, 0.03, -t/2 + 0.07, L2, t, t/2); g.fill();
+      if(lv.fence === 'timber'){
+        g.fillStyle = '#E2AE68'; g.strokeStyle = '#7A4E24'; g.lineWidth = lw*1.2; rr(g, 0, -t/2, L2, t, 0.04); g.fill(); g.stroke();
+        g.strokeStyle = 'rgba(140,90,40,0.55)'; g.lineWidth = 0.018; line(g, 0.12, -0.02, 0.5, -0.02); line(g, 0.6, 0.03, 1.02, 0.03);
+        g.fillStyle = '#7A4E24'; ell(g, 0.08, 0, 0.018, 0.018); g.fill(); ell(g, L2 - 0.08, 0, 0.018, 0.018); g.fill();
+      } else {
+        g.fillStyle = '#fff'; g.strokeStyle = O; g.lineWidth = lw; rr(g, 0, -t/2, L2, t, 0.03); g.fill();
+        g.save(); rr(g, 0, -t/2, L2, t, 0.03); g.clip(); g.fillStyle = '#FF7A1A'; for(let i = -1; i < 8; i++){ poly(g, [[i*0.18, t/2], [i*0.18 + 0.09, t/2], [i*0.18 + 0.17, -t/2], [i*0.18 + 0.08, -t/2]]); g.fill(); } g.restore();
+        rr(g, 0, -t/2, L2, t, 0.03); g.stroke();
+        g.fillStyle = '#868E96'; [0.06, L2 - 0.06].forEach(x => { ell(g, x, 0, 0.055, 0.055); g.fill(); g.stroke(); });
+      }
+      g.restore();
+    }
+  }
+  // the fence all the way round the maze, with a gap at the exit
+  function drawFrame(g){
+    const t = 0.16;
+    const plank = (x1, y1, x2, y2) => {
+      const horiz = y1 === y2, len = horiz ? x2 - x1 : y2 - y1;
+      if(len <= 0) return;
+      g.save(); g.translate(x1, y1); if(!horiz) g.rotate(Math.PI/2);
+      g.fillStyle = '#D79A55'; g.strokeStyle = '#6B421C'; g.lineWidth = 0.035; rr(g, -t/2, -t/2, len + t, t, 0.05); g.fill(); g.stroke();
+      g.strokeStyle = 'rgba(120,70,30,0.4)'; g.lineWidth = 0.018; for(let x = 0.4; x < len - 0.2; x += 1.3) line(g, x, -0.015, x + 0.45, -0.015);
+      g.restore();
+    };
+    const ex = L.bay === 'right';
+    plank(0, 0, NX, 0); plank(0, 0, 0, NY);
+    if(ex){ plank(NX, 0, NX, NY - 1); plank(0, NY, NX, NY); }
+    else { plank(NX, 0, NX, NY); plank(0, NY, NX - 1, NY); }
+    // posts at the corners and beside the exit
+    const posts = [[0, 0], [NX, 0], [0, NY], ex ? [NX, NY - 1] : [NX - 1, NY], ex ? [NX, NY] : [NX, NY]];
+    posts.forEach(([x, y]) => { g.fillStyle = '#B97A3A'; g.strokeStyle = '#6B421C'; g.lineWidth = 0.035; ell(g, x, y, 0.13, 0.13); g.fill(); g.stroke(); g.fillStyle = 'rgba(255,255,255,0.3)'; ell(g, x - 0.03, y - 0.04, 0.05, 0.035); g.fill(); });
+  }
+  function drawExit(g, lw){
+    const right = L.bay === 'right';
+    // a sign with an arrow pointing out to Tipper
+    if(gateOpen && phase === 'play'){
+      const bob = reduced ? 0 : Math.sin(clock*5)*0.06;
+      g.save(); g.translate(NX - 0.5 + (right ? 0.18 + bob : 0), NY - 0.5 + (right ? 0 : 0.18 + bob)); if(!right) g.rotate(Math.PI/2);
+      g.globalAlpha = 0.85; g.fillStyle = '#51CF66'; g.strokeStyle = O; g.lineWidth = lw;
+      poly(g, [[-0.22, -0.08], [0.02, -0.08], [0.02, -0.18], [0.24, 0], [0.02, 0.18], [0.02, 0.08], [-0.22, 0.08]]); g.fill(); g.stroke();
+      g.restore(); g.globalAlpha = 1;
+    }
+    if(!lv.button) return;
+    // the boom gate: a striped arm that swings open when the big red button is pressed
+    const px = right ? NX : NX - 1, py = right ? NY - 1 : NY;
+    g.save(); g.translate(px, py);
+    // closed: across the gap. Open: swung right round to lie along the fence
+    g.rotate(right ? Math.PI/2 - gateA*Math.PI : gateA*Math.PI);
+    g.fillStyle = 'rgba(70,45,20,0.2)'; rr(g, 0, 0.02, 1, 0.14, 0.07); g.fill();
+    g.fillStyle = '#fff'; g.strokeStyle = O; g.lineWidth = lw; rr(g, 0, -0.07, 1, 0.14, 0.07); g.fill();
+    g.save(); rr(g, 0, -0.07, 1, 0.14, 0.07); g.clip(); g.fillStyle = '#E03131'; for(let i = 0; i < 6; i += 2) g.fillRect(0.1 + i*0.15, -0.1, 0.15, 0.2); g.restore();
+    rr(g, 0, -0.07, 1, 0.14, 0.07); g.stroke();
+    g.restore();
+    g.fillStyle = '#495057'; g.strokeStyle = O; g.lineWidth = lw; ell(g, px, py, 0.14, 0.14); g.fill(); g.stroke();
+    g.fillStyle = gateOpen ? '#51CF66' : (Math.sin(clock*6) > 0 ? '#FA5252' : '#C92A2A'); ell(g, px, py, 0.07, 0.07); g.fill();
+  }
+
+  // ===== MAIN LOOP =====
+  let lastT = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t - lastT)/1000)*timeScale; lastT = t;
+    if(phase === 'play' || phase === 'end' || phase === 'menu' || phase === 'paused') update(phase === 'paused' ? 0 : dt);
+    render(ctx, L, null);
+    requestAnimationFrame(loop);
+  }
+
+  // ===== GO! =====
+  startLevel(prog.cur, null);
+  phase = 'menu';
+  lennySay('', 0);
+  showMenu();
+  requestAnimationFrame(loop);
+
+  // a small helper for automatic testing only (switched on by adding ?test to the address)
+  if(TEST) window.__dmz = {
+    get state(){ return {level: level + 1, phase, x: dig.x, y: dig.y, moving: !!dig.move, scooping: !!dig.scoop, n: NX, bay: L.bay, cell: L.cs, board: [L.W, L.H], digs,
+      items: items.map(i => ({kind: i.kind, x: i.x, y: i.y, got: i.got})), button: button && {x: button.x, y: button.y, pressed: button.pressed}, gateOpen,
+      overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)), tracks: tracks.length, hint: !!hint}; },
+    start(n, seed){ startLevel(n - 1, seed); },
+    wall(x, y, d){ return wallType(x, y, d); },
+    // the directions (0 up, 1 right, 2 down, 3 left) to drive from where the digger is to a square, without digging
+    route(tx, ty, allowDirt){
+      const prev = Array.from({length: NY}, () => new Array(NX).fill(null)), q = [[dig.x, dig.y]], seen = new Set([dig.x + ',' + dig.y]);
+      while(q.length){ const [x, y] = q.shift(); if(x === tx && y === ty) break;
+        for(let d = 0; d < 4; d++){ const t = wallType(x, y, d); if(!(t === OPEN || (allowDirt && t === DIRT))) continue; const nx = x + DX[d], ny = y + DY[d], k = nx + ',' + ny; if(!seen.has(k)){ seen.add(k); prev[ny][nx] = [x, y, d]; q.push([nx, ny]); } } }
+      const out = []; let p = [tx, ty];
+      while(prev[p[1]][p[0]]){ const [x, y, d] = prev[p[1]][p[0]]; out.unshift(d); p = [x, y]; }
+      return out;
+    },
+    reachableWithoutDigging(){ const D = distances(0, 0, false); return D.every(r => r.every(v => v >= 0)); },
+    dirtWalls(){ let c = 0; wR.forEach(r => r.forEach(v => v === DIRT && c++)); wD.forEach(r => r.forEach(v => v === DIRT && c++)); return c; },
+    press(d){ request(d); },
+    hold(d){ if(!held.includes(d)) held.push(d); request(d); }, release(){ held.length = 0; },
+    hint(){ showHint(); return hint && hint.path; },
+    teleport(x, y){ dig.x = dig.fx = x; dig.y = dig.fy = y; dig.move = null; dig.scoop = null; },
+    unlockAll(){ TEST_ALL = true; prog.unlocked = 6; saveProg(); },
+    reset(){ prog = freshProg(); saveProg(); },
+    speed(k){ timeScale = k; },
+    menu(){ showMenu(); }, bones(mode){ showBones(mode || 'menu'); }, setBones(a){ prog.bones = a.slice(); saveProg(); },
+    // pictures for the game card and share preview
+    poster(w, h, opts){ return makePoster(w, h, opts || {}); }
+  };
+
+  function makePoster(w, h, opts){
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    const save = {L, NX, NY, wR, wD, items, puddles, decor, button, tracks, parts, words, dig: Object.assign({}, dig), phase, lv, level, flyers, hint, tip: Object.assign({}, tip), lenny: Object.assign({}, lenny)};
+    level = 0; lv = LEVELS[opts.level || 1];
+    NX = opts.nx || 7; NY = opts.ny || 5;
+    // a hand-made little maze for the picture
+    wR = Array.from({length: NY}, () => new Array(NX).fill(OPEN)); wD = Array.from({length: NY}, () => new Array(NX).fill(OPEN));
+    (opts.walls || []).forEach(([kind, x, y, t]) => { (kind === 'r' ? wR : wD)[y][x] = t; });
+    items = (opts.items || []).map(([k, x, y]) => ({kind: k, x, y, got: false, ph: x + y}));
+    puddles = (opts.puddles || []).map(([x, y]) => ({x, y, rx: 0.32, ry: 0.24, rot: 0.2, splashT: 0}));
+    button = null; tracks = (opts.tracks || []).map(([x1, y1, x2, y2]) => ({x1, y1, x2, y2, t: clock}));
+    const R = rng(7); decor = []; for(let i = 0; i < NX*NY; i++){ const k = R(); decor.push({x: R()*NX, y: R()*NY, kind: k < 0.55 ? 'pebble' : k < 0.8 ? 'dot' : 'tuft', r: 0.04 + R()*0.05, rot: R()*TAU}); }
+    const cs = opts.cs;
+    L = {cs, ox: opts.ox, oy: opts.oy, bay: opts.bay || 'right', W: w, H: h, dpr: 1};
+    Object.assign(dig, {x: opts.dig[0], y: opts.dig[1], fx: opts.dig[0], fy: opts.dig[1], face: opts.face || 1, tilt: 0, move: null, scoop: null, bumpT: 0, happyT: 0, blink: 0, dir: 1});
+    phase = 'play'; flyers = []; hint = null;
+    Object.assign(tip, {dx: 0, heap: 0.35, happyT: 1, honkT: 0, bounce: 0});
+    Object.assign(lenny, {cheerT: 1, hop: 0, sayT: 0});
+    // dirt flying from the scoop
+    parts = []; const R2 = rng(3);
+    (opts.dirt || []).forEach(([x, y, d]) => { for(let i = 0; i < 20; i++){ const a = Math.atan2(DY[d], DX[d]) + (R2() - 0.5)*2.4, sp = 0.2 + R2()*0.9; parts.push({kind: 'dirt', x: x + Math.cos(a)*sp*0.5, y: y + Math.sin(a)*sp*0.5, vx: 0, vy: 0, z: 0.2 + R2()*1.6, vz: 0, r: 0.05 + R2()*0.07, col: ['#8A5A34', '#A56B3B', '#6E4426', '#C58A52'][i % 4], life: 0.7, decay: 0}); } });
+    (opts.sparkles || []).forEach(([x, y]) => { for(let i = 0; i < 8; i++){ const a = i/8*TAU; parts.push({kind: 'spark', x: x + Math.cos(a)*0.35, y: y + Math.sin(a)*0.35, vx: 0, vy: 0, z: 0, vz: 0, r: 0.05 + (i % 2)*0.03, col: i % 2 ? '#FFD43B' : '#FF9ACB', life: 0.7, decay: 0}); } });
+    words = (opts.words || []).map(([text, x, y, col]) => ({text, x, y, t: 0.2, col}));
+    posterSpr = opts.spr || 0;
+    render(g, L, {digger: opts.digger || null});
+    posterSpr = 0;
+    const url = c.toDataURL('image/png');
+    ({L, NX, NY, wR, wD, items, puddles, decor, button, tracks, parts, words, phase, lv, level, flyers, hint} = save);
+    Object.assign(dig, save.dig); Object.assign(tip, save.tip); Object.assign(lenny, save.lenny);
+    return url;
+  }
+})();
+</script>
+</body>
+</html>

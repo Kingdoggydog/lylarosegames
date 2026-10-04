@@ -25,6 +25,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Blossom's Jigsaw Puzzles | Puzzles & Mazes, Unicorns, Animals | 3+ | `games/blossoms-jigsaw/` |
 | Busy Building Site | Diggers & Trucks, Cars | 3+ | `games/busy-building-site/` |
 | Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles & Mazes | 4+ | `games/chompers-toot-toot/` |
+| Chomper's Digger Maze | Puzzles & Mazes, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
 
 ## Age groups
 
