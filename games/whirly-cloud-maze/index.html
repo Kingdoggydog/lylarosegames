@@ -1,0 +1,1724 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Whirly's Cloud Maze - Free Helicopter Maze Game for Kids | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --sky:#CFEAFF;
+    --sky2:#FDE2EC;
+    --teal:#2E6E61;
+    --pink:#F2559B;
+    --gold:#FFC23D;
+    --ink:#23413B;
+    --card:#FFFFFFD9;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%);
+    background-color:var(--sky);
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:900px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .btns{display:flex;gap:8px}
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:6px 12px;flex-wrap:wrap}
+  h1{font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(28px,5.5vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .sub{margin:4px 0 0;font-size:14px}
+  .stats{display:flex;gap:6px;flex-wrap:wrap}
+  .pill{background:var(--card);border-radius:999px;padding:6px 12px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* the maze is always square and grows to the biggest square that fits the space left over */
+  .stage{flex:1;min-height:160px;container-type:size;display:grid;place-items:center}
+  .board{position:relative;width:min(100cqw,100cqh);aspect-ratio:1/1;border-radius:18px;overflow:hidden;background:#BFE6FF;box-shadow:0 10px 30px #2E6E6133;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas{display:block;width:100%;height:100%}
+  .controls{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .help{font-size:14px;margin:0;flex:1}
+  .pad{display:grid;grid-template-columns:repeat(3,60px);grid-template-rows:repeat(2,60px);gap:6px}
+  .pad button{padding:0;font-size:24px;background:#3F8FC9;border-radius:14px;box-shadow:0 4px 0 #2B6E9E}
+  .pad button:active{transform:translateY(2px);box-shadow:0 2px 0 #2B6E9E}
+  .pad .up{grid-column:2;grid-row:1}.pad .left{grid-column:1;grid-row:2}.pad .down{grid-column:2;grid-row:2}.pad .right{grid-column:3;grid-row:2}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px;min-height:48px;min-width:48px;-webkit-tap-highlight-color:transparent}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink)}
+  button.ghost.off{opacity:.6}
+  .peek{background:#FFD84D;color:#7A5200;border-radius:999px;display:flex;align-items:center;gap:6px;padding:8px 18px;box-shadow:0 4px 0 #E3B21C;font-size:17px}
+  .peek .sun{font-size:26px;line-height:1}
+  .peek:active{transform:translateY(2px);box-shadow:0 2px 0 #E3B21C}
+  .peek.on{background:#FFF1B8}
+  .back{font-weight:800;color:var(--teal);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  .lbl2{margin-left:4px}
+  @media (hover:hover) and (pointer:fine){ .pad{display:none} }
+  @media (pointer:coarse){ .help{display:none} }
+  @media (max-height:760px){ .sub{display:none} h1{font-size:30px} .pill{font-size:14px;padding:5px 10px} }
+
+  /* ===== the pop-up panels (start, levels, level done) cover the whole page ===== */
+  .overlay{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:#1F4F6AA6;padding:16px;box-sizing:border-box}
+  .panel{background:#fff;border-radius:20px;padding:18px 20px;text-align:center;width:min(440px,100%);max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 40px #0003}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:32px;margin:0;color:var(--pink);line-height:1.05}
+  .panel p{margin:0;font-size:15px}
+  .panel .starrow{font-size:40px;line-height:1;letter-spacing:4px}
+  .panel .starrow .off{opacity:.22;filter:grayscale(1)}
+  .panel .lr-share{align-self:center}
+  .panel .row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+  .panel .main{font-size:20px;padding:12px 26px;box-shadow:0 5px 0 #C23A78;align-self:center;min-width:200px}
+  .panel .main:active{transform:translateY(3px);box-shadow:0 2px 0 #C23A78}
+  .panel .ghost{background:#EAF4FF}
+  .levels{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .lvlbtn{background:#EAF4FF;color:var(--ink);display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 4px;border-radius:14px;min-height:64px;box-shadow:0 3px 0 #C9DDF2}
+  .lvlbtn .n{font-family:"Chewy",cursive;font-weight:400;font-size:24px;line-height:1;color:#3F8FC9}
+  .lvlbtn .nm{font-size:12px;line-height:1.1}
+  .lvlbtn .st{font-size:13px;letter-spacing:1px;line-height:1.1}
+  .lvlbtn .st .off{opacity:.25;filter:grayscale(1)}
+  .lvlbtn.cur{background:#FFE3F0;box-shadow:0 3px 0 #F2A6C8}
+  .lvlbtn.locked{opacity:.55;cursor:default}
+  .stickers{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;align-items:flex-end}
+  .stk{display:flex;flex-direction:column;align-items:center;font-size:11px;font-weight:800;width:58px}
+  .stk canvas{width:52px;height:52px}
+  .stk.no{opacity:.35;filter:grayscale(1)}
+  .small{font-size:13px!important;color:#4D6A64}
+
+  /* phone on its side, or a short window: title, scores and buttons on the left, maze on the right */
+  @media (orientation:landscape) and (max-height:620px){
+    .wrap{max-width:none;display:grid;grid-template-columns:minmax(200px,260px) 1fr;grid-template-rows:auto auto 1fr auto;gap:8px 16px}
+    .top{grid-column:1;grid-row:1;flex-wrap:wrap}
+    header{grid-column:1;grid-row:2;flex-direction:column;align-items:flex-start}
+    h1{font-size:26px}
+    .stats{flex-direction:column;align-items:flex-start}
+    .controls{grid-column:1;grid-row:4;flex-direction:column;align-items:flex-start}
+    .stage{grid-column:2;grid-row:1 / 5;min-height:0}
+    .levels{grid-template-columns:repeat(6,1fr)}
+  }
+
+  /* ===== PHONES ONLY: the maze gets the whole screen, everything else floats in the spare space ===== */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:0;background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%)}
+    .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+    h1,.sub,.help{display:none}
+    .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
+      box-sizing:border-box;padding:54px 6px 150px;min-height:0;place-items:start center}
+    .board{border-radius:14px}
+    /* round icon buttons in the top-left corner */
+    .top{position:fixed;z-index:6;top:calc(6px + env(safe-area-inset-top,0px));left:calc(6px + env(safe-area-inset-left,0px));gap:6px}
+    .btns{gap:6px}
+    .back,.top button.ghost{width:42px;height:42px;min-height:42px;min-width:42px;padding:0;display:grid;place-items:center;border-radius:50%;font-size:19px;background:#FFFFFFD0;box-shadow:0 2px 8px #2E6E6126}
+    /* scores: small see-through bubbles */
+    header{position:fixed;z-index:3;right:calc(8px + env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));pointer-events:none}
+    .stats{flex-direction:column;align-items:flex-end;gap:4px}
+    .pill{font-size:13px;padding:3px 10px;background:#FFFFFFC0}
+    /* direction pad by the left thumb, peek button by the right thumb */
+    .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
+      grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
+    .pad button{background:#3F8FC9DD}
+    .peek{position:fixed;z-index:3;right:calc(8px + env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));
+      width:66px;height:66px;padding:0;justify-content:center;flex-direction:column;gap:0;font-size:12px}
+    .peek .sun{font-size:28px}
+    .overlay{padding:56px 10px 10px}
+    .panel{padding:14px 14px;gap:8px}
+    .panel h2{font-size:27px}
+    .panel .starrow{font-size:34px}
+    @media (orientation: landscape) {
+      .stage{padding:6px 124px 6px 196px;place-items:center}
+      .pad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,56px)}
+      header{top:calc(8px + env(safe-area-inset-top,0px));bottom:auto}
+      .overlay{padding:52px 12px 6px}
+      .panel{width:min(600px,100%);gap:5px;padding:8px 14px}
+      .panel .small{display:none}
+      .panel h2{font-size:24px}
+      .panel p{font-size:14px}
+      .panel .starrow{font-size:28px}
+      .lvlbtn{min-height:52px;padding:4px 2px}
+      .lvlbtn .nm{display:none}
+      .stk canvas{width:36px;height:36px}
+      .stk{width:46px}
+      .panel .main{min-width:0}
+      .panel .main{font-size:18px;padding:10px 22px;min-height:46px}
+    }
+  }
+</style>
+<meta name="description" content="Whirly's Cloud Maze - a free helicopter maze game for kids. Fly Whirly the rescue helicopter with Lenny the Lemur, blow the clouds off the maze, find Dilly, Woolly, Kip, Truffle and Mittens and fly them to the picnic!">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/whirly-cloud-maze/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Whirly&#x27;s Cloud Maze - Free Helicopter Maze Game for Kids | Lyla Rose Games">
+<meta property="og:description" content="Whirly&#x27;s Cloud Maze - a free helicopter maze game for kids. Fly Whirly the rescue helicopter with Lenny the Lemur, blow the clouds off the maze, find Dilly, Woolly, Kip, Truffle and Mittens and fly them to the picnic!">
+<meta property="og:url" content="https://lylarosegames.com/games/whirly-cloud-maze/">
+<meta property="og:image" content="https://lylarosegames.com/games/whirly-cloud-maze/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Whirly&#x27;s Cloud Maze - free helicopter maze game for kids">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: Arrow keys, WASD, swipe, tap or on-screen buttons -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Whirly's Cloud Maze",
+   "url": "https://lylarosegames.com/games/whirly-cloud-maze/",
+   "description": "Whirly's Cloud Maze - a free helicopter maze game for kids. Fly Whirly the rescue helicopter with Lenny the Lemur, blow the clouds off the maze, find Dilly, Woolly, Kip, Truffle and Mittens and fly them to the picnic!",
+   "image": "https://lylarosegames.com/games/whirly-cloud-maze/share.jpg",
+   "genre": [
+    "Puzzles & Mazes",
+    "Flying",
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Puzzle & maze games",
+     "item": "https://lylarosegames.com/puzzle-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Whirly's Cloud Maze",
+     "item": "https://lylarosegames.com/games/whirly-cloud-maze/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../">←<span class="lbl"> All games</span></a>
+    <div class="btns">
+      <button class="ghost" id="levelsBtn" aria-label="Levels">🗺️<span class="lbl lbl2">Levels</span></button>
+      <button class="ghost" id="musicBtn" aria-label="Music on">🎵</button>
+      <button class="ghost" id="sfxBtn" aria-label="Sounds on">🔊</button>
+    </div>
+  </div>
+  <header>
+    <div>
+      <h1>Whirly's Cloud Maze</h1>
+      <p class="sub">Blow the clouds off the maze, find the animal friends and fly them to the picnic!</p>
+    </div>
+    <div class="stats">
+      <span class="pill" id="lvl">Level 1</span>
+      <span class="pill" id="saved" aria-label="Friends rescued">🐾 0/1</span>
+      <span class="pill" id="stars" aria-label="Stars">⭐ 0/3</span>
+    </div>
+  </header>
+
+  <div class="stage">
+    <div class="board" id="board"><canvas id="c" aria-label="The cloud maze"></canvas></div>
+  </div>
+
+  <div class="controls">
+    <div class="pad" aria-label="Direction buttons">
+      <button class="up" data-d="up" aria-label="Up">▲</button>
+      <button class="left" data-d="left" aria-label="Left">◀</button>
+      <button class="down" data-d="down" aria-label="Down">▼</button>
+      <button class="right" data-d="right" aria-label="Right">▶</button>
+    </div>
+    <p class="help">Fly with the arrow keys or WASD (or tap where you want to go). Whirly keeps flying until the next corner. Stuck? Press P to peek under the clouds.</p>
+    <button class="peek" id="peekBtn" aria-label="Peek under the clouds"><span class="sun">☀️</span><span>Peek</span></button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"><div class="panel" id="panel" role="dialog" aria-live="polite"></div></div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const cvs = document.getElementById('c');
+  const ctx = cvs.getContext('2d');
+  const board = document.getElementById('board');
+  const overlay = document.getElementById('overlay');
+  const panel = document.getElementById('panel');
+  const lvlEl = document.getElementById('lvl');
+  const savedEl = document.getElementById('saved');
+  const starsEl = document.getElementById('stars');
+  const peekBtn = document.getElementById('peekBtn');
+  const musicBtn = document.getElementById('musicBtn');
+  const sfxBtn = document.getElementById('sfxBtn');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TEST = /[?&]test\b/.test(location.search);
+  const KEY = 'lrg-whirly-cloud-maze-';
+
+  function load(k, d){ try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch(e){} }
+
+  let prog = load('prog', null);
+  if(!prog || !Array.isArray(prog.stars)) prog = {unlocked: 1, stars: [0, 0, 0, 0, 0, 0]};
+  let stickers = load('stickers', {});
+  let muted = load('muted', false);
+  let musicOn = load('music', true);
+
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const pick = a => a[Math.floor(Math.random()*a.length)];
+  const hash = (x, y) => { const s = Math.sin(x*127.1 + y*311.7)*43758.5453; return s - Math.floor(s); };
+
+  // ===== THE LEVELS =====
+  // # wall (trees, houses, hills)   . path   H helipad (start)   P picnic blanket
+  // 1-5 animal friends   * stars   a b balloons that open gates A B   ^ > v < wind puffs
+  const LEVELS = [
+    {name: 'Sunny Park', theme: 'park', friends: ['duck'], perch: ['tree'], map: [
+      '#######',
+      '#....1#',
+      '#*#####',
+      '#...*.#',
+      '###.#*#',
+      '#.#H..#',
+      '###P###']},
+    {name: 'Little Town', theme: 'town', friends: ['lamb', 'koala'], perch: ['roof', 'roof'], map: [
+      '#########',
+      '#1#.....#',
+      '#.#.###*#',
+      '#..*#.#.#',
+      '#.###.#.#',
+      '#.*....*#',
+      '#.#.###.#',
+      '#2#.#H..#',
+      '#####P###']},
+    {name: 'Balloon Festival', theme: 'fair', friends: ['piglet', 'kitten'], perch: ['tent', 'tree'], map: [
+      '#########',
+      '#..*..A*#',
+      '#.#####.#',
+      '#*.a#.*.#',
+      '#.#.#.###',
+      '#.#.#...#',
+      '#.#.###.#',
+      '#2#..H#1#',
+      '#####P###']},
+    {name: 'Windy Hills', theme: 'hills', friends: ['koala', 'duck', 'lamb'], perch: ['tree', 'hill', 'hill'], map: [
+      '###########',
+      '#..1#...>.#',
+      '#.###.#.#*#',
+      '#*#.....#.#',
+      '#.#.###.#.#',
+      '#.>.#3#..*#',
+      '#.#*#.#.#.#',
+      '#*....#v#.#',
+      '###.###.#.#',
+      '#.#..H..#2#',
+      '#####P#####']},
+    {name: 'Rainbow Valley', theme: 'rainbow', friends: ['kitten', 'piglet', 'duck'], perch: ['hill', 'tree', 'roof'], map: [
+      '###########',
+      '#...*..>.*#',
+      '#.#A#####.#',
+      '#1#.#..a..#',
+      '###.#v###.#',
+      '#..*#.*b#.#',
+      '#B###.#.#*#',
+      '#.....#*..#',
+      '#.#v#.#.###',
+      '#3#..H#..2#',
+      '#####P#####']},
+    {name: 'Big Sky Rescue', theme: 'sky', friends: ['duck', 'lamb', 'koala', 'piglet', 'kitten'], perch: ['roof', 'tree', 'hill', 'tent', 'roof'], map: [
+      '#############',
+      '#....1#....3#',
+      '#.#.###.#.###',
+      '#*#.....*...#',
+      '#.#*#######.#',
+      '#....2#b.a#*#',
+      '#######.#.#B#',
+      '#.>.>...#*..#',
+      '#^###.#####.#',
+      '#..*#.*.....#',
+      '#.#.#v#.#.###',
+      '#4#.A..H...5#',
+      '#######P#####']}
+  ];
+  const THEMES = {
+    park:    {grass: '#7CC96A', grass2: '#6DBB5C', path: '#F6E7BE', edge: '#E3CC92', walls: ['tree', 'tree', 'tree', 'bush', 'flowers', 'pond']},
+    town:    {grass: '#8ACB72', grass2: '#7ABD63', path: '#E4E1EA', edge: '#C9C4D4', walls: ['house', 'house', 'house', 'tree', 'tree', 'bush']},
+    fair:    {grass: '#86CC6E', grass2: '#76BE5F', path: '#F8E6C4', edge: '#E6CB97', walls: ['tent', 'tent', 'tree', 'tree', 'bush', 'flowers']},
+    hills:   {grass: '#92CF6F', grass2: '#81C15F', path: '#F2E2BC', edge: '#DCC38E', walls: ['hill', 'hill', 'hill', 'tree', 'rock', 'bush']},
+    rainbow: {grass: '#8FD08A', grass2: '#7EC27A', path: '#FFF0D6', edge: '#EBCFA0', walls: ['rhill', 'rhill', 'tree', 'tree', 'flowers', 'rhill']},
+    sky:     {grass: '#85CB70', grass2: '#74BC60', path: '#F6E8C6', edge: '#E1C994', walls: ['house', 'tree', 'tree', 'hill', 'tent', 'bush']}
+  };
+  const NAMES = {duck: 'Dilly', lamb: 'Woolly', koala: 'Kip', piglet: 'Truffle', kitten: 'Mittens'};
+  const ALL_FRIENDS = ['duck', 'lamb', 'koala', 'piglet', 'kitten'];
+  const GATE_COL = {a: {name: 'pink', c: '#F2559B', d: '#C23A78', l: '#FFB8D6'}, b: {name: 'blue', c: '#4DABF7', d: '#2B7CC2', l: '#BFE3FF'}, c: {name: 'yellow', c: '#FFC23D', d: '#D99A12', l: '#FFE7A8'}};
+  const DIRS = {up: [0, -1], right: [1, 0], down: [0, 1], left: [-1, 0]};
+  const REV = {up: 'down', down: 'up', left: 'right', right: 'left'};
+  const ARROW = {'^': 'up', '>': 'right', 'v': 'down', '<': 'left'};
+  const HELP = ['Help!', 'Yoo-hoo!', 'Over here!', "I'm stuck!", 'Whirly!'];
+  const YAY = ['Yippee!', 'Hooray!', 'My hero!', 'Thank you!', 'Woohoo!'];
+  const PICNIC = ['Picnic time!', 'Yum yum!', 'Thanks, Lenny!', 'Safe and sound!', 'Sandwiches!'];
+  const CONF = ['#FF6B6B', '#FFA94D', '#FFD43B', '#69DB7C', '#4DABF7', '#9775FA', '#F2559B'];
+
+  // ===== GAME STATE =====
+  let state = 'menu';            // menu, play, party, done
+  let levelI = 0, L = null, S = 7, tile = [], friends = [], balloons = [], gates = [], winds = [], stars = [];
+  let fog = [], fogV = [], H = {x: 0, y: 0}, P = {x: 0, y: 0};
+  let clock = 0, peekT = 0, peekV = 0, partyT = 0, finale = 0, callT = 3, birdT = 4, whooshT = 0, starsGot = 0;
+  let parts = [], bubbles = [], flyers = [], birds = [];
+  let held = [];                 // directions being held down (keys or pad)
+  let timeScale = 1, auto = false;
+  const W = {x: 0, y: 0, fx: 0, fy: 0, tx: 0, ty: 0, t: 0, moving: false, dir: null, queued: null, push: false,
+             face: 1, faceS: 1, tilt: 0, rotor: 0, alt: 1, carry: null, busy: 0, job: null, bump: 0, spin: -1, cheer: 0, lift: 0};
+
+  function isWall(x, y){ if(x < 0 || y < 0 || x >= S || y >= S) return true; return tile[y][x] === '#' || tile[y][x] === 'P'; }
+  function gateAt(x, y){ return gates.find(g => g.x === x && g.y === y); }
+  function isOpen(x, y){ if(isWall(x, y)) return false; const g = gateAt(x, y); return !g || g.open; }
+  function windAt(x, y){ return winds.find(w => w.x === x && w.y === y); }
+  function exits(x, y){ return Object.keys(DIRS).filter(d => isOpen(x + DIRS[d][0], y + DIRS[d][1])); }
+
+  function buildLevel(i){
+    levelI = i; L = LEVELS[i]; S = L.map.length;
+    tile = []; friends = []; balloons = []; gates = []; winds = []; stars = [];
+    for(let y = 0; y < S; y++){
+      tile.push([]);
+      for(let x = 0; x < S; x++){
+        const c = L.map[y][x];
+        let t = '.';
+        if(c === '#') t = '#';
+        else if(c === 'P'){ t = 'P'; P = {x, y}; }
+        else if(c === 'H'){ t = 'H'; H = {x, y}; }
+        else if(c >= '1' && c <= '5'){ const k = +c - 1; friends.push({i: k, kind: L.friends[k], perch: L.perch[k], x, y, state: 'wait', t: 0, ph: Math.random()*6, slot: -1, jump: 0}); }
+        else if('ab'.includes(c)) balloons.push({c, x, y, popped: false, t: 0});
+        else if('AB'.includes(c)) gates.push({c: c.toLowerCase(), x, y, open: false, t: 0});
+        else if(ARROW[c]) winds.push({x, y, d: ARROW[c]});
+        else if(c === '*') stars.push({x, y, got: false, t: 0});
+        tile[y].push(t);
+      }
+    }
+    friends.sort((a, b) => a.i - b.i);
+    fog = []; fogV = [];
+    for(let y = 0; y < S; y++){ fog.push(Array(S).fill(1)); fogV.push(Array(S).fill(1)); }
+    Object.assign(W, {x: H.x, y: H.y, fx: H.x, fy: H.y, tx: H.x, ty: H.y, t: 0, moving: false, dir: null, queued: null, push: false,
+      face: 1, faceS: 1, tilt: 0, alt: 0.35, carry: null, busy: 0, job: null, bump: 0, spin: -1, cheer: 0, lift: 0});
+    parts = []; bubbles = []; flyers = []; birds = []; held = [];
+    peekT = 0; peekV = 0; partyT = 0; finale = 0; callT = 3.5; starsGot = 0;
+    clearAround(H.x, H.y, true);
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++) fogV[y][x] = fog[y][x];
+    updateHud();
+    bgDirty = true;
+  }
+
+  // the rotor blows away the clouds in a circle around Whirly (about 2 squares each way)
+  const CLEAR_R = 2.3;
+  function clearAround(px, py, quiet){
+    let n = 0;
+    const r = Math.ceil(CLEAR_R);
+    for(let y = Math.floor(py) - r; y <= Math.ceil(py) + r; y++) for(let x = Math.floor(px) - r; x <= Math.ceil(px) + r; x++){
+      if(x < 0 || y < 0 || x >= S || y >= S || !fog[y][x]) continue;
+      if(Math.hypot(x - px, y - py) <= CLEAR_R){
+        fog[y][x] = 0; n++;
+        if(!quiet && !reduced && Math.random() < 0.7){
+          const a = Math.atan2(y - py, x - px) + (Math.random() - 0.5)*0.6;
+          parts.push({k: 'puff', x: x + 0.5, y: y + 0.5, vx: Math.cos(a)*1.4, vy: Math.sin(a)*1.4, r: 0.35 + Math.random()*0.2, life: 1});
+        }
+      }
+    }
+    if(n && !quiet && whooshT <= 0){ sfx.whoosh(); whooshT = 0.35; }
+    return n;
+  }
+  function clearCircle(cx, cy, r){
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++) if(fog[y][x] && Math.hypot(x - cx, y - cy) <= r){ fog[y][x] = 0;
+      if(!reduced) parts.push({k: 'puff', x: x + 0.5, y: y + 0.5, vx: (Math.random() - 0.5)*1.6, vy: -0.6 - Math.random(), r: 0.3 + Math.random()*0.2, life: 1}); }
+  }
+
+  function friendsHome(){ return friends.filter(f => f.state === 'picnic').length; }
+  function updateHud(){
+    if(!L) return;
+    lvlEl.textContent = 'Level ' + (levelI + 1);
+    lvlEl.title = L.name;
+    savedEl.textContent = '🐾 ' + friendsHome() + '/' + friends.length;
+    savedEl.setAttribute('aria-label', 'Friends at the picnic: ' + friendsHome() + ' of ' + friends.length);
+    starsEl.textContent = '⭐ ' + starsGot + '/' + stars.length;
+    starsEl.setAttribute('aria-label', 'Stars: ' + starsGot + ' of ' + stars.length);
+  }
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.32 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.012); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.03);
+  }
+  // a burst of filtered hiss (whooshes, puffs, pops and the drums)
+  function noise(t0, dur, type, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = type; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  const now = () => actx ? actx.currentTime : 0;
+  const sfx = {
+    whoosh(){ if(audio()) noise(now(), 0.55, 'bandpass', 700, 0.9, 0.07, 0.12, null, 2600); },
+    boing(){ tone(300, 0.22, 'sine', 0.2, 150); tone(600, 0.12, 'triangle', 0.04, 300, 0.02); },
+    ladder(){ for(let i = 0; i < 7; i++) tone(950 - i*70, 0.04, 'square', 0.03, null, i*0.055); },
+    climb(){ [523, 587, 659, 698, 784, 880].forEach((f, i) => tone(f, 0.08, 'triangle', 0.09, null, i*0.12)); },
+    cheer(){
+      tone(520, 0.35, 'triangle', 0.08, 900); tone(660, 0.35, 'triangle', 0.06, 1100, 0.03);
+      [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.16, 'triangle', 0.09, null, 0.14 + i*0.07));
+      if(audio()) for(let i = 0; i < 4; i++) noise(now() + 0.05 + i*0.09, 0.06, 'bandpass', 1500, 0.8, 0.1, 0.003);
+    },
+    pop(){ if(audio()){ noise(now(), 0.12, 'highpass', 1200, 0.7, 0.35, 0.002); } tone(900, 0.12, 'sine', 0.12, 300); [1047, 1319, 1568].forEach((f, i) => tone(f, 0.18, 'triangle', 0.07, null, 0.12 + i*0.07)); },
+    gate(){ [659, 880, 1175].forEach((f, i) => tone(f, 0.25, 'triangle', 0.09, null, i*0.1)); },
+    star(){ [988, 1319, 1568].forEach((f, i) => tone(f, 0.22, 'triangle', 0.1, null, i*0.06)); tone(2093, 0.4, 'sine', 0.04, null, 0.2); },
+    wind(){ if(audio()){ noise(now(), 0.9, 'bandpass', 500, 1.4, 0.12, 0.15, null, 1800); } tone(400, 0.6, 'sine', 0.05, 900); },
+    drop(){ tone(400, 0.12, 'triangle', 0.11, 900); tone(1200, 0.1, 'sine', 0.05, null, 0.1); },
+    full(){ tone(660, 0.14, 'triangle', 0.09); tone(784, 0.2, 'triangle', 0.09, null, 0.15); },
+    peek(){ [784, 988, 1175, 1568, 1976].forEach((f, i) => tone(f, 0.4, 'sine', 0.05, null, i*0.06)); if(audio()) noise(now(), 1.2, 'bandpass', 400, 0.8, 0.05, 0.3, null, 1600); },
+    tweet(){ for(let i = 0; i < 3; i++) tone(2400, 0.07, 'sine', 0.04, 3400, i*0.1); },
+    fanfare(){
+      [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.8 : 0.16, 'triangle', 0.13, null, i*0.13));
+      [262, 330, 392].forEach(f => tone(f, 1.1, 'triangle', 0.06, null, 0.8));
+      this.cheer();
+    }
+  };
+
+  // Whirly's rotor: a soft hiss that goes "whup-whup-whup"
+  let rotorG = null, rotorLfo = null;
+  function startRotor(){
+    if(!audio() || rotorG) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const bp = actx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 480; bp.Q.value = 0.8;
+    const am = actx.createGain(); am.gain.value = 0.55;
+    rotorLfo = actx.createOscillator(); rotorLfo.type = 'sine'; rotorLfo.frequency.value = 11;
+    const lg = actx.createGain(); lg.gain.value = 0.45; rotorLfo.connect(lg).connect(am.gain);
+    const hum = actx.createOscillator(); hum.type = 'triangle'; hum.frequency.value = 74;
+    const hg = actx.createGain(); hg.gain.value = 0.22;
+    rotorG = actx.createGain(); rotorG.gain.value = 0;
+    src.connect(bp).connect(am); hum.connect(hg).connect(am); am.connect(rotorG).connect(sfxBus);
+    src.start(); rotorLfo.start(); hum.start();
+  }
+  let rotorLevel = -1;
+  function rotorSound(level){
+    if(!rotorG || Math.abs(level - rotorLevel) < 0.005) return;
+    rotorLevel = level;
+    rotorG.gain.setTargetAtTime(level, actx.currentTime, 0.25);
+    rotorLfo.frequency.setTargetAtTime(9 + level*60, actx.currentTime, 0.3);
+  }
+
+  // background music: a gentle, floaty tune that loops
+  const BPM = 100, STEP = 60/BPM/2;
+  const CHORDS = [48, 53, 45, 43, 48, 53, 50, 43];   // C, F, Am, G, C, F, Dm, G
+  const MINORS = [45, 50];
+  const MELODY = [
+    76,0,79,0,81,79,76,0,   77,0,81,0,84,0,81,0,
+    76,0,72,0,74,76,72,0,   74,0,0,71,74,0,0,0,
+    72,0,76,0,79,0,84,0,    81,0,77,0,81,84,81,77,
+    74,0,77,0,76,74,72,0,   71,0,74,0,72,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    if(beat === 0 || beat === 4) tone(hz(root - 12), STEP*3.2, 'triangle', 0.16, null, d, musicBus);
+    if(beat === 6) tone(hz(root - 5), STEP*1.6, 'triangle', 0.1, null, d, musicBus);
+    if(beat === 0) [12, 16, 19].forEach(n => { const nn = MINORS.includes(root) && n === 16 ? 15 : n; tone(hz(root + nn), STEP*7.5, 'sine', 0.03, null, d, musicBus); });
+    const m = MELODY[i];
+    if(m){ tone(hz(m), 0.45, 'triangle', 0.08, null, d, musicBus); tone(hz(m)*2, 0.18, 'sine', 0.025, null, d, musicBus); }
+    if(beat === 2 || beat === 6) noise(t, 0.05, 'highpass', 6500, 0.7, 0.025, 0.003, musicBus);
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){ playStep(mStep, mNext); mNext += STEP; mStep = (mStep + 1) % 64; }
+  }
+  function startMusic(){ if(!audio() || mTimer) return; mNext = actx.currentTime + 0.1; mStep = 0; mTimer = setInterval(scheduleMusic, 50); }
+  function duckMusic(secs){
+    if(!actx || !musicOn) return;
+    const g = musicBus.gain, t = actx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.08, t + 0.1); g.setValueAtTime(0.08, t + secs); g.linearRampToValueAtTime(0.32, t + secs + 0.8);
+  }
+  function startSound(){ wake(); startMusic(); startRotor(); }
+
+  function paintSoundBtns(){
+    sfxBtn.innerHTML = muted ? '🔇' : '🔊'; sfxBtn.setAttribute('aria-label', muted ? 'Sounds off' : 'Sounds on'); sfxBtn.classList.toggle('off', muted);
+    musicBtn.innerHTML = '🎵'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off'); musicBtn.classList.toggle('off', !musicOn);
+    musicBtn.style.textDecoration = musicOn ? '' : 'line-through';
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.cancelScheduledValues(actx.currentTime); musicBus.gain.setValueAtTime(musicOn ? 0.32 : 0, actx.currentTime);
+    }
+  }
+  sfxBtn.addEventListener('click', () => { muted = !muted; save('muted', muted); startSound(); paintSoundBtns(); sfxBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save('music', musicOn); startSound(); paintSoundBtns(); musicBtn.blur(); });
+  paintSoundBtns();
+
+  // ===== FLYING AROUND THE MAZE =====
+  const SPEED = 4.2, PUSH_SPEED = 2.6;
+  function canAct(){ return state === 'play' && W.busy <= 0; }
+
+  function press(d){
+    if(!DIRS[d]) return;
+    startSound();
+    if(state !== 'play') return;
+    if(W.busy > 0 || W.push){ return; }
+    if(W.moving){
+      if(d === REV[W.dir]){
+        // turn straight round, from where Whirly is now
+        [W.fx, W.fy, W.tx, W.ty] = [W.tx, W.ty, W.fx, W.fy]; W.t = 1 - W.t; W.dir = d; W.queued = null; faceFor(d);
+      } else W.queued = d;
+      return;
+    }
+    tryMove(d, true);
+  }
+  function tryMove(d, fromTap){
+    const nx = W.x + DIRS[d][0], ny = W.y + DIRS[d][1];
+    if(!isOpen(nx, ny)){
+      if(fromTap){
+        if(W.bump <= 0) sfx.boing();
+        W.bump = 0.35; W.bumpDir = d;
+        const g = gateAt(nx, ny);
+        if(g && !g.open && !bubbles.some(b => b.gate)) say(() => ({x: W.fx + 0.5, y: W.fy - 0.4}), 'Find the ' + GATE_COL[g.c].name + ' balloon!', 2.2, {gate: true});
+      }
+      return false;
+    }
+    W.fx = W.x; W.fy = W.y; W.tx = nx; W.ty = ny; W.t = 0; W.moving = true; W.dir = d; W.queued = null;
+    faceFor(d);
+    return true;
+  }
+  function faceFor(d){ if(d === 'left') W.face = -1; else if(d === 'right') W.face = 1; }
+
+  function arrive(){
+    W.x = W.tx; W.y = W.ty; W.fx = W.x; W.fy = W.y; W.moving = false; W.t = 0;
+    const wasPush = W.push; W.push = false;
+    const x = W.x, y = W.y;
+    // sparkly star
+    const st = stars.find(s => !s.got && s.x === x && s.y === y);
+    if(st){ st.got = true; st.t = 0; starsGot++; sfx.star(); burst(x + 0.5, y + 0.5, 12, ['#FFD43B', '#FFF3B0', '#FFA94D']); updateHud(); }
+    // wind puff: whoosh, one square along
+    const wd = !wasPush && windAt(x, y);
+    if(wd){
+      sfx.wind(); W.spin = 0;
+      W.fx = x; W.fy = y; W.tx = x + DIRS[wd.d][0]; W.ty = y + DIRS[wd.d][1]; W.t = 0; W.moving = true; W.dir = wd.d; W.push = true; W.queued = null;
+      faceFor(wd.d);
+      say(() => ({x: W.fx + 0.5, y: W.fy - 0.4}), pick(['Wheee!', 'Whoosh!', 'Windy!']), 1.2);
+      return;
+    }
+    // an animal friend
+    const f = friends.find(f => f.state === 'wait' && f.x === x && f.y === y);
+    if(f){
+      if(!W.carry){ startRescue(f); return; }
+      if(!f.told){ f.told = 1.5; say(() => ({x: f.x + 0.5, y: f.y - 0.1}), 'Me next!', 1.6); sfx.full(); }
+    }
+    // a balloon to pop
+    const b = balloons.find(b => !b.popped && b.x === x && b.y === y);
+    if(b){ popBalloon(b); W.queued = null; return; }
+    // home to the helipad with a friend
+    if(x === H.x && y === H.y && W.carry){ startDrop(); return; }
+    if(wasPush){ W.queued = null; return; }
+    // keep going: a turn the player asked for, a held button, or straight on down a corridor
+    const order = [];
+    if(W.queued) order.push(W.queued);
+    for(let i = held.length - 1; i >= 0; i--) order.push(held[i]);
+    for(const d of order){ if(d !== REV[W.dir] && isOpen(x + DIRS[d][0], y + DIRS[d][1])){ tryMove(d); return; } }
+    W.queued = null;
+    const ex = exits(x, y);
+    if(W.dir && ex.length === 2 && ex.includes(W.dir) && ex.includes(REV[W.dir])) tryMove(W.dir);
+  }
+
+  function startRescue(f){
+    W.busy = 1.7; W.job = {k: 'rescue', f, t: 0}; f.state = 'ladder'; f.t = 0;
+    sfx.ladder(); W.queued = null;
+  }
+  function startDrop(){
+    W.busy = 1.4; W.job = {k: 'drop', f: W.carry, t: 0}; W.queued = null;
+  }
+  function popBalloon(b){
+    b.popped = true; b.t = 0; sfx.pop();
+    const col = GATE_COL[b.c];
+    burst(b.x + 0.5, b.y - 0.2, 22, [col.c, col.l, '#FFFFFF']);
+    const g = gates.find(g => g.c === b.c);
+    if(g) flyers.push({x: b.x + 0.5, y: b.y - 0.2, x0: b.x + 0.5, y0: b.y - 0.2, x1: g.x + 0.5, y1: g.y + 0.5, t: 0, col: col.c, g});
+    say(() => ({x: b.x + 0.5, y: b.y - 0.5}), 'Pop! The ' + col.name + ' gate is open!', 2.4);
+  }
+
+  function updateJob(dt){
+    const j = W.job; if(!j) return;
+    j.t += dt;
+    if(j.k === 'rescue'){
+      const f = j.f;
+      if(f.state === 'ladder' && j.t > 0.45){ f.state = 'climb'; f.t = 0; sfx.climb(); }
+      if(f.state === 'climb'){ f.t = (j.t - 0.45)/0.85; if(f.t >= 1){ f.state = 'carried'; W.carry = f; W.cheer = 1.2; sfx.cheer(); say(() => wPos(), pick(YAY), 1.6); burst(W.fx + 0.5, W.fy, 10); } }
+    } else if(j.k === 'drop'){
+      const f = j.f;
+      if(f.state === 'carried' && j.t > 0.35){
+        f.state = 'hop'; f.t = 0; f.slot = friendsHome(); W.carry = null; sfx.drop();
+        f.hx = W.fx + 0.5; f.hy = W.fy + 0.3;
+      }
+      if(f.state === 'hop'){
+        f.t = (j.t - 0.35)/0.6;
+        if(f.t >= 1){
+          f.state = 'picnic'; f.jump = 1; stickers[f.kind] = true; save('stickers', stickers);
+          sfx.cheer(); updateHud();
+          const pp = picnicSpot(f.slot);
+          burst(pp.x, pp.y - 0.4, 12);
+          if(friends.every(g => g.state === 'picnic')) startParty();
+          else say(() => { const q = picnicSpot(f.slot); return {x: q.x, y: q.y - 0.75}; }, pick(PICNIC), 1.8);
+        }
+      }
+    }
+    if(W.busy - dt <= 0){ W.job = null; }
+  }
+
+  // ===== WINNING =====
+  function rating(){ const n = stars.length; if(!n || starsGot >= n) return 3; return starsGot*2 >= n ? 2 : 1; }
+  function startParty(){
+    state = 'party'; partyT = 0; W.busy = 99; W.spin = 0; W.cheer = 3;
+    const r = rating();
+    prog.stars[levelI] = Math.max(prog.stars[levelI] || 0, r);
+    prog.unlocked = Math.max(prog.unlocked, Math.min(LEVELS.length, levelI + 2));
+    save('prog', prog);
+    sfx.fanfare(); duckMusic(3);
+    for(let i = 0; i < 4; i++) setTimeout(() => burst(P.x + 0.5, P.y - 0.2, 26), i*300);
+    clearCircle(S/2 - 0.5, S/2 - 0.5, S);   // the clouds all drift away for the party
+    if(levelI === LEVELS.length - 1) finale = 0.001;
+  }
+  function endLevel(){
+    state = 'done';
+    showDone();
+  }
+
+  // ===== EFFECTS =====
+  function burst(x, y, n, cols){
+    if(reduced) n = Math.min(n, 4);
+    for(let i = 0; i < n; i++){
+      const a = Math.random()*Math.PI*2, sp = 1 + Math.random()*2.5;
+      parts.push({k: 'conf', x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 2, rot: Math.random()*6, vr: (Math.random() - 0.5)*12, col: pick(cols || CONF), life: 1, s: 0.08 + Math.random()*0.06});
+    }
+  }
+  function say(get, text, dur, extra){ bubbles = bubbles.filter(b => !(b.text === text)); bubbles.push(Object.assign({get, text, t: 0, dur}, extra || {})); if(bubbles.length > 4) bubbles.shift(); }
+  function wPos(){ return {x: lerp(W.fx, W.tx, ease(W.t)) + 0.5, y: lerp(W.fy, W.ty, ease(W.t)) + 0.5 - W.alt - 0.55}; }
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt;
+    whooshT -= dt; W.bump -= dt; W.cheer -= dt;
+    if(W.spin >= 0){ W.spin += dt; if(W.spin > 0.9) W.spin = -1; }
+    W.rotor += dt*(W.busy > 0 && W.job && W.job.k === 'drop' ? 18 : 30);
+    // moving from square to square
+    if(state === 'play' || state === 'party'){
+      if(W.busy > 0){ W.busy -= dt; updateJob(dt); if(W.busy <= 0){ W.busy = 0; W.job = null; } }
+      if(W.moving){
+        W.t += dt*(W.push ? PUSH_SPEED : SPEED);
+        if(W.t >= 1){ W.t = 1; arrive(); }
+      }
+    }
+    const px = lerp(W.fx, W.tx, W.moving ? W.t : 0), py = lerp(W.fy, W.ty, W.moving ? W.t : 0);
+    if(state === 'play') clearAround(px, py, false);
+    // Whirly hovers low over the helipad and over a friend while the ladder is down
+    const landing = W.job && W.job.k === 'drop' && W.job.t < 1.1;
+    W.alt += ((landing ? 0.08 : 0.35) - W.alt)*Math.min(1, dt*6);
+    W.faceS += (W.face - W.faceS)*Math.min(1, dt*10);
+    const tiltTo = W.moving ? (W.dir === 'left' || W.dir === 'right' ? 0.16 : 0.06) : 0;
+    W.tilt += (tiltTo - W.tilt)*Math.min(1, dt*8);
+    // rotor sound: louder while flying
+    rotorSound(state === 'play' || state === 'party' ? (W.moving ? 0.09 : 0.05) : 0.0);
+    // clouds drift away / back
+    if(peekT > 0){ peekT -= dt; if(peekT <= 0) peekBtn.classList.remove('on'); }
+    peekV += ((peekT > 0 ? 1 : 0) - peekV)*Math.min(1, dt*(peekT > 0 ? 3.5 : 1.6));
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){ const v = fogV[y][x], t = fog[y][x]; if(v !== t) fogV[y][x] = Math.abs(v - t) < 0.01 ? t : v + (t - v)*Math.min(1, dt*3.2); }
+    // stars twinkle away, balloons pop, gates open
+    stars.forEach(s => { if(s.got) s.t += dt; });
+    balloons.forEach(b => { if(b.popped) b.t += dt; });
+    gates.forEach(g => { if(g.open) g.t += dt; });
+    friends.forEach(f => { if(f.told) f.told = Math.max(0, f.told - dt); if(f.jump > 0) f.jump = Math.max(0, f.jump - dt*1.6); });
+    // the sparkle that flies from a popped balloon to its gate
+    flyers = flyers.filter(fl => {
+      fl.t += dt/0.9;
+      const u = ease(Math.min(1, fl.t));
+      fl.x = lerp(fl.x0, fl.x1, u); fl.y = lerp(fl.y0, fl.y1, u) - Math.sin(Math.PI*u)*1.2;
+      if(!reduced && Math.random() < 0.8) parts.push({k: 'spark', x: fl.x, y: fl.y, vx: (Math.random() - 0.5)*0.6, vy: (Math.random() - 0.5)*0.6, col: fl.col, life: 1});
+      if(fl.t >= 1){ fl.g.open = true; fl.g.t = 0; sfx.gate(); clearCircle(fl.g.x, fl.g.y, 1.3); burst(fl.x1, fl.y1, 14, [fl.col, '#FFFFFF']); return false; }
+      return true;
+    });
+    // particles
+    parts = parts.filter(p => {
+      p.life -= dt*(p.k === 'puff' ? 0.9 : p.k === 'spark' ? 2.2 : 0.75);
+      p.x += p.vx*dt; p.y += p.vy*dt;
+      if(p.k === 'conf'){ p.vy += 5*dt; p.vx *= 0.99; p.rot += p.vr*dt; }
+      if(p.k === 'puff'){ p.vx *= 0.97; p.vy *= 0.97; p.r += dt*0.15; }
+      return p.life > 0;
+    });
+    if(parts.length > 400) parts.splice(0, parts.length - 400);
+    bubbles = bubbles.filter(b => (b.t += dt) < b.dur);
+    // friends hidden under the clouds call out now and then (a little clue)
+    if(state === 'play'){
+      callT -= dt;
+      if(callT <= 0){
+        callT = 5 + Math.random()*3;
+        const hid = friends.filter(f => f.state === 'wait' && fogV[f.y][f.x] > 0.5);
+        if(hid.length && !W.carry){ const f = pick(hid); say(() => ({x: f.x + 0.5, y: f.y + 0.1}), pick(HELP), 2, {call: true}); }
+      }
+    }
+    // birds fly across now and then
+    birdT -= dt;
+    if(birdT <= 0 && !reduced){
+      birdT = 7 + Math.random()*8;
+      const dir = Math.random() < 0.5 ? 1 : -1;
+      birds.push({x: dir > 0 ? -1 : S + 1, y: 0.8 + Math.random()*(S - 2), dir, ph: Math.random()*6, sp: 1.2 + Math.random()*0.6});
+      if(state === 'play' && Math.random() < 0.5) sfx.tweet();
+    }
+    birds = birds.filter(b => { b.x += b.dir*b.sp*dt; b.y += Math.sin(clock*2 + b.ph)*0.003; return b.x > -2 && b.x < S + 2; });
+    // party time
+    if(state === 'party'){
+      partyT += dt;
+      if(!reduced && Math.random() < dt*6) burst(Math.random()*S, -0.2, 3);
+      friends.forEach(f => { if(f.jump <= 0 && Math.random() < dt*2.5) f.jump = 1; });
+      if(finale > 0) finale += dt;
+      if(partyT > (finale > 0 ? 5 : 2.4)) endLevel();
+    }
+    if(TEST && auto) autoStep();
+  }
+
+  // ===== DRAWING =====
+  function ell(c, x, y, rx, ry, rot){ c.beginPath(); c.ellipse(x, y, Math.max(0.01, rx), Math.max(0.01, ry), rot || 0, 0, Math.PI*2); }
+  function circ(c, x, y, r){ c.beginPath(); c.arc(x, y, Math.max(0.01, r), 0, Math.PI*2); }
+  function rr(c, x, y, w, h, r){ c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+  function starShape(c, x, y, r, col, rot){
+    c.fillStyle = col; c.beginPath();
+    for(let i = 0; i < 10; i++){ const a = -Math.PI/2 + (rot || 0) + i*Math.PI/5, q = i % 2 ? r*0.48 : r; c.lineTo(x + Math.cos(a)*q, y + Math.sin(a)*q); }
+    c.closePath(); c.fill();
+  }
+
+  let size = 600, T = 60, dpr = 1, bgDirty = true;
+  const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
+
+  // ----- the town, park and hills (drawn once per level, then reused) -----
+  function wallKind(x, y){
+    const th = THEMES[L.theme];
+    return th.walls[Math.floor(hash(x + levelI*17, y)*th.walls.length)];
+  }
+  function drawBackground(){
+    const c = bgc, th = THEMES[L.theme];
+    bg.width = Math.round(size*dpr); bg.height = Math.round(size*dpr);
+    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);   // draw in squares: 1 unit = 1 square
+    // grass everywhere, with a soft checker
+    c.fillStyle = th.grass; c.fillRect(0, 0, S, S);
+    c.fillStyle = th.grass2;
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++) if((x + y) % 2) c.fillRect(x, y, 1, 1);
+    // paths: soft rounded sandy tracks joining the open squares
+    const open = (x, y) => x >= 0 && y >= 0 && x < S && y < S && tile[y][x] !== '#' && tile[y][x] !== 'P';
+    const pathShape = (inset, col) => {
+      c.fillStyle = col;
+      for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+        if(!open(x, y)) continue;
+        rr(c, x + inset, y + inset, 1 - inset*2, 1 - inset*2, 0.3); c.fill();
+        if(open(x + 1, y)) c.fillRect(x + 0.5, y + inset, 1, 1 - inset*2);
+        if(open(x, y + 1)) c.fillRect(x + inset, y + 0.5, 1 - inset*2, 1);
+      }
+    };
+    pathShape(0.04, th.edge);
+    pathShape(0.1, th.path);
+    // little details on the path: pebbles, or road lines in town
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+      if(!open(x, y)) continue;
+      if(L.theme === 'town'){
+        c.fillStyle = '#FFFFFF';
+        if(open(x + 1, y) && open(x - 1, y) && !open(x, y - 1) && !open(x, y + 1)){ c.fillRect(x + 0.2, y + 0.47, 0.25, 0.06); c.fillRect(x + 0.6, y + 0.47, 0.25, 0.06); }
+        if(open(x, y + 1) && open(x, y - 1) && !open(x - 1, y) && !open(x + 1, y)){ c.fillRect(x + 0.47, y + 0.2, 0.06, 0.25); c.fillRect(x + 0.47, y + 0.6, 0.06, 0.25); }
+      } else if(hash(x, y + 9) < 0.5){
+        c.fillStyle = 'rgba(160,120,70,0.18)';
+        circ(c, x + 0.2 + hash(x, y)*0.6, y + 0.25 + hash(y, x)*0.5, 0.04); c.fill();
+        circ(c, x + 0.3 + hash(x + 3, y)*0.4, y + 0.3 + hash(y + 2, x)*0.4, 0.03); c.fill();
+      }
+    }
+    // helipad
+    const hx = H.x + 0.5, hy = H.y + 0.5;
+    c.fillStyle = '#8E99AD'; circ(c, hx, hy, 0.44); c.fill();
+    c.fillStyle = '#A9B3C6'; circ(c, hx, hy, 0.38); c.fill();
+    c.strokeStyle = '#FFD43B'; c.lineWidth = 0.05; circ(c, hx, hy, 0.3); c.stroke();
+    c.save(); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.fillStyle = '#FFFFFF'; c.font = Math.round(T*0.42) + 'px "Chewy","Comic Sans MS",cursive'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText('H', hx*T, hy*T + T*0.02);
+    c.restore();
+    // walls, back row first so the front ones overlap a little
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+      if(tile[y][x] === 'P') drawPicnicBlanket(c, x, y);
+      else if(tile[y][x] === '#') drawWall(c, wallKind(x, y), x, y);
+    }
+  }
+
+  function leafy(c, x, y, r, col){ c.fillStyle = col; c.beginPath(); for(let i = 0; i < 6; i++){ const a = i/6*Math.PI*2; c.moveTo(x + Math.cos(a)*r*0.5 + r*0.55, y + Math.sin(a)*r*0.45); c.arc(x + Math.cos(a)*r*0.5, y + Math.sin(a)*r*0.45, r*0.55, 0, Math.PI*2); } c.fill(); }
+  function drawTreeAt(c, x, y, s, k){
+    // a round leafy tree seen from above-ish, with a little trunk and shadow
+    c.fillStyle = 'rgba(30,60,30,0.22)'; ell(c, x + 0.06*s, y + 0.32*s, 0.4*s, 0.14*s); c.fill();
+    c.fillStyle = '#8B5A3C'; c.fillRect(x - 0.06*s, y + 0.05*s, 0.12*s, 0.27*s);
+    const g = ['#3F9150', '#4FA85C', '#5DB86A', '#6FC77A'];
+    leafy(c, x, y - 0.05*s, 0.42*s, g[0]);
+    c.fillStyle = g[1]; circ(c, x - 0.08*s, y - 0.12*s, 0.3*s); c.fill();
+    c.fillStyle = g[2]; circ(c, x - 0.12*s, y - 0.2*s, 0.17*s); c.fill();
+    if(k % 3 === 0){ c.fillStyle = '#FF6B6B'; [[-0.2, 0.05], [0.18, -0.08], [0.05, 0.14]].forEach(([a, b]) => { circ(c, x + a*s, y + b*s, 0.045*s); c.fill(); }); }
+    else if(k % 3 === 1){ c.fillStyle = '#FFFFFF'; [[-0.22, -0.02], [0.2, 0.02], [0, 0.18]].forEach(([a, b]) => { circ(c, x + a*s, y + b*s, 0.035*s); c.fill(); }); }
+  }
+  function drawHouseAt(c, x, y, s, k){
+    const walls = ['#FFE3A8', '#CDE8FF', '#FFD1DC', '#E0F5D0'][k % 4], roof = ['#E8636B', '#5C8FE0', '#F28C3B', '#9775FA'][Math.floor(k/4) % 4];
+    c.fillStyle = 'rgba(30,60,30,0.22)'; ell(c, x + 0.05*s, y + 0.4*s, 0.42*s, 0.1*s); c.fill();
+    c.fillStyle = walls; c.fillRect(x - 0.34*s, y - 0.05*s, 0.68*s, 0.45*s);
+    c.fillStyle = roof;
+    c.beginPath(); c.moveTo(x - 0.44*s, y + 0.0*s); c.lineTo(x, y - 0.42*s); c.lineTo(x + 0.44*s, y + 0.0*s); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(0,0,0,0.12)'; c.beginPath(); c.moveTo(x, y - 0.42*s); c.lineTo(x + 0.44*s, y); c.lineTo(x + 0.22*s, y); c.closePath(); c.fill();
+    c.fillStyle = '#8B5A3C'; rr(c, x - 0.08*s, y + 0.16*s, 0.16*s, 0.24*s, 0.05*s); c.fill();
+    c.fillStyle = '#9FD8FF'; c.fillRect(x - 0.28*s, y + 0.08*s, 0.14*s, 0.12*s); c.fillRect(x + 0.14*s, y + 0.08*s, 0.14*s, 0.12*s);
+    c.fillStyle = '#B5655B'; c.fillRect(x + 0.16*s, y - 0.34*s, 0.1*s, 0.16*s);
+  }
+  function drawTentAt(c, x, y, s, k){
+    const cols = [['#F2559B', '#FFFFFF'], ['#4DABF7', '#FFFFFF'], ['#FFC23D', '#FF6B6B'], ['#69DB7C', '#FFFFFF']][k % 4];
+    c.fillStyle = 'rgba(30,60,30,0.22)'; ell(c, x + 0.05*s, y + 0.38*s, 0.42*s, 0.1*s); c.fill();
+    for(let i = 0; i < 6; i++){
+      c.fillStyle = cols[i % 2];
+      c.beginPath(); c.moveTo(x, y - 0.42*s); c.lineTo(x - 0.42*s + i*0.14*s, y + 0.36*s); c.lineTo(x - 0.28*s + i*0.14*s, y + 0.36*s); c.closePath(); c.fill();
+    }
+    c.fillStyle = 'rgba(0,0,0,0.25)'; c.beginPath(); c.moveTo(x - 0.06*s, y + 0.36*s); c.lineTo(x, y + 0.06*s); c.lineTo(x + 0.06*s, y + 0.36*s); c.closePath(); c.fill();
+    c.strokeStyle = '#8B5A3C'; c.lineWidth = 0.03*s; c.beginPath(); c.moveTo(x, y - 0.42*s); c.lineTo(x, y - 0.56*s); c.stroke();
+    c.fillStyle = cols[0]; c.beginPath(); c.moveTo(x, y - 0.56*s); c.lineTo(x + 0.16*s, y - 0.51*s); c.lineTo(x, y - 0.46*s); c.closePath(); c.fill();
+  }
+  function drawHillAt(c, x, y, s, k, rainbow){
+    const sets = rainbow ? [['#FFB3C8', '#FF8FB0'], ['#FFD8A8', '#FFB86B'], ['#FFF0A0', '#F2D24B'], ['#B8F0B0', '#86D97C'], ['#B7DCFF', '#86BDF5'], ['#D9C8FF', '#B197FC']] : [['#A6DB98', '#86C977'], ['#B5E2A0', '#93CF7F'], ['#9ED48C', '#7FBF6C']];
+    const [a, b] = sets[k % sets.length];
+    c.fillStyle = 'rgba(30,60,30,0.2)'; ell(c, x + 0.05*s, y + 0.36*s, 0.46*s, 0.11*s); c.fill();
+    c.fillStyle = b; c.beginPath(); c.moveTo(x - 0.5*s, y + 0.36*s); c.quadraticCurveTo(x - 0.1*s, y - 0.62*s, x + 0.5*s, y + 0.36*s); c.closePath(); c.fill();
+    c.fillStyle = a; c.beginPath(); c.moveTo(x - 0.5*s, y + 0.36*s); c.quadraticCurveTo(x - 0.25*s, y - 0.55*s, x + 0.12*s, y + 0.36*s); c.closePath(); c.fill();
+    if(k % 2 === 0){ c.fillStyle = '#FFFFFF'; circ(c, x - 0.12*s, y + 0.12*s, 0.04*s); c.fill(); c.fillStyle = '#FFD43B'; circ(c, x - 0.12*s, y + 0.12*s, 0.018*s); c.fill(); }
+  }
+  function drawWall(c, kind, x, y){
+    const cx = x + 0.5, cy = y + 0.5, k = Math.floor(hash(y + 5, x + 3)*100);
+    if(kind === 'tree') drawTreeAt(c, cx, cy, 1, k);
+    else if(kind === 'house') drawHouseAt(c, cx, cy, 1, k);
+    else if(kind === 'tent') drawTentAt(c, cx, cy, 1, k);
+    else if(kind === 'hill') drawHillAt(c, cx, cy, 1, k, false);
+    else if(kind === 'rhill') drawHillAt(c, cx, cy, 1, k, true);
+    else if(kind === 'bush'){
+      c.fillStyle = 'rgba(30,60,30,0.2)'; ell(c, cx + 0.04, cy + 0.3, 0.42, 0.12); c.fill();
+      leafy(c, cx - 0.16, cy + 0.08, 0.3, '#4FA85C'); leafy(c, cx + 0.16, cy + 0.06, 0.32, '#3F9150'); leafy(c, cx, cy - 0.12, 0.3, '#5DB86A');
+      c.fillStyle = ['#FF8FB0', '#FFFFFF', '#FFD43B'][k % 3]; [[-0.2, 0], [0.15, -0.1], [0.05, 0.15], [-0.05, -0.22]].forEach(([a, b]) => { circ(c, cx + a, cy + b, 0.045); c.fill(); });
+    } else if(kind === 'flowers'){
+      c.fillStyle = '#5DA84E'; rr(c, x + 0.08, y + 0.08, 0.84, 0.84, 0.2); c.fill();
+      c.fillStyle = '#8B5A3C'; rr(c, x + 0.14, y + 0.14, 0.72, 0.72, 0.16); c.fill();
+      for(let i = 0; i < 6; i++){
+        const fx = x + 0.28 + (i % 3)*0.22, fy = y + 0.3 + Math.floor(i/3)*0.36;
+        c.fillStyle = '#3F9150'; c.fillRect(fx - 0.015, fy, 0.03, 0.14);
+        c.fillStyle = ['#FF8FB0', '#FFD43B', '#B197FC', '#FF6B6B'][(i + k) % 4];
+        for(let p = 0; p < 5; p++){ const a = p/5*Math.PI*2; circ(c, fx + Math.cos(a)*0.06, fy + Math.sin(a)*0.06, 0.045); c.fill(); }
+        c.fillStyle = '#FFF3B0'; circ(c, fx, fy, 0.03); c.fill();
+      }
+    } else if(kind === 'pond'){
+      c.fillStyle = '#5BB0E8'; ell(c, cx, cy, 0.42, 0.36); c.fill();
+      c.fillStyle = '#8FD0FF'; ell(c, cx - 0.06, cy - 0.06, 0.3, 0.24); c.fill();
+      c.fillStyle = '#4FA85C'; ell(c, cx + 0.16, cy + 0.12, 0.1, 0.07); c.fill();
+      c.fillStyle = '#FF8FB0'; circ(c, cx + 0.16, cy + 0.1, 0.035); c.fill();
+    } else if(kind === 'rock'){
+      c.fillStyle = 'rgba(30,60,30,0.2)'; ell(c, cx + 0.04, cy + 0.3, 0.4, 0.12); c.fill();
+      c.fillStyle = '#A8A3B4'; ell(c, cx, cy + 0.06, 0.4, 0.3); c.fill();
+      c.fillStyle = '#C3BFCE'; ell(c, cx - 0.08, cy - 0.02, 0.26, 0.18); c.fill();
+      leafy(c, cx + 0.22, cy + 0.26, 0.14, '#5DB86A');
+    }
+  }
+  function drawPicnicBlanket(c, x, y){
+    c.save();
+    c.beginPath(); c.moveTo(x - 0.25, y + 0.12); c.lineTo(x + 1.25, y + 0.12); c.lineTo(x + 1.35, y + 0.95); c.lineTo(x - 0.35, y + 0.95); c.closePath();
+    c.fillStyle = '#FFFFFF'; c.fill(); c.clip();
+    c.fillStyle = '#F25C6B';
+    for(let r = 0; r < 5; r++) for(let k = -1; k < 9; k++){ if((r + k) % 2) continue; c.fillRect(x - 0.35 + k*0.21, y + 0.12 + r*0.17, 0.21, 0.17); }
+    c.restore();
+    // basket
+    c.fillStyle = '#C8894A'; rr(c, x + 0.92, y + 0.02, 0.36, 0.26, 0.05); c.fill();
+    c.strokeStyle = '#8B5A3C'; c.lineWidth = 0.04; c.beginPath(); c.arc(x + 1.1, y + 0.03, 0.13, Math.PI, 0); c.stroke();
+    c.fillStyle = '#F25C6B'; c.fillRect(x + 0.92, y + 0.08, 0.36, 0.05);
+  }
+
+  // ----- Blossom's animal friends (drawn like they are in Blossom's Easter Eggs), feet at 0,0, about 106 tall -----
+  const ARMS = {duck: ['#FFD43B', '#EDC23A'], lamb: ['#FFFFFF', '#E3DDE8'], koala: ['#A9ACB8', '#8C8FA0'], piglet: ['#FFC7D6', '#EE9BB3'], kitten: ['#FFC078', '#E59A4E']};
+  function fEyes(c, o, y, gap){
+    c.strokeStyle = '#2B2340'; c.fillStyle = '#2B2340'; c.lineWidth = 2.6; c.lineCap = 'round';
+    if(o.happy){
+      c.beginPath(); c.arc(-gap, y + 1, 5, 1.1*Math.PI, 1.9*Math.PI); c.stroke();
+      c.beginPath(); c.arc(gap, y + 1, 5, 1.1*Math.PI, 1.9*Math.PI); c.stroke();
+    } else if(!reduced && ((clock + (o.ph || 0)) % 4.5) < 0.12){
+      c.beginPath(); c.moveTo(-gap - 5, y); c.lineTo(-gap + 5, y); c.moveTo(gap - 5, y); c.lineTo(gap + 5, y); c.stroke();
+    } else {
+      ell(c, -gap, y, 5, 6); c.fill(); ell(c, gap, y, 5, 6); c.fill();
+      c.fillStyle = '#fff'; circ(c, -gap - 1.5, y - 2.5, 2); c.fill(); circ(c, gap - 1.5, y - 2.5, 2); c.fill();
+    }
+  }
+  function fMouth(c, o, y){
+    c.strokeStyle = '#8A4B63'; c.lineWidth = 2; c.lineCap = 'round';
+    if(o.happy || o.open){ c.fillStyle = '#E05A7A'; c.beginPath(); c.arc(0, y - 2, 6, 0.05*Math.PI, 0.95*Math.PI); c.closePath(); c.fill(); }
+    else { c.beginPath(); c.arc(0, y - 3, 4.5, 0.2*Math.PI, 0.8*Math.PI); c.stroke(); }
+  }
+  function fCheeks(c, y, gap){ c.fillStyle = 'rgba(255,143,184,0.45)'; ell(c, -gap, y, 5, 3.5); c.fill(); ell(c, gap, y, 5, 3.5); c.fill(); }
+  function fluffy(c, pts, fill, line){
+    c.fillStyle = line; pts.forEach(([x, y, r]) => { circ(c, x, y, r + 2.5); c.fill(); });
+    c.fillStyle = fill; pts.forEach(([x, y, r]) => { circ(c, x, y, r); c.fill(); });
+  }
+  function drawFriendBody(c, k, o){
+    c.lineWidth = 2.5; c.lineCap = 'round'; c.lineJoin = 'round';
+    if(k === 'lamb'){
+      c.fillStyle = '#6B5A5A'; rr(c, -14, -16, 7, 16, 3); c.fill(); rr(c, 7, -16, 7, 16, 3); c.fill();
+      const body = [];
+      for(let i = 0; i < 8; i++){ const a = i/8*Math.PI*2; body.push([Math.cos(a)*18, -32 + Math.sin(a)*16, 12]); }
+      body.push([0, -32, 18]);
+      fluffy(c, body, '#FFFFFF', '#E3DDE8');
+      c.fillStyle = '#F2CDB8'; ell(c, -23, -76, 12, 6, -0.4); c.fill(); ell(c, 23, -76, 12, 6, 0.4); c.fill();
+      c.fillStyle = '#FBE8D8'; c.strokeStyle = '#E8C8B0'; ell(c, 0, -72, 19, 22); c.fill(); c.stroke();
+      fluffy(c, [[-9, -92, 8], [0, -96, 9], [9, -92, 8]], '#FFFFFF', '#E3DDE8');
+      fEyes(c, o, -74, 8); fCheeks(c, -64, 12);
+      c.fillStyle = '#C98A8A'; ell(c, 0, -63, 4, 3); c.fill();
+      fMouth(c, o, -56);
+    } else if(k === 'duck'){
+      c.fillStyle = '#FF9F43'; ell(c, -10, -3, 9, 4); c.fill(); ell(c, 10, -3, 9, 4); c.fill();
+      c.fillStyle = '#FFE066'; c.strokeStyle = '#EDC23A';
+      ell(c, 0, -30, 26, 26); c.fill(); c.stroke();
+      if(!o.arms){ c.fillStyle = '#FFD43B'; ell(c, -24, -32, 8, 13, 0.4); c.fill(); ell(c, 24, -32, 8, 13, -0.4); c.fill(); }
+      c.fillStyle = '#FFE066'; circ(c, 0, -72, 23); c.fill(); c.stroke();
+      c.strokeStyle = '#EDC23A'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(0, -94); c.quadraticCurveTo(-2, -104, -8, -106); c.moveTo(0, -94); c.quadraticCurveTo(4, -106, 9, -104); c.stroke();
+      fEyes(c, o, -76, 9); fCheeks(c, -66, 15);
+      const open = (o.happy || o.open) ? 3 : 0;
+      c.fillStyle = '#FF9F43'; c.strokeStyle = '#E8802A'; c.lineWidth = 2;
+      ell(c, 0, -65 - open/2, 11, 4.5); c.fill(); c.stroke();
+      ell(c, 0, -60 + open/2, 9, 3.5); c.fill(); c.stroke();
+    } else if(k === 'koala'){
+      c.fillStyle = '#8C8FA0'; ell(c, -12, -4, 9, 5); c.fill(); ell(c, 12, -4, 9, 5); c.fill();
+      c.fillStyle = '#A9ACB8'; c.strokeStyle = '#8C8FA0';
+      ell(c, 0, -30, 26, 26); c.fill(); c.stroke();
+      c.fillStyle = '#E9E9F0'; ell(c, 0, -26, 15, 17); c.fill();
+      [[-25, -90], [25, -90]].forEach(([a, b]) => {
+        c.fillStyle = '#A9ACB8'; circ(c, a, b, 15); c.fill(); c.stroke();
+        c.fillStyle = '#F3F3F8'; circ(c, a, b + 1, 9); c.fill();
+      });
+      c.fillStyle = '#A9ACB8'; ell(c, 0, -72, 26, 22); c.fill(); c.stroke();
+      fEyes(c, o, -77, 12); fCheeks(c, -64, 17);
+      c.fillStyle = '#3A3A48'; ell(c, 0, -67, 7, 9); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.4)'; ell(c, -2, -71, 2, 3); c.fill();
+      fMouth(c, o, -54);
+    } else if(k === 'piglet'){
+      c.strokeStyle = '#EE9BB3'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(22, -22); c.bezierCurveTo(34, -24, 34, -12, 28, -12); c.bezierCurveTo(24, -12, 26, -18, 30, -18); c.stroke();
+      c.lineWidth = 2.5;
+      c.fillStyle = '#FFC7D6'; c.strokeStyle = '#EE9BB3';
+      ell(c, 0, -30, 26, 25); c.fill(); c.stroke();
+      ell(c, -10, -9, 7, 9); c.fill(); c.stroke(); ell(c, 10, -9, 7, 9); c.fill(); c.stroke();
+      c.fillStyle = '#E48AA6'; ell(c, -10, -2, 7, 3); c.fill(); ell(c, 10, -2, 7, 3); c.fill();
+      c.fillStyle = '#FFC7D6';
+      c.beginPath(); c.moveTo(-20, -84); c.lineTo(-24, -104); c.lineTo(-6, -93); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(20, -84); c.lineTo(24, -104); c.lineTo(6, -93); c.closePath(); c.fill(); c.stroke();
+      circ(c, 0, -72, 24); c.fill(); c.stroke();
+      fEyes(c, o, -78, 10); fCheeks(c, -68, 16);
+      c.fillStyle = '#FFAFC5'; ell(c, 0, -64, 11, 8); c.fill(); c.stroke();
+      c.fillStyle = '#D9738F'; ell(c, -4, -64, 2, 3); c.fill(); ell(c, 4, -64, 2, 3); c.fill();
+      fMouth(c, o, -52);
+    } else if(k === 'kitten'){
+      c.strokeStyle = '#E59A4E'; c.lineWidth = 7;
+      const tw = reduced ? 0 : Math.sin(clock*2 + (o.ph || 0))*4;
+      c.beginPath(); c.moveTo(18, -14); c.quadraticCurveTo(40, -20, 34 + tw, -48); c.stroke();
+      c.strokeStyle = '#FFC078'; c.lineWidth = 4;
+      c.beginPath(); c.moveTo(18, -14); c.quadraticCurveTo(40, -20, 34 + tw, -48); c.stroke();
+      c.lineWidth = 2.5;
+      c.fillStyle = '#FFC078'; c.strokeStyle = '#E59A4E';
+      ell(c, 0, -30, 24, 25); c.fill(); c.stroke();
+      c.fillStyle = '#FFE8CC'; ell(c, 0, -26, 13, 16); c.fill();
+      ell(c, -10, -4, 8, 5); c.fill(); ell(c, 10, -4, 8, 5); c.fill();
+      c.fillStyle = '#FFC078';
+      c.beginPath(); c.moveTo(-23, -80); c.lineTo(-19, -105); c.lineTo(-4, -91); c.closePath(); c.fill(); c.stroke();
+      c.beginPath(); c.moveTo(23, -80); c.lineTo(19, -105); c.lineTo(4, -91); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = '#FFB3C8';
+      c.beginPath(); c.moveTo(-19, -84); c.lineTo(-18, -98); c.lineTo(-9, -90); c.closePath(); c.fill();
+      c.beginPath(); c.moveTo(19, -84); c.lineTo(18, -98); c.lineTo(9, -90); c.closePath(); c.fill();
+      c.fillStyle = '#FFC078'; ell(c, 0, -72, 25, 22); c.fill(); c.stroke();
+      c.strokeStyle = '#E59A4E'; c.lineWidth = 3;
+      c.beginPath(); c.moveTo(-6, -93); c.lineTo(-5, -86); c.moveTo(0, -94); c.lineTo(0, -86); c.moveTo(6, -93); c.lineTo(5, -86); c.stroke();
+      fEyes(c, o, -75, 10); fCheeks(c, -64, 16);
+      c.fillStyle = '#FF8FB8'; c.beginPath(); c.moveTo(-3.5, -67); c.lineTo(3.5, -67); c.lineTo(0, -63); c.closePath(); c.fill();
+      fMouth(c, o, -56);
+      c.strokeStyle = '#C9A27E'; c.lineWidth = 1.4;
+      c.beginPath(); c.moveTo(-8, -64); c.lineTo(-26, -67); c.moveTo(-8, -62); c.lineTo(-26, -59); c.moveTo(8, -64); c.lineTo(26, -67); c.moveTo(8, -62); c.lineTo(26, -59); c.stroke();
+    }
+    // little arms for waving and cheering
+    if(o.arms){
+      const [fill, line] = ARMS[k], b = reduced ? 0 : Math.sin(clock*9 + (o.ph || 0))*7;
+      const hands = o.arms === 'cheer' ? [[-30, -64 + b*0.5], [30, -64 - b*0.5]] : o.arms === 'climb' ? [[-14, -70 + b], [14, -70 - b]] : [[-24, -18], [32, -62 + b]];
+      [[-18, -40], [18, -40]].forEach(([sx, sy], i) => {
+        const [hx, hy] = hands[i];
+        c.strokeStyle = line; c.lineWidth = 11; c.beginPath(); c.moveTo(sx, sy); c.lineTo(hx, hy); c.stroke();
+        c.strokeStyle = fill; c.lineWidth = 7; c.beginPath(); c.moveTo(sx, sy); c.lineTo(hx, hy); c.stroke();
+        c.fillStyle = fill; c.strokeStyle = line; c.lineWidth = 2; circ(c, hx, hy, 5.5); c.fill(); c.stroke();
+      });
+    }
+  }
+  function drawFriend(c, kind, x, y, s, o){
+    c.save(); c.translate(x, y); c.scale(s, s);
+    drawFriendBody(c, kind, o || {});
+    c.restore();
+  }
+
+  // ----- Lenny the Lemur (drawn like he is in Whirlybird Rescue) -----
+  function drawLemur(c, t, look, mood, pose){
+    const grey = '#9A9AA8', dark = '#55556A';
+    const sway = reduced ? 0 : Math.sin(t*2.2)*14;
+    const pts = [];
+    for(let i = 0; i <= 14; i++){
+      const u = i/14;
+      pts.push([(1-u)*(1-u)*10 + 2*(1-u)*u*62 + u*u*(44 + sway), (1-u)*(1-u)*14 + 2*(1-u)*u*40 + u*u*(-66)]);
+    }
+    c.lineCap = 'round';
+    for(let i = 0; i < 14; i++){ c.strokeStyle = i % 2 ? '#2B2B35' : '#F4F4F6'; c.lineWidth = 10 - i*0.25; c.beginPath(); c.moveTo(pts[i][0], pts[i][1]); c.lineTo(pts[i+1][0], pts[i+1][1]); c.stroke(); }
+    c.fillStyle = grey;
+    ell(c, -9, 26, 7, 11, 0.15); c.fill(); ell(c, 9, 26, 7, 11, -0.15); c.fill();
+    let hands;
+    if(pose === 'cheer') hands = [[-40, -42], [40, -42]];
+    else { const b = reduced ? 0 : Math.sin(t*6)*3; hands = [[-34, 2 + b], [34, 2 - b]]; }
+    c.strokeStyle = grey; c.lineWidth = 8;
+    c.beginPath(); c.moveTo(-13, -14); c.lineTo(hands[0][0], hands[0][1]); c.moveTo(13, -14); c.lineTo(hands[1][0], hands[1][1]); c.stroke();
+    c.fillStyle = grey; ell(c, 0, 2, 18, 24); c.fill();
+    c.fillStyle = '#F4F4F6'; ell(c, 0, 6, 11, 16); c.fill();
+    hands.forEach(h => { c.fillStyle = dark; circ(c, h[0], h[1], 5.5); c.fill(); });
+    c.fillStyle = dark; circ(c, -14, -52, 7); c.fill(); circ(c, 14, -52, 7); c.fill();
+    c.fillStyle = grey; circ(c, 0, -36, 18); c.fill();
+    c.fillStyle = '#F4F4F6'; ell(c, 0, -31, 14, 12); c.fill();
+    c.fillStyle = '#2B2B35'; ell(c, -7, -36, 6, 6.5, -0.3); c.fill(); ell(c, 7, -36, 6, 6.5, 0.3); c.fill();
+    const el = Math.hypot(look.x, look.y) || 1, ex = look.x/el*1.8, ey = look.y/el*1.8;
+    c.fillStyle = '#FF9F1C'; circ(c, -7, -36, 4.2); c.fill(); circ(c, 7, -36, 4.2); c.fill();
+    c.fillStyle = '#111'; circ(c, -7 + ex, -36 + ey, 2); c.fill(); circ(c, 7 + ex, -36 + ey, 2); c.fill();
+    c.fillStyle = '#2B2B35'; ell(c, 0, -26, 4, 3); c.fill();
+    c.strokeStyle = '#2B2B35'; c.lineWidth = 1.6; c.beginPath();
+    if(mood === 'happy') c.arc(0, -24, 5, 0.2*Math.PI, 0.8*Math.PI); else { c.moveTo(-3, -21); c.lineTo(3, -21); }
+    c.stroke();
+  }
+
+  // ----- Whirly the rescue helicopter (drawn like he is in Whirlybird Rescue) -----
+  // o: {face, tilt, rotor, carry (a friend's kind), cheer, look, spin}
+  function drawWhirlyAt(c, x, y, k, o){
+    c.save(); c.translate(x, y);
+    let ang = (o.tilt || 0)*Math.sign(o.face || 1);
+    if(o.spin >= 0) ang += reduced ? Math.sin(o.spin*20)*0.1 : Math.PI*2*ease(Math.min(1, o.spin/0.9));
+    if(o.wob) ang += o.wob;
+    c.rotate(ang);
+    const fs = Math.abs(o.face) < 0.08 ? 0.08*Math.sign(o.face || 1) : o.face;
+    c.scale(k*fs, k);
+    const body = '#FFC93C', bodyD = '#F2A922', stripe = '#F2559B';
+    // tail fin and little tail rotor
+    c.fillStyle = bodyD;
+    c.beginPath(); c.moveTo(-140, -4); c.lineTo(-166, -38); c.quadraticCurveTo(-176, -42, -174, -30); c.lineTo(-164, 4); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(90,100,120,0.22)'; circ(c, -168, -22, 17); c.fill();
+    c.save(); c.translate(-168, -22); c.rotate(o.rotor*1.3); c.fillStyle = '#5B6475'; c.fillRect(-17, -2.5, 34, 5); c.restore();
+    c.fillStyle = '#5B6475'; circ(c, -168, -22, 4); c.fill();
+    // tail boom
+    c.fillStyle = body;
+    c.beginPath(); c.moveTo(-30, -14); c.lineTo(-160, -5); c.quadraticCurveTo(-167, 0, -160, 5); c.lineTo(-30, 18); c.closePath(); c.fill();
+    c.fillStyle = stripe;
+    c.beginPath(); c.moveTo(-40, 0); c.lineTo(-156, -1); c.lineTo(-156, 3); c.lineTo(-40, 8); c.closePath(); c.fill();
+    // skids
+    c.strokeStyle = '#5B6475'; c.lineWidth = 5; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-22, 48); c.lineTo(-30, 70); c.moveTo(24, 48); c.lineTo(32, 70); c.stroke();
+    c.lineWidth = 6; c.beginPath(); c.moveTo(-58, 72); c.lineTo(46, 72); c.quadraticCurveTo(60, 72, 60, 60); c.stroke();
+    // round body with the big window
+    c.fillStyle = body; circ(c, 0, 0, 58); c.fill();
+    c.fillStyle = '#D7F3FF'; circ(c, 6, -8, 44); c.fill();
+    c.save();
+    c.beginPath(); c.arc(6, -8, 44, 0, Math.PI*2); c.clip();
+    const cheering = o.cheer;
+    // Lenny flying, and a friend waving beside him when Whirly is carrying one
+    c.save(); c.translate(o.carry ? 18 : 6, 18); c.scale(0.86, 0.86);
+    drawLemur(c, clock, o.look || {x: 1, y: 0.2}, cheering || o.carry ? 'happy' : 'calm', cheering ? 'cheer' : 'idle');
+    c.restore();
+    if(o.carry){
+      c.save(); c.translate(-16, 40); c.scale(-0.56, 0.56);
+      drawFriendBody(c, o.carry, {happy: true, arms: cheering ? 'cheer' : 'wave', ph: 1});
+      c.restore();
+    }
+    c.restore();
+    c.strokeStyle = '#FFFFFF'; c.lineWidth = 4; circ(c, 6, -8, 44); c.stroke();
+    c.strokeStyle = 'rgba(255,255,255,0.7)'; c.lineWidth = 6; c.beginPath(); c.arc(6, -8, 34, -2.5, -1.7); c.stroke();
+    // the lower half of the body, with a friendly smile
+    c.save();
+    c.beginPath(); c.arc(0, 0, 58, 0, Math.PI*2); c.clip();
+    c.fillStyle = body; c.beginPath(); c.moveTo(-70, 24); c.quadraticCurveTo(0, 14, 70, 24); c.lineTo(70, 70); c.lineTo(-70, 70); c.closePath(); c.fill();
+    c.fillStyle = stripe; c.beginPath(); c.moveTo(-70, 30); c.quadraticCurveTo(0, 20, 70, 30); c.lineTo(70, 37); c.quadraticCurveTo(0, 27, -70, 37); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(0,0,0,0.08)'; c.beginPath(); c.arc(0, 0, 58, 0.1*Math.PI, 0.9*Math.PI); c.lineTo(0, 30); c.closePath(); c.fill();
+    c.restore();
+    c.strokeStyle = '#8A5A12'; c.lineWidth = 3; c.beginPath(); c.arc(38, 40, 7, 0.15*Math.PI, 0.85*Math.PI); c.stroke();
+    c.fillStyle = 'rgba(255,110,140,0.55)'; circ(c, 50, 36, 5); c.fill();
+    c.strokeStyle = bodyD; c.lineWidth = 3; circ(c, 0, 0, 58); c.stroke();
+    // rotor on top, with a soft blur where the blades spin
+    c.fillStyle = '#5B6475'; c.fillRect(-4, -66, 8, 12);
+    c.fillStyle = 'rgba(90,100,120,0.18)'; ell(c, 0, -70, 116, 9); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.35)'; ell(c, 0, -71, 100, 4); c.fill();
+    const Lb = 112*Math.cos(o.rotor);
+    c.strokeStyle = '#5B6475'; c.lineWidth = 6; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(-Lb, -70); c.lineTo(Lb, -70); c.stroke();
+    c.strokeStyle = 'rgba(91,100,117,0.35)'; c.lineWidth = 5;
+    const Lb2 = 112*Math.cos(o.rotor + 0.5);
+    c.beginPath(); c.moveTo(-Lb2, -70); c.lineTo(Lb2, -70); c.stroke();
+    c.fillStyle = '#F2559B'; circ(c, 0, -70, 7); c.fill();
+    c.restore();
+  }
+
+  // ----- where friends are stuck: a treetop, a rooftop, a tent or a hilltop -----
+  function drawPerch(c, kind, x, y){
+    // x, y = middle of the square
+    if(kind === 'tree'){ drawTreeAt(c, x, y + 0.16, 0.72, 1); }
+    else if(kind === 'roof'){ drawHouseAt(c, x, y + 0.16, 0.7, 5); }
+    else if(kind === 'tent'){ drawTentAt(c, x, y + 0.18, 0.7, 2); }
+    else { drawHillAt(c, x, y + 0.16, 0.75, 3, L.theme === 'rainbow'); }
+  }
+  const perchTop = {tree: -0.06, roof: -0.12, tent: -0.18, hill: -0.04};
+
+  function picnicSpot(slot){
+    const n = friends.length, u = n === 1 ? 0.5 : 0.1 + slot*(0.8/(n - 1));
+    return {x: P.x - 0.15 + u*1.3, y: P.y + 0.78 - (slot % 2)*0.12};
+  }
+  function lennyLook(){
+    let tx = null, ty = null;
+    const wx = W.fx + 0.5, wy = W.fy + 0.5;
+    if(W.carry){ tx = H.x + 0.5; ty = H.y + 0.5; }
+    else {
+      let bd = 1e9;
+      friends.forEach(f => { if(f.state !== 'wait') return; const d = Math.hypot(f.x - W.fx, f.y - W.fy); if(d < bd){ bd = d; tx = f.x + 0.5; ty = f.y + 0.5; } });
+    }
+    if(tx === null) return {x: Math.sin(clock*0.7), y: 0.3};
+    return {x: (tx - wx)*Math.sign(W.faceS || 1), y: ty - wy};
+  }
+
+  function drawCloudsLayer(c){
+    // soft puffy clouds over every square not yet explored (big overlapping puffs make soft edges)
+    const bob = reduced ? 0 : 1;
+    // layers: [colour, shift down, size]: a soft shadow on the ground, the white cloud, then
+    // a pale blue shade and a white top on every puff, which makes the round puffy bumps
+    const layers = [['rgba(60,90,130,0.16)', 0.16, 1.05], ['#F4F8FF', 0, 1.0], ['#DCE7F7', 0.05, 0.78], ['#FFFFFF', -0.03, 0.66]];
+    const puffs = [];
+    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+      const a = fogV[y][x]*(1 - peekV);
+      if(a < 0.02) continue;
+      // 3 puffs per square, each a different size and in a different spot, so the clouds look natural
+      for(let i = 0; i < 3; i++){
+        const h1 = hash(x*3 + i, y*7 - i), h2 = hash(y*5 + i*11, x*2 + i);
+        const px = 0.15 + h1*0.7, py = 0.15 + h2*0.7;
+        const r = (0.36 + hash(x + i*31, y + i*17)*0.26)*(0.2 + 0.8*a);
+        const wob = bob*Math.sin(clock*0.7 + h1*6 + i)*0.025;
+        puffs.push([x + px + wob, y + py - wob, r]);
+      }
+      puffs.push([x + 0.5, y + 0.5, 0.5*(0.2 + 0.8*a)]);   // one in the middle so no gaps peek through
+    }
+    layers.forEach(([col, dy, rs]) => {
+      c.fillStyle = col;
+      c.beginPath();
+      puffs.forEach(([px, py, rad]) => { const q = rad*rs; c.moveTo(px + q, py + dy*rad*2); c.arc(px, py + dy*rad*2, q, 0, Math.PI*2); });
+      c.fill();
+    });
+  }
+
+  function drawWind(c, w){
+    const x = w.x + 0.5, y = w.y + 0.5, [dx, dy] = DIRS[w.d];
+    c.save(); c.translate(x, y); c.rotate(Math.atan2(dy, dx));
+    c.fillStyle = 'rgba(160,215,255,0.35)'; ell(c, 0, 0, 0.46, 0.34); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,0.95)'; c.lineWidth = 0.06; c.lineCap = 'round';
+    const sp = reduced ? 0 : clock*2.2;
+    for(let i = 0; i < 3; i++){
+      const u = ((sp + i/3) % 1), px = -0.4 + u*0.8, al = Math.sin(u*Math.PI);
+      c.globalAlpha = al;
+      c.beginPath(); c.arc(px - 0.06, (i - 1)*0.18, 0.1, Math.PI*0.6, Math.PI*2.1); c.stroke();
+    }
+    c.globalAlpha = 1;
+    // a friendly arrow
+    c.fillStyle = '#4DABF7';
+    c.beginPath(); c.moveTo(0.36, 0); c.lineTo(0.16, -0.16); c.lineTo(0.16, -0.06); c.lineTo(-0.2, -0.06); c.lineTo(-0.2, 0.06); c.lineTo(0.16, 0.06); c.lineTo(0.16, 0.16); c.closePath(); c.fill();
+    c.restore();
+  }
+  function drawGate(c, g){
+    const col = GATE_COL[g.c], x = g.x, y = g.y;
+    const horiz = isOpen(x - 1, y) || isOpen(x + 1, y) || !isWall(x - 1, y) || !isWall(x + 1, y);   // the path runs left-right through it
+    c.save(); c.translate(x + 0.5, y + 0.5); if(horiz) c.rotate(Math.PI/2);
+    // posts either side of the path
+    c.fillStyle = '#FFFFFF'; c.strokeStyle = '#C9B48A'; c.lineWidth = 0.03;
+    [-0.4, 0.4].forEach(px => { rr(c, px - 0.06, -0.3, 0.12, 0.5, 0.04); c.fill(); c.stroke(); c.fillStyle = col.c; circ(c, px, -0.32, 0.07); c.fill(); c.fillStyle = '#FFFFFF'; });
+    if(!g.open || g.t < 0.6){
+      const u = g.open ? ease(Math.min(1, g.t/0.6)) : 0, sag = u*0.4, fade = 1 - u;
+      c.globalAlpha = fade;
+      c.strokeStyle = col.c; c.lineWidth = 0.1;
+      const wv = reduced ? 0 : Math.sin(clock*3 + x)*0.02;
+      c.beginPath(); c.moveTo(-0.4, -0.12); c.quadraticCurveTo(0, 0.02 + wv + sag, 0.4, -0.12); c.stroke();
+      // a big bow in the middle
+      const by = -0.04 + sag;
+      c.fillStyle = col.c;
+      c.beginPath(); c.moveTo(0, by); c.quadraticCurveTo(-0.22, by - 0.2, -0.24, by + 0.02); c.quadraticCurveTo(-0.2, by + 0.12, 0, by); c.fill();
+      c.beginPath(); c.moveTo(0, by); c.quadraticCurveTo(0.22, by - 0.2, 0.24, by + 0.02); c.quadraticCurveTo(0.2, by + 0.12, 0, by); c.fill();
+      c.fillStyle = col.d; circ(c, 0, by, 0.06); c.fill();
+      c.globalAlpha = 1;
+    }
+    c.restore();
+  }
+  function drawBalloon(c, b){
+    if(b.popped) return;
+    const col = GATE_COL[b.c], x = b.x + 0.5, y = b.y + 0.5, bob = reduced ? 0 : Math.sin(clock*2 + b.x)*0.05;
+    c.strokeStyle = '#8B6B4A'; c.lineWidth = 0.025;
+    c.beginPath(); c.moveTo(x, y + 0.36); c.quadraticCurveTo(x + 0.08, y + 0.05, x, y - 0.1 + bob); c.stroke();
+    c.fillStyle = '#8B5A3C'; ell(c, x, y + 0.37, 0.07, 0.04); c.fill();
+    c.fillStyle = col.c; ell(c, x, y - 0.32 + bob, 0.22, 0.26); c.fill();
+    c.beginPath(); c.moveTo(x - 0.05, y - 0.06 + bob); c.lineTo(x + 0.05, y - 0.06 + bob); c.lineTo(x, y - 0.12 + bob); c.closePath(); c.fill();
+    c.fillStyle = 'rgba(255,255,255,0.55)'; ell(c, x - 0.08, y - 0.42 + bob, 0.05, 0.09, 0.4); c.fill();
+  }
+  function drawStarItem(c, s){
+    const x = s.x + 0.5, y = s.y + 0.5;
+    if(s.got){
+      if(s.t > 0.6) return;
+      const u = s.t/0.6; c.globalAlpha = 1 - u; starShape(c, x, y - u*0.6, 0.24*(1 + u), '#FFD43B'); c.globalAlpha = 1; return;
+    }
+    const bob = reduced ? 0 : Math.sin(clock*3 + s.x + s.y)*0.04, tw = reduced ? 0 : Math.sin(clock*2 + s.x)*0.2;
+    c.fillStyle = 'rgba(255,212,59,0.3)'; circ(c, x, y + bob, 0.3); c.fill();
+    starShape(c, x, y + bob, 0.24, '#FFC23D', tw);
+    starShape(c, x - 0.02, y + bob - 0.02, 0.15, '#FFE066', tw);
+  }
+
+  function drawBird(c, b){
+    const flap = reduced ? 0.5 : (Math.sin(clock*14 + b.ph) + 1)/2, s = 0.014;
+    c.save(); c.translate(b.x, b.y); c.scale(b.dir*s, s);
+    c.fillStyle = '#4DA3E8';
+    c.beginPath(); c.moveTo(-6, -2); c.quadraticCurveTo(-14, -26*flap - 4, 4, -6*flap - 8); c.closePath(); c.fill();
+    c.fillStyle = '#6EC6FF'; ell(c, 0, 0, 20, 15); c.fill();
+    c.fillStyle = '#E3F4FF'; ell(c, 4, 5, 11, 8); c.fill();
+    c.fillStyle = '#4DA3E8';
+    c.beginPath(); c.moveTo(-18, -2); c.lineTo(-30, -8); c.lineTo(-28, 4); c.closePath(); c.fill();
+    c.beginPath(); c.moveTo(-2, 0); c.quadraticCurveTo(-10, 24*flap - 10, 8, 2); c.closePath(); c.fill();
+    c.fillStyle = '#FFA94D'; c.beginPath(); c.moveTo(18, -3); c.lineTo(28, 1); c.lineTo(18, 4); c.closePath(); c.fill();
+    c.fillStyle = '#23413B'; circ(c, 11, -4, 2.6); c.fill();
+    c.restore();
+  }
+
+  function drawBubble(c, b){
+    const p = b.get(); if(!p) return;
+    const a = Math.min(1, b.t*6, (b.dur - b.t)*4);
+    const s = reduced ? 1 : Math.min(1, 0.6 + b.t*4);
+    // text is drawn in real pixels (tiny font sizes look fuzzy on some phones)
+    const fsz = Math.round(clamp(T*0.36, 14, 22));
+    c.save(); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.globalAlpha = Math.max(0, a);
+    c.font = fsz + 'px "Chewy","Comic Sans MS",cursive';
+    const tw = c.measureText(b.text).width + fsz*0.9, th = fsz*1.45, tip = fsz*0.45;
+    const x = clamp(p.x*T, tw/2 + 4, size - tw/2 - 4), y = Math.max(th + 4, p.y*T - T*0.35);
+    c.translate(x, y); c.scale(s, s);
+    c.fillStyle = b.call ? '#FFF6D6' : '#FFFFFF'; c.strokeStyle = b.call ? '#F2A922' : '#F2559B'; c.lineWidth = 2;
+    rr(c, -tw/2, -th, tw, th, th*0.45); c.fill(); c.stroke();
+    const px = clamp(p.x*T - x, -tw/2 + 12, tw/2 - 12);
+    c.beginPath(); c.moveTo(px - tip*0.6, -1); c.lineTo(px, tip); c.lineTo(px + tip*0.6, -1); c.closePath(); c.fill();
+    c.fillStyle = '#23413B'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(b.text, 0, -th/2 + 1);
+    c.restore();
+  }
+
+  function drawParts(c){
+    parts.forEach(p => {
+      const a = Math.max(0, Math.min(1, p.life));
+      if(p.k === 'puff'){ c.globalAlpha = a*0.9; c.fillStyle = '#FFFFFF'; circ(c, p.x, p.y, p.r*(0.6 + 0.4*a)); c.fill(); }
+      else if(p.k === 'spark'){ c.globalAlpha = a; starShape(c, p.x, p.y, 0.08 + 0.06*a, p.col); }
+      else { c.globalAlpha = a; c.save(); c.translate(p.x, p.y); c.rotate(p.rot); c.fillStyle = p.col; c.fillRect(-p.s, -p.s*0.5, p.s*2, p.s); c.restore(); }
+    });
+    c.globalAlpha = 1;
+  }
+
+  function draw(){
+    if(!L) return;
+    if(bgDirty){ drawBackground(); bgDirty = false; }
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.drawImage(bg, 0, 0);
+    const c = ctx;
+    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);
+    // things on the ground
+    winds.forEach(w => drawWind(c, w));
+    gates.forEach(g => drawGate(c, g));
+    stars.forEach(s => drawStarItem(c, s));
+    balloons.forEach(b => drawBalloon(c, b));
+    // friends waiting on their perches
+    friends.forEach(f => {
+      const x = f.x + 0.5, y = f.y + 0.5;
+      drawPerch(c, f.perch, x, y);
+      if(f.state === 'wait' || f.state === 'ladder'){
+        const near = Math.hypot(W.fx - f.x, W.fy - f.y) < 2.2;
+        const fy = y + perchTop[f.perch] + (f.state === 'ladder' || !reduced && near ? -Math.abs(Math.sin(clock*7 + f.ph))*0.06 : 0);
+        drawFriend(c, f.kind, x, fy, 0.0074, {arms: near || f.state === 'ladder' ? 'cheer' : 'wave', happy: f.state === 'ladder', open: near, ph: f.ph});
+      }
+    });
+    // friends at the picnic
+    friends.forEach(f => {
+      if(f.state !== 'picnic') return;
+      const p = picnicSpot(f.slot), j = f.jump > 0 && !reduced ? Math.sin(Math.PI*f.jump)*0.25 : 0;
+      const party = state === 'party' || state === 'done';
+      drawFriend(c, f.kind, p.x, p.y - j, 0.0046, {arms: party || f.jump > 0 ? 'cheer' : null, happy: party || f.jump > 0, ph: f.ph});
+    });
+    // Whirly's shadow on the ground
+    const u = W.moving ? ease(W.t) : 0;
+    const wx = lerp(W.fx, W.tx, W.push ? W.t : u) + 0.5, wy = lerp(W.fy, W.ty, W.push ? W.t : u) + 0.5;
+    c.fillStyle = 'rgba(20,50,40,' + (0.12 + 0.12*(1 - W.alt)).toFixed(3) + ')'; ell(c, wx, wy + 0.25, 0.38, 0.12); c.fill();
+    // the clouds
+    drawCloudsLayer(c);
+    // the rope ladder and the friend climbing up it
+    const bob = reduced || W.moving ? 0 : Math.sin(clock*2.4)*0.05;
+    let shake = 0;
+    if(W.bump > 0 && !reduced){ shake = Math.sin(W.bump*40)*0.06*(W.bump/0.35); }
+    let bx = wx, by = wy - W.alt - 0.2 + bob;
+    if(W.bump > 0 && W.bumpDir){ bx += DIRS[W.bumpDir][0]*Math.sin(W.bump/0.35*Math.PI)*0.08; by += DIRS[W.bumpDir][1]*Math.sin(W.bump/0.35*Math.PI)*0.08; }
+    const k = 1.7/290;
+    if(W.job && W.job.k === 'rescue'){
+      const f = W.job.f, fx = f.x + 0.5, fy = f.y + 0.5 + perchTop[f.perch];
+      const lt = {x: bx - 0.02*W.faceS, y: by + 72*k};
+      let end;
+      if(f.state === 'ladder'){ const q = ease(Math.min(1, W.job.t/0.45)); end = {x: lerp(lt.x, fx, q), y: lerp(lt.y, fy - 0.5, q)}; }
+      else if(f.state === 'climb'){ const q = ease(Math.min(1, f.t)); end = {x: lerp(fx, lt.x, q), y: lerp(fy - 0.5, lt.y + 0.05, q)}; }
+      if(end) drawLadder(c, lt, end);
+      if(f.state === 'climb'){
+        const q = ease(Math.min(1, f.t));
+        drawFriend(c, f.kind, lerp(fx, lt.x, q), lerp(fy, lt.y + 0.25, q), lerp(0.0074, 0.003, q), {arms: 'climb', happy: true, ph: f.ph});
+      }
+    }
+    // a friend hopping from Whirly to the picnic blanket
+    friends.forEach(f => {
+      if(f.state !== 'hop') return;
+      const to = picnicSpot(f.slot), q = Math.min(1, f.t);
+      drawFriend(c, f.kind, lerp(f.hx, to.x, q), lerp(f.hy, to.y, q) - Math.sin(Math.PI*q)*0.8, lerp(0.004, 0.0046, q), {arms: 'cheer', happy: true, open: true});
+    });
+    // Whirly!
+    const wob = W.push && !reduced ? Math.sin(clock*18)*0.12 : 0;
+    drawWhirlyAt(c, bx + shake, by, k, {face: W.faceS, tilt: W.tilt, rotor: W.rotor, carry: W.carry && W.carry.kind, cheer: W.cheer > 0 || state === 'party', look: lennyLook(), spin: W.spin, wob});
+    // sparkles flying to a gate
+    flyers.forEach(fl => { starShape(c, fl.x, fl.y, 0.2, fl.col, clock*5); starShape(c, fl.x, fl.y, 0.1, '#FFFFFF', clock*5); });
+    drawParts(c);
+    birds.forEach(b => drawBird(c, b));
+    bubbles.forEach(b => drawBubble(c, b));
+    // peek: the sun shines and the clouds part
+    if(peekV > 0.02){
+      c.fillStyle = 'rgba(255,230,120,' + (0.12*peekV).toFixed(3) + ')'; c.fillRect(0, 0, S, S);
+    }
+    if(finale > 0) drawFinale(c);
+  }
+  function drawLadder(c, a, b){
+    const dx = b.x - a.x, dy = b.y - a.y, len = Math.hypot(dx, dy);
+    if(len < 0.02) return;
+    const nx = -dy/len*0.08, ny = dx/len*0.08;
+    c.strokeStyle = '#B07A3A'; c.lineWidth = 0.035; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(a.x + nx, a.y + ny); c.lineTo(b.x + nx, b.y + ny); c.moveTo(a.x - nx, a.y - ny); c.lineTo(b.x - nx, b.y - ny); c.stroke();
+    c.strokeStyle = '#8B5A2B'; c.lineWidth = 0.04;
+    for(let d = 0.1; d < len; d += 0.13){ const q = d/len, rx = a.x + dx*q, ry = a.y + dy*q; c.beginPath(); c.moveTo(rx + nx, ry + ny); c.lineTo(rx - nx, ry - ny); c.stroke(); }
+  }
+
+  // the big picnic party at the end of Big Sky Rescue: everyone dancing!
+  function drawFinale(c){
+    const u = Math.min(1, finale/0.8);
+    c.fillStyle = 'rgba(255,240,248,' + (0.85*u).toFixed(3) + ')'; c.fillRect(0, 0, S, S);
+    if(u < 0.3) return;
+    c.save(); c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
+    const cx = S/2, base = S*0.78, sc = S/7;
+    // sunshine and rainbow
+    ['#FF6B6B', '#FFA94D', '#FFD43B', '#69DB7C', '#4DABF7', '#9775FA'].forEach((col, i) => { c.strokeStyle = col; c.lineWidth = sc*0.12; c.beginPath(); c.arc(cx, base + sc*0.3, sc*(2.9 - i*0.12), Math.PI*1.05, Math.PI*1.95); c.stroke(); });
+    // blanket
+    c.save(); c.translate(cx, base); c.scale(sc, sc);
+    c.beginPath(); c.moveTo(-2.6, -0.15); c.lineTo(2.6, -0.15); c.lineTo(3, 0.6); c.lineTo(-3, 0.6); c.closePath();
+    c.fillStyle = '#FFFFFF'; c.fill(); c.save(); c.clip(); c.fillStyle = '#F25C6B';
+    for(let r = 0; r < 4; r++) for(let k = -16; k < 16; k++){ if((r + k) % 2) continue; c.fillRect(k*0.25, -0.15 + r*0.19, 0.25, 0.19); }
+    c.restore();
+    c.restore();
+    // everyone dancing
+    const kinds = ALL_FRIENDS;
+    kinds.forEach((kind, i) => {
+      const x = cx + (i - 2)*sc*0.95, hop = reduced ? 0 : Math.abs(Math.sin(clock*5 + i*1.3))*sc*0.25;
+      c.save(); c.translate(x, base + sc*0.25 - hop); c.rotate(reduced ? 0 : Math.sin(clock*5 + i)*0.12);
+      drawFriend(c, kind, 0, 0, sc*0.0085, {arms: 'cheer', happy: true, open: true, ph: i});
+      c.restore();
+    });
+    drawWhirlyAt(c, cx, base - sc*2.1 + (reduced ? 0 : Math.sin(clock*2.4)*sc*0.08), sc*0.0075, {face: Math.cos(clock*0.8) > 0 ? 1 : -1, tilt: 0, rotor: W.rotor, cheer: true, look: {x: 0, y: 1}, spin: -1});
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.font = Math.round(sc*T*0.55) + 'px "Chewy","Comic Sans MS",cursive'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.lineWidth = sc*T*0.1; c.lineJoin = 'round'; c.strokeStyle = '#FFFFFF'; c.strokeText("Everyone's safe!", cx*T, sc*T*0.7);
+    c.fillStyle = '#F2559B'; c.fillText("Everyone's safe!", cx*T, sc*T*0.7);
+    c.restore();
+  }
+
+  function resize(){
+    const r = board.getBoundingClientRect();
+    if(r.width < 2) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    size = r.width;
+    cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
+    T = size/S; bgDirty = true;
+  }
+  addEventListener('resize', resize);
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+
+  // ===== PANELS: levels, level done =====
+  function starSpans(n, total){ let s = ''; for(let i = 0; i < (total || 3); i++) s += '<span class="' + (i < n ? '' : 'off') + '">⭐</span>'; return s; }
+  function friendCanvas(kind, opts){
+    const cv = document.createElement('canvas'), d = 2;
+    cv.width = 52*d; cv.height = 52*d;
+    const c = cv.getContext('2d'); c.scale(d, d);
+    drawFriend(c, kind, 26, 50, 0.4, opts || {happy: true});
+    return cv;
+  }
+  function stickerRow(kinds, got, label){
+    const row = document.createElement('div'); row.className = 'stickers';
+    kinds.forEach(k => {
+      const d = document.createElement('div'); d.className = 'stk' + (got(k) ? '' : ' no');
+      d.appendChild(friendCanvas(k, {happy: got(k), arms: got(k) ? 'wave' : null}));
+      const s = document.createElement('span'); s.textContent = got(k) ? NAMES[k] : '?'; d.appendChild(s);
+      d.setAttribute('aria-label', got(k) ? NAMES[k] + (label || ' rescued') : 'Not rescued yet');
+      row.appendChild(d);
+    });
+    return row;
+  }
+  function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html !== undefined) e.innerHTML = html; return e; }
+  let mainBtn = null;
+  function openPanel(){ overlay.hidden = false; peekBtn.disabled = true; held = []; }
+  function closePanel(){ overlay.hidden = true; panel.innerHTML = ''; mainBtn = null; peekBtn.disabled = false; }
+
+  function showLevels(first){
+    if(state === 'play') state = 'paused';
+    panel.innerHTML = '';
+    panel.appendChild(el('h2', '', first ? "Whirly's Cloud Maze" : 'Pick a level'));
+    if(first) panel.appendChild(el('p', '', 'Clouds are hiding the maze! Fly Whirly the helicopter to blow them away, find the stuck animal friends and fly them to the picnic.'));
+    const grid = el('div', 'levels');
+    const next = Math.min(prog.unlocked, LEVELS.length) - 1;
+    LEVELS.forEach((lv, i) => {
+      const locked = i + 1 > prog.unlocked;
+      const b = el('button', 'lvlbtn' + (locked ? ' locked' : '') + (i === next ? ' cur' : ''),
+        '<span class="n">' + (locked ? '🔒' : i + 1) + '</span><span class="nm">' + lv.name + '</span><span class="st">' + starSpans(prog.stars[i] || 0) + '</span>');
+      b.setAttribute('aria-label', 'Level ' + (i + 1) + ', ' + lv.name + (locked ? ', locked' : ', ' + (prog.stars[i] || 0) + ' stars'));
+      if(locked) b.setAttribute('aria-disabled', 'true');
+      b.addEventListener('click', () => { if(!locked) startLevel(i); });
+      grid.appendChild(b);
+    });
+    panel.appendChild(grid);
+    panel.appendChild(el('p', 'small', 'Friends rescued so far:'));
+    panel.appendChild(stickerRow(ALL_FRIENDS, k => !!stickers[k]));
+    const resume = state === 'paused';
+    mainBtn = el('button', 'main', resume ? 'Keep flying' : 'Play level ' + (next + 1));
+    mainBtn.addEventListener('click', () => { if(resume){ state = 'play'; closePanel(); } else startLevel(next); });
+    panel.appendChild(mainBtn);
+    if(resume){ const nb = el('button', 'ghost', 'Start this level again'); nb.addEventListener('click', () => startLevel(levelI)); panel.appendChild(nb); }
+    openPanel();
+    setTimeout(() => mainBtn && mainBtn.focus({preventScroll: true}), 30);
+  }
+
+  function showDone(){
+    panel.innerHTML = '';
+    const r = rating(), last = levelI === LEVELS.length - 1;
+    panel.appendChild(el('h2', '', last ? 'You rescued everyone!' : 'Level ' + (levelI + 1) + ' done!'));
+    const sr = el('p', 'starrow', starSpans(r)); sr.setAttribute('aria-label', r + ' stars'); panel.appendChild(sr);
+    panel.appendChild(el('p', '', starsGot + ' of ' + stars.length + ' sparkly stars. ' + (r < 3 ? 'Find them all for 3 stars!' : 'Every single one!')));
+    panel.appendChild(el('p', 'small', 'You rescued:'));
+    panel.appendChild(stickerRow(friends.map(f => f.kind), () => true, ' rescued'));
+    const row = el('div', 'row end');
+    mainBtn = el('button', 'main', last ? 'Play again' : 'Next level');
+    mainBtn.addEventListener('click', () => { if(last) showLevels(false); else startLevel(levelI + 1); });
+    row.appendChild(mainBtn);
+    const n = friends.length;
+    if(window.LR && LR.shareButton){
+      panel.querySelectorAll('.lr-share').forEach(b => b.remove());
+      row.appendChild(LR.shareButton('I rescued ' + n + ' friend' + (n === 1 ? '' : 's') + " in Whirly's Cloud Maze and got " + r + ' star' + (r === 1 ? '' : 's') + '! 🚁', 'Share my rescue'));
+    }
+    const lb = el('button', 'ghost', '🗺️ Levels'); lb.addEventListener('click', () => showLevels(false)); row.appendChild(lb);
+    if(r < 3){ const rb = el('button', 'ghost', '↻ Try for 3 stars'); rb.addEventListener('click', () => startLevel(levelI)); row.appendChild(rb); }
+    panel.appendChild(row);
+    openPanel();
+    setTimeout(() => mainBtn && mainBtn.focus({preventScroll: true}), 30);
+  }
+
+  function startLevel(i){
+    startSound();
+    buildLevel(i);
+    resize();
+    state = 'play';
+    closePanel();
+    say(() => wPos(), i === 0 ? "Let's find Dilly!" : L.name + '!', 2);
+    if(i === 2) setTimeout(() => { if(state === 'play' && levelI === 2) say(() => wPos(), 'Pop a balloon to open its gate!', 2.6); }, 2300);
+    if(i === 3) setTimeout(() => { if(state === 'play' && levelI === 3) say(() => wPos(), 'Wind puffs give you a push!', 2.6); }, 2300);
+  }
+
+  // ===== CONTROLS =====
+  document.getElementById('levelsBtn').addEventListener('click', e => { e.currentTarget.blur(); startSound(); if(state === 'play' || state === 'paused') showLevels(false); else if(overlay.hidden) showLevels(false); });
+  function doPeek(){
+    if(state !== 'play') return;
+    startSound();
+    if(peekT <= 0) sfx.peek();
+    peekT = 3; peekBtn.classList.add('on');
+  }
+  peekBtn.addEventListener('click', () => { doPeek(); peekBtn.blur(); });
+
+  const keyMap = {ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', w: 'up', s: 'down', a: 'left', d: 'right', W: 'up', S: 'down', A: 'left', D: 'right'};
+  addEventListener('keydown', e => {
+    const d = keyMap[e.key];
+    if(!overlay.hidden){
+      if((e.key === 'Enter' || e.key === ' ') && mainBtn && !(e.target && e.target.closest && e.target.closest('button'))){ e.preventDefault(); mainBtn.click(); }
+      return;
+    }
+    if(d){ e.preventDefault(); if(!e.repeat){ held = held.filter(h => h !== d); held.push(d); press(d); } }
+    else if(e.key === 'p' || e.key === 'P' || (e.key === ' ' && !(e.target && e.target.closest && e.target.closest('button')))){ e.preventDefault(); doPeek(); }
+    else if(e.key === 'Escape'){ showLevels(false); }
+  });
+  addEventListener('keyup', e => { const d = keyMap[e.key]; if(d) held = held.filter(h => h !== d); });
+  addEventListener('blur', () => { held = []; });
+
+  // on-screen arrows: tap to fly, hold to keep turning that way
+  document.querySelectorAll('.pad button').forEach(b => {
+    const d = b.dataset.d;
+    b.addEventListener('pointerdown', e => { e.preventDefault(); held = held.filter(h => h !== d); held.push(d); press(d); });
+    const up = () => { held = held.filter(h => h !== d); };
+    ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => b.addEventListener(ev, up));
+    b.addEventListener('click', e => e.preventDefault());
+  });
+
+  // swipe on the maze, or tap where you want Whirly to go
+  let sw = null;
+  board.addEventListener('pointerdown', e => { sw = {x: e.clientX, y: e.clientY, moved: false, id: e.pointerId}; startSound(); });
+  board.addEventListener('pointermove', e => {
+    if(!sw || e.pointerId !== sw.id) return;
+    const dx = e.clientX - sw.x, dy = e.clientY - sw.y, th = Math.max(20, T*0.45);
+    if(Math.abs(dx) > th || Math.abs(dy) > th){
+      const d = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+      if(d !== sw.last){ press(d); sw.last = d; }
+      sw.x = e.clientX; sw.y = e.clientY; sw.moved = true;
+    }
+  });
+  board.addEventListener('pointerup', e => {
+    if(!sw || e.pointerId !== sw.id) return;
+    if(!sw.moved && state === 'play'){
+      const r = board.getBoundingClientRect();
+      const tx = (e.clientX - r.left)/T, ty = (e.clientY - r.top)/T;
+      const wx = W.fx + 0.5, wy = W.fy + 0.5 - 0.3;
+      const dx = tx - wx, dy = ty - wy;
+      if(Math.hypot(dx, dy) > 0.45) press(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
+    }
+    sw = null;
+  });
+  board.addEventListener('pointercancel', () => { sw = null; });
+
+  // ===== MAIN LOOP =====
+  let last = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t - last)/1000)*timeScale; last = t;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ===== HELPER FOR AUTOMATIC TESTING (only switched on by adding ?test to the address) =====
+  function planDir(){
+    // shortest way (by single squares, using the wind and the gates as they are now) to the most useful place
+    const key = (x, y) => x + ',' + y;
+    const prev = new Map([[key(W.x, W.y), null]]), q = [[W.x, W.y]];
+    while(q.length){
+      const [x, y] = q.shift();
+      for(const d in DIRS){
+        let nx = x + DIRS[d][0], ny = y + DIRS[d][1];
+        if(!isOpen(nx, ny)) continue;
+        const wd = windAt(nx, ny); if(wd){ nx += DIRS[wd.d][0]; ny += DIRS[wd.d][1]; }
+        if(prev.has(key(nx, ny))) continue;
+        prev.set(key(nx, ny), [x, y, d]); q.push([nx, ny]);
+      }
+    }
+    const waiting = friends.filter(f => f.state === 'wait'), left = stars.filter(s => !s.got);
+    let goals = [];
+    if(W.carry){
+      if(waiting.length === 0) goals = left.filter(s => prev.has(key(s.x, s.y)));
+      if(!goals.length) goals = [H];
+    } else {
+      goals = waiting.concat(left).concat(balloons.filter(b => !b.popped)).filter(g => prev.has(key(g.x, g.y)));
+    }
+    let best = null, bl = 1e9;
+    goals.forEach(g => { let n = 0, k = key(g.x, g.y); while(prev.get(k)){ n++; const p = prev.get(k); k = key(p[0], p[1]); } if(n > 0 && n < bl){ bl = n; best = g; } });
+    if(!best) return null;
+    let k = key(best.x, best.y), first = null;
+    while(prev.get(k)){ const p = prev.get(k); first = p[2]; k = key(p[0], p[1]); }
+    return first;
+  }
+  function autoStep(){
+    if(state !== 'play' || W.moving || W.busy > 0) return;
+    const d = planDir(); if(d) press(d);
+  }
+
+  // ===== START =====
+  buildLevel(Math.min(prog.unlocked, LEVELS.length) - 1);
+  resize();
+  showLevels(true);
+  requestAnimationFrame(loop);
+
+  if(TEST) window.__wcm = {
+    get state(){ return {state, level: levelI + 1, name: L.name, x: W.x, y: W.y, moving: W.moving, busy: W.busy > 0, carrying: W.carry && W.carry.kind,
+      home: friendsHome(), friends: friends.length, stars: starsGot + '/' + stars.length, rating: rating(), panel: !overlay.hidden,
+      cleared: fog.flat().filter(v => !v).length + '/' + S*S, gatesOpen: gates.filter(g => g.open).length + '/' + gates.length, prog: JSON.parse(JSON.stringify(prog))}; },
+    start(n){ startLevel(n - 1); },
+    press(d){ press(d); },
+    autoplay(on){ auto = on !== false; },
+    speed(k){ timeScale = k; },
+    peek(){ doPeek(); },
+    revealAll(){ for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){ fog[y][x] = 0; fogV[y][x] = 0; } },
+    unlockAll(){ prog.unlocked = LEVELS.length; save('prog', prog); },
+    map(){ return L.map.slice(); },
+    reset(){ prog = {unlocked: 1, stars: [0, 0, 0, 0, 0, 0]}; stickers = {}; save('prog', prog); save('stickers', stickers); },
+    showLevels(){ showLevels(false); },
+    // for making the card pictures: put Whirly on a square (clearing clouds on the way), give him a passenger, show a speech bubble
+    tp(x, y, face){ W.x = W.fx = W.tx = x; W.y = W.fy = W.ty = y; W.moving = false; if(face) W.face = W.faceS = face; clearAround(x, y, true); },
+    carry(n){ const f = friends[n - 1]; f.state = 'carried'; W.carry = f; },
+    say(n, text, dur){ const f = friends[n - 1]; say(() => ({x: f.x + 0.5, y: f.y + 0.1}), text, dur || 99, {call: true}); },
+    sayW(text, dur){ say(() => wPos(), text, dur || 99); },
+    calm(){ birdT = 999; callT = 999; bubbles = []; parts = []; }
+  };
+})();
+</script>
+</body>
+</html>

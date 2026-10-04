@@ -255,9 +255,21 @@ const games = [
     emoji: "🚜",
     colour: "#FFE8A3",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A digger maze game! Drive Chomper's big yellow digger through the building site maze, dig through soft dirt walls for shortcuts, find gold nuggets and dinosaur bones, and reach Tipper the dump truck.",
     categories: ["puzzles", "diggers", "dinosaurs"],
     controls: "Arrow keys, swipe or tap the arrows"
+  },
+  {
+    title: "Whirly's Cloud Maze",
+    folder: "whirly-cloud-maze",
+    ages: "4+",             // age group - see ageGroups above
+    emoji: "🚁",
+    colour: "#DDE3FF",
+    thumb: "thumb.jpg",
+    blurb: "A helicopter maze game hidden under the clouds! Fly Whirly the rescue helicopter to blow the clouds off the maze, pop balloons to open gates, ride the wind puffs and fly the animal friends to the picnic.",
+    categories: ["puzzles", "flying", "animals"],
+    controls: "Arrow keys, WASD, swipe or tap the arrows"
   },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];

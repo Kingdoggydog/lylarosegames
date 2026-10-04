@@ -210,3 +210,13 @@ p.halo(692,252,100)
 p.bob(516,352,98,72,dy=-3,dur=.9)
 p.star(470,85,11); p.star(560,160,10,.7); p.star(445,545,10,1.4); p.star(105,480,9,1.9)
 print('toot toot', p.save())
+
+p=Pic('chompers-digger-maze','Lenny cheering, Tipper idling, a glowing dinosaur bone, dirt flying from the scoop and twinkling gold nuggets')
+p.bob(662,48,134,152,dy=-4,dur=1.1)
+p.bob(636,448,164,116,dy=-1.5,dur=.45)
+p.pulse(326,58,92,62,k=1.06,dur=1.8)
+p.halo(370,88,62)
+for i,(x,dx,r) in enumerate(((352,-14,6),(366,8,5),(343,-26,5),(372,18,4))):
+    p.add(f'<circle class="bub" style="--l:{i*0.35}s;--d:{1.4+i%2*0.3}s;--x:{dx}px" cx="{x}" cy="300" r="{r}" fill="#8A5A34"/>')
+p.star(495,176,11); p.star(592,282,10,.7); p.star(178,488,10,1.4); p.star(500,384,9,2.0)
+print('digger maze', p.save())

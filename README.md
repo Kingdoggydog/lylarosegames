@@ -26,6 +26,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Busy Building Site | Diggers & Trucks, Cars | 3+ | `games/busy-building-site/` |
 | Chomper's Toot Toot Delivery | Trains, Dinosaurs, Puzzles & Mazes | 4+ | `games/chompers-toot-toot/` |
 | Chomper's Digger Maze | Puzzles & Mazes, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
+| Whirly's Cloud Maze | Puzzles & Mazes, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
 
 ## Age groups
 
