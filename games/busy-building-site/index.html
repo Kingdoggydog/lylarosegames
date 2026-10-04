@@ -103,6 +103,11 @@
     .panel p{font-size:14px}
     .panel .key{display:none}
     .panel .crew canvas{height:70px;width:204px}
+    .panel .lr-share{min-height:44px;padding:6px 14px;font-size:15px}
+  }
+  /* very short screens (small phones turned sideways): a smaller crew picture so the share button fits too */
+  @media (max-height:360px){
+    .overlay.soft .panel:has(.lr-share) .crew canvas{height:52px;width:152px}
   }
   /* PHONES ONLY: the building site fills the whole screen; buttons float over it */
   @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
@@ -2054,6 +2059,11 @@
       </div>`, true);
     $('goBtn').addEventListener('click', () => { newTown(town + 1, true); hidePanel(); });
     $('stayBtn').addEventListener('click', () => { party.closed = true; hidePanel(); });
+    // "Share my town" button (the panel is rebuilt each time, so there's only ever one)
+    if(window.LR && LR.shareButton){
+      const shareMsg = townsBuilt > 1 ? "I've built " + townsBuilt + " little towns at the Busy Building Site! 🚧🏡" : 'I built a whole little town at the Busy Building Site! 🚧🏡';
+      panel.querySelector('.row').appendChild(LR.shareButton(shareMsg, 'Share my town'));
+    }
   }
   function showNewConfirm(){
     const was = playing;

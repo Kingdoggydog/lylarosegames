@@ -47,6 +47,9 @@
   .panel{background:#fff;border-radius:18px;padding:20px 22px;text-align:center;max-width:320px;display:flex;flex-direction:column;gap:10px}
   .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink)}
   .panel p{margin:0;font-size:15px}
+  .panel .lr-share{align-self:center}
+  /* small boards (phones): tighter results panel so every button fits */
+  @media (max-height:500px), (max-width:420px){ .overlay{padding:8px} .panel{padding:12px 14px;gap:7px} .panel h2{font-size:24px} .panel p{font-size:13px} .panel .lr-share{font-size:14px;min-height:44px;padding:8px 14px} }
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
@@ -343,12 +346,25 @@
       ovTitle.textContent = 'Level ' + level + ' done!';
       ovText.textContent = `${secs}s, ${got} of ${starsList.length} stars. +${pts} points (total ${totalScore}).`;
       ovBtn.textContent = 'Next level';
+      addShare(level, secs, got);
       overlay.hidden = false;
       ovBtn.focus();
     }, reduced?0:600);
   }
 
+  // "Share my score" button on the level-done panel (made fresh each time, so there's only ever one)
+  let shareBtn = null;
+  function addShare(lvl, secs, stars){
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
+    if(!(window.LR && LR.shareButton)) return;
+    const t = Math.floor(secs/60) + ':' + String(secs%60).padStart(2,'0');
+    const starBit = stars > 0 ? ` and grabbed ${stars} star${stars===1?'':'s'}` : '';
+    shareBtn = LR.shareButton(`I solved level ${lvl} of Sparklehoof's Maze in ${t}${starBit}! 🦄`);
+    ovBtn.after(shareBtn);
+  }
+
   function start(){
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
     overlay.hidden = true;
     Sound.init();
     startTime = performance.now() - elapsed;
@@ -365,7 +381,7 @@
   addEventListener('keydown', e => {
     const d = keyMap[e.key];
     if(d){ e.preventDefault(); move(d); }
-    else if((e.key==='Enter'||e.key===' ') && !overlay.hidden){ e.preventDefault(); ovBtn.click(); }
+    else if((e.key==='Enter'||e.key===' ') && !overlay.hidden && !(e.target.closest && e.target.closest('.lr-share'))){ e.preventDefault(); ovBtn.click(); }
   });
 
   // on-screen pad with hold-to-repeat

@@ -73,6 +73,8 @@
   .races button.now{background:#FFE08A}
   .races button:disabled{background:#EEE9F1;box-shadow:0 3px 0 #D5CCDC;color:#9C90A8;cursor:default}
   .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .panel .lr-share{font-size:14px;padding:8px 12px;gap:6px}
+  .panel .lr-share.done{font-size:12px;padding-left:6px;padding-right:6px}.panel .lr-share.done svg{display:none}
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px;min-height:48px;min-width:48px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
@@ -94,6 +96,7 @@
     .races button{min-height:48px;padding:3px 4px}
     .races button b{font-size:18px}
     .why span{font-size:11px;padding:2px 7px}
+    .panel .lr-share{min-height:44px;padding:6px 12px}
   }
   @container (max-height:340px) and (max-width:430px){ .races{grid-template-columns:repeat(4,1fr)} .races button b{display:block} .races button span{display:none} }
   /* phones and small screens: tuck away the extra words to make room for the game */
@@ -557,6 +560,7 @@
     ovStars.hidden = true; ovBig.hidden = true; ovSay.hidden = true; ovWhy.hidden = true; ovRow.hidden = true;
     ovText.hidden = false; racesEl.hidden = true; ovBtn2.hidden = false; ovBtn3.hidden = false;
     jumpBtn.hidden = true;
+    ovRow.querySelectorAll('.lr-share').forEach(b => b.remove());
     if(mode === 'start'){
       ovTitle.textContent = "Starlight's Unicorn Race!";
       ovText.textContent = 'Tap tap tap to gallop - the faster you tap, the faster Starlight runs! Press the pink button to jump the hurdles, and catch rainbow stars for a Rainbow boost.';
@@ -997,6 +1001,13 @@
     ovBig.textContent = '⏱ ' + fmt(r.time) + (r.newBest ? '  🏆 New best!' : '  🏆 Best: ' + fmt(prog.best[race]));
     ovSay.hidden = false; ovSay.textContent = 'Rainbow says: "' + r.line + '"';
     ovRow.hidden = false;
+    // share my result (secondary white button next to Race again / All races)
+    if(window.LR && LR.shareButton){
+      const where = RACES[race].name, place = r.place;
+      ovRow.appendChild(LR.shareButton(place < 4
+        ? 'I won ' + ['gold', 'silver', 'bronze'][place - 1] + " in Starlight's Unicorn Race on " + where + '! ' + ['🥇', '🥈', '🥉'][place - 1] + '🦄'
+        : "I raced in Starlight's Unicorn Race on " + where + '! 🦄', 'Share'));
+    }
     const last = race === RACES.length - 1;
     if(!last){ ovBtn.textContent = 'Next race: ' + RACES[race + 1].icon + ' ' + RACES[race + 1].short + ' ➜'; ovBtn.dataset.go = race + 1; }
     else { ovBtn.textContent = 'Race again'; ovBtn.dataset.go = race; ovBtn2.hidden = true; }

@@ -113,6 +113,11 @@
   .fbtn.go{background:var(--pink);box-shadow:0 4px 0 #C9306F}
   .fbtn:active{transform:translateY(3px)}
   .finish.tallcard .fcard{flex-direction:column;flex-wrap:nowrap}
+  /* the round "share my sticker" button: white with a pink ring, its words shown only as a little "Link copied!" bubble */
+  .fbtn.lr-share{position:relative;padding:0;border-radius:50%;gap:0;min-width:0;min-height:0}
+  .fbtn.lr-share svg{width:46%;height:46%;stroke-width:2.6}
+  .fbtn.lr-share span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  .fbtn.lr-share.done span{width:auto;height:auto;overflow:visible;clip:auto;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#2F2350;color:#fff;font-size:14px;padding:5px 9px;border-radius:10px;pointer-events:none}
 
   /* the big pointing hand that shows what to do */
   .hand{position:absolute;z-index:3;left:0;top:0;width:58px;height:76px;pointer-events:none;transform-origin:29px 2px;filter:drop-shadow(0 3px 3px #2F235040)}
@@ -2686,6 +2691,14 @@
     $('fStars').innerHTML = SIZES.map(n => '<span class="' + (got.includes(n) ? 'on' : '') + '">★</span>').join('');
     $('fStars').setAttribute('aria-label', got.length + ' of 4 stars');
     $('fBigger').hidden = size >= 12;
+    // "Share my sticker" button - one at a time, with this puzzle's picture and size
+    const oldShare = finishEl.querySelector('.lr-share');
+    if(oldShare) oldShare.remove();
+    if(window.LR && LR.shareButton){
+      const sb = LR.shareButton('I finished a ' + size + '-piece jigsaw of ' + SCENES[sceneIdx].name + '! 🧩', 'Share my sticker');
+      sb.classList.add('fbtn');
+      finishEl.querySelector('.fbtns').appendChild(sb);
+    }
     finishEl.hidden = false;
     placeCard();
     setTimeout(() => { try { $('fMore').focus({preventScroll: true}); } catch(e){} }, 60);
@@ -2698,15 +2711,31 @@
     else { x0 = OX + (PW + 10)*S; x1 = CW - mp; y0 = mp + (phone ? 50 : 0); y1 = CH - mp; }
     let w = x1 - x0, h = y1 - y0;
     if(w < 120 || h < 150){ x0 = OX + PW*S*0.15; x1 = OX + PW*S*0.85; y0 = OY + PH*S*0.25; y1 = OY + PH*S*0.95; w = x1 - x0; h = y1 - y0; }
-    const fb = Math.floor(clamp(Math.min(w, h)/3.4, 52, 72));
-    const perRow = Math.max(1, Math.min(3, Math.floor((w - 20 + 8)/(fb + 8))));
-    const nBtn = size >= 12 ? 2 : 3, btnRows = Math.ceil(nBtn/perRow);
-    const st = Math.floor(clamp(Math.min(w - 24, h - 24 - 26 - btnRows*(fb + 8) - 8), 56, 170));
+    let fb = Math.floor(clamp(Math.min(w, h)/3.4, 52, 72));
+    const nBtn = (size >= 12 ? 2 : 3) + (finishEl.querySelector('.lr-share') ? 1 : 0);
+    let perRow = Math.max(1, Math.min(nBtn === 4 ? 4 : 3, Math.floor((w - 20 + 8)/(fb + 8))));
+    if(nBtn === 4 && perRow === 3) perRow = 2;
+    let btnRows = Math.ceil(nBtn/perRow), gap = 8;
+    // very short screens: if the buttons can't all fit, use a tighter card and the arrangement that keeps them biggest
+    const tight = 24 + 26 + 56 + 8 + btnRows*(fb + 8) > h;
+    if(tight){
+      gap = 6;
+      let bestF = 0;
+      for(let pr = 1; pr <= nBtn; pr++){
+        const rows = Math.ceil(nBtn/pr);
+        const f = Math.floor(Math.min(72, (w - 28 + gap)/pr - gap, (h - 24 - 26 - 56 - 8)/rows - gap));
+        if(f > bestF){ bestF = f; perRow = pr; }
+      }
+      fb = Math.max(48, bestF); btnRows = Math.ceil(nBtn/perRow);
+    }
+    $('fcard').style.padding = tight ? '6px' : '';
+    finishEl.querySelector('.fbtns').style.gap = tight ? gap + 'px' : '';
+    const st = Math.floor(clamp(Math.min(w - 24, h - 24 - 26 - btnRows*(fb + gap) - 8), 56, 170));
     Object.assign(finishEl.style, {left: x0 + 'px', top: y0 + 'px', width: w + 'px', height: h + 'px'});
     finishEl.classList.add('tallcard');
     finishEl.style.setProperty('--st', st + 'px');
     finishEl.querySelectorAll('.fbtn').forEach(b => { b.style.width = b.style.height = fb + 'px'; });
-    finishEl.querySelector('.fbtns').style.maxWidth = (perRow*(fb + 8)) + 'px';
+    finishEl.querySelector('.fbtns').style.maxWidth = (perRow*(fb + gap)) + 'px';
   }
   $('fMore').addEventListener('click', () => { sfx.tap(); openGallery(); });
   $('fAgain').addEventListener('click', () => { sfx.tap(); startPuzzle(sceneIdx, size); });

@@ -57,6 +57,9 @@
   .panel button.ghost{background:#F3EEFA}
   #ovBtn{box-shadow:0 5px 0 #C23A78}
   #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C23A78}
+  /* end panel: "Start again" and "Share my score" side by side under the main button */
+  .panel .btnrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+  .panel .btnrow > *{flex:1 1 auto}
   .back{font-weight:800;color:var(--leaf);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
   .back:hover{text-decoration:underline}
   /* short screens: a smaller title and a more compact start panel */
@@ -67,6 +70,8 @@
     .panel p,.panel .key{font-size:13px}
     .panel .starrow{font-size:30px}
     button{padding:8px 16px}
+    .panel .lr-share{font-size:14px;min-height:44px;padding:6px 12px;gap:6px}
+    .panel .btnrow button.ghost{min-height:44px}
   }
   /* phone on its side: title, scores and buttons on the left, meadow on the right */
   @media (orientation:landscape) and (max-height:620px){
@@ -690,9 +695,27 @@
     ovKey.hidden = true;
     ovBtn.textContent = 'Level ' + (level + 1) + ' ➜';
     ovBtn2.hidden = false;
+    addShare(happyN, n, st);
     overlay.hidden = false;
     updateHud();
     ovBtn.focus();
+  }
+
+  // "Share my score" (white, under the main button, next to "Start again"); made fresh every time
+  function addShare(happyN, n, st){
+    let row = document.getElementById('ovRow');
+    if(!row){
+      row = document.createElement('div'); row.id = 'ovRow'; row.className = 'btnrow';
+      ovBtn.after(row); row.appendChild(ovBtn2);
+    }
+    row.querySelectorAll('.lr-share').forEach(b => b.remove());
+    if(!(window.LR && LR.shareButton)) return;
+    const lv = level, sc = score;
+    const msg = happyN === n
+      ? 'I gave all of Blossom\'s friends their Easter eggs on level ' + lv + ' and got ' + st + ' star' + (st === 1 ? '' : 's') + '! 🐰🥚'
+      : happyN === 0 ? 'I helped Blossom the Bunnycorn catch Easter eggs on level ' + lv + ' and scored ' + sc + ' points! 🐰🥚'
+      : 'I gave ' + happyN + ' of Blossom\'s friends their Easter eggs on level ' + lv + ' and scored ' + sc + ' points! 🐰🥚';
+    row.appendChild(LR.shareButton(msg));
   }
 
   ovBtn.addEventListener('click', () => {

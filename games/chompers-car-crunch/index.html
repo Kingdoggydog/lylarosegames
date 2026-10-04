@@ -121,6 +121,12 @@
       .panel p{font-size:14px}
     }
   }
+  /* very short screens (small phone on its side): squeeze the results panel so Play and Share both fit */
+  @media (max-height: 360px){
+    .panel{gap:5px;padding-top:8px;padding-bottom:8px}
+    .panel .starrow{font-size:30px}
+    .panel .lr-share{min-height:44px;font-size:14px;padding:6px 16px}
+  }
 </style>
 <meta name="description" content="Chomper's Car Crunch - a free dinosaur game for kids. Stomp around as Chomper, the friendly purple dinosaur, crunch cars, vans and trucks into bouncing bits, and fill up your giant ROAR!">
 <!-- ===== SEO for this game (Google + share previews) ===== -->
@@ -786,6 +792,14 @@
     nextPlace = justUnlocked ? unlocked : null;
     ovBtn.textContent = justUnlocked ? 'Go to the ' + PLACES[unlocked].name + '!' : 'Play again';
     buildPlaces(); buildKey();
+    // a "Share my score" button just under the main button (from the site-wide helper, if it loaded)
+    const oldShare = overlay.querySelector('.lr-share'); if(oldShare) oldShare.remove();
+    if(window.LR && LR.shareButton){
+      const msg = score > 0
+        ? 'Chomper and I crunched cars for ' + score + ' points in Chomper\'s Car Crunch' + (starsWon > 0 ? ' and got ' + starsWon + (starsWon === 1 ? ' star' : ' stars') : '') + '!' + (bossCrunched ? ' We even crunched the monster truck!' : '') + ' 🦖'
+        : 'I went stomping with Chomper in Chomper\'s Car Crunch! 🦖';
+      ovBtn.after(LR.shareButton(msg));
+    }
     overlay.hidden = false;
     setTimeout(() => { if(state === 'over') ovBtn.focus({preventScroll: true}); }, 50);
     updateHud();
@@ -850,7 +864,7 @@
     if(KEYMAP[k]){ keys[KEYMAP[k]] = 1; target = null; if(k.startsWith('Arrow')) e.preventDefault(); }
     if(k === ' ' || k === 'Spacebar'){
       // let Space press a place button when one is chosen with the keyboard
-      if(!overlay.hidden && document.activeElement && document.activeElement.parentNode === placesEl) return;
+      if(!overlay.hidden && document.activeElement && (document.activeElement.parentNode === placesEl || document.activeElement.classList.contains('lr-share'))) return;
       e.preventDefault();
       if(state === 'play') doRoar();
       else if(state !== 'ending' && !overlay.hidden && !e.repeat) ovBtn.click();

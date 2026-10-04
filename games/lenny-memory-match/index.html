@@ -89,6 +89,12 @@
   button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
   #ovBtn{box-shadow:0 5px 0 #C23A78}
   #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C23A78}
+  /* main button with "Share my score" beside it (wraps underneath on narrow screens) */
+  .ovrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+  .ovrow #ovBtn{flex:1 1 50%}
+  .ovrow .lr-share{flex:0 1 auto}
+  @media (max-height:640px){ .ovrow .lr-share{font-size:14px;min-height:44px;padding:6px 12px;gap:6px} }
+  @media (max-height:640px) and (orientation:landscape){ .panel:has(.lr-share){width:420px;max-width:100%} }
   .back-link{font-weight:800;color:var(--jungle);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
   .back-link:hover{text-decoration:underline}
 
@@ -266,7 +272,7 @@
         <p id="ovStars" class="starrow" hidden></p>
         <p id="ovBig" class="big" hidden></p>
         <p id="ovText">Flip two cards at a time and find the pairs that match. Find both Lenny cards and he lets you peek at all of them!</p>
-        <button id="ovBtn">Play</button>
+        <div class="ovrow" id="ovRow"><button id="ovBtn">Play</button></div>
         <p class="small">Or pick a level</p>
         <div class="levels" id="levels"></div>
       </div>
@@ -711,10 +717,19 @@
       ovBtn.textContent = last ? 'Play again' : s < 3 ? 'Next level' : 'Next level';
       ovBtn.dataset.go = last ? level : level + 1;
       buildLevels();
+      addShare(level + 1, tries, s);
       overlay.hidden = false;
       for(let i = 0; i < s; i++) setTimeout(() => sfx.star(i), 250 + i*260);
       ovBtn.focus({preventScroll: true});
     }, 1300);
+  }
+
+  // "Share my score" beside the main button on the finish panel; made fresh for each finished level
+  function addShare(lv, t, s){
+    const row = document.getElementById('ovRow');
+    row.querySelectorAll('.lr-share').forEach(b => b.remove());
+    if(!(window.LR && LR.shareButton)) return;
+    row.appendChild(LR.shareButton('I found all the pairs on level ' + lv + ' of Lenny\'s Memory Match in ' + t + ' tries and got ' + s + ' star' + (s === 1 ? '' : 's') + '! 🌴🧠'));
   }
 
   function nextToPlay(){

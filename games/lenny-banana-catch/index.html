@@ -51,6 +51,7 @@
   .panel .big{font-size:20px;font-weight:800}
   .panel .starrow{font-size:40px;line-height:1;letter-spacing:4px}
   .panel .starrow .off{opacity:.22;filter:grayscale(1)}
+  .panel .lr-share{align-self:center;flex:none}
   .panel .key{font-size:14px;display:grid;grid-template-columns:auto auto;justify-content:center;gap:2px 10px;text-align:left}
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--pink);color:#fff;font-size:17px;min-height:48px;min-width:48px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
@@ -104,6 +105,7 @@
     .panel .big{font-size:18px}
     .panel .key{grid-template-columns:auto auto auto auto;font-size:13px}
     #ovBtn{min-height:44px;padding:8px 18px}
+    .panel .lr-share{font-size:14px;min-height:44px;padding:8px 14px}
   }
 </style>
 <meta name="description" content="Lenny's Banana Catch - a free animal game for kids. Help Lenny the Lemur catch the bananas cheeky monkeys throw from the jungle trees, and dodge the coconuts!">
@@ -557,12 +559,26 @@
       : 'Your best is ' + best + '. Have another go!';
     ovKey.hidden = true;
     ovBtn.textContent = 'Play again';
+    addShare(score, starsWon);
     overlay.hidden = false;
     updateHud();
     ovBtn.focus();
   }
 
+  // "Share my score" button under Play again (made fresh each round, so there's only ever one)
+  let shareBtn = null;
+  function addShare(pts, stars){
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
+    if(!(window.LR && LR.shareButton)) return;
+    const starBit = stars > 0 ? ` and won ${stars} star${stars === 1 ? '' : 's'}` : '';
+    shareBtn = LR.shareButton(pts > 0
+      ? `I scored ${pts} point${pts === 1 ? '' : 's'} catching bananas for Lenny${starBit}! 🍌`
+      : 'I helped Lenny the Lemur catch bananas! 🍌');
+    ovBtn.after(shareBtn);
+  }
+
   ovBtn.addEventListener('click', () => {
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
     wake(); startMusic();
     overlay.hidden = true;
     startRound();

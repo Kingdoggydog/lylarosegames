@@ -119,6 +119,11 @@
     .maps{grid-template-columns:repeat(4,1fr)}
     .maps button{font-size:13px;min-height:44px;padding:3px 4px}
     .panel .stars{font-size:26px}
+    .panel .lr-share{min-height:44px;padding:6px 14px;font-size:15px}
+  }
+  /* very short screens (small phones turned sideways): a smaller train picture so every button on the "Hooray!" panel fits */
+  @media (max-height:360px){
+    .overlay.soft .panel:has(.lr-share) .crew canvas{height:44px;width:132px}
   }
   /* PHONES ONLY: the train set fills the whole screen; buttons float over it */
   @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
@@ -2323,6 +2328,11 @@
     const nb = $('nextBtn'); if(nb) nb.addEventListener('click', () => { startMap(mapI + 1, false); hidePanel(); });
     const ab = $('againBtn'); if(ab) ab.addEventListener('click', () => { startMap(mapI, false); hidePanel(); });
     $('stayBtn').addEventListener('click', () => { party.closed = true; hidePanel(); });
+    // "Share my map" button (the panel is rebuilt each time, so there's only ever one)
+    if(window.LR && LR.shareButton){
+      const shareMsg = 'I delivered everything on ' + MAPS[mapI].name + " in Chomper's Toot Toot Delivery! 🚂";
+      panel.querySelector('.row').appendChild(LR.shareButton(shareMsg, 'Share my map'));
+    }
   }
 
   // ===== SIZE AND MAIN LOOP =====

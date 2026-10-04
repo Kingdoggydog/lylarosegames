@@ -61,6 +61,56 @@ const GA_MEASUREMENT_ID = "G-EM2WKCXBEL";
   } catch (e) {}
 })();
 
+// ----- "Share my score" button for game end screens - the same look and behaviour in every game.
+//       A game calls:  panel.appendChild(LR.shareButton("I got gold in Starlight's Unicorn Race! 🥇"))
+//       It shares the message + this game's address (phone's own share menu, or "Link copied!" on computers).
+//       Nothing is sent anywhere by the site itself.
+window.LR = window.LR || {};
+(function () {
+  const css = document.createElement("style");
+  css.textContent =
+    ".lr-share{font:inherit;font-weight:800;font-size:16px;line-height:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;" +
+    "min-height:48px;padding:10px 20px;border-radius:14px;cursor:pointer;color:#23413B;background:#fff;border:3px solid #F2559B55;" +
+    "box-shadow:0 4px 0 #F2559B33;-webkit-tap-highlight-color:transparent}" +
+    ".lr-share:hover{background:#FDE2EC}.lr-share:active{transform:translateY(2px);box-shadow:0 2px 0 #F2559B33}" +
+    ".lr-share:focus-visible{outline:3px solid #FFC23D;outline-offset:2px}.lr-share svg{flex:none}" +
+    ".lr-share.done{background:#E9F9EC;border-color:#69DB7C}";
+  (document.head || document.documentElement).appendChild(css);
+  const ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>';
+  function pageUrl() {
+    const c = document.querySelector('link[rel="canonical"]');
+    return c ? c.href : location.href.split("#")[0].split("?")[0];
+  }
+  window.LR.share = async function (message) {
+    const url = pageUrl();
+    const title = document.title.split(" - ")[0];
+    const text = message + " Play it free on Lyla Rose Games:";
+    if (window.gtag) gtag("event", "share", { method: "score", content_type: "game", item_id: url });
+    if (navigator.share) {
+      try { await navigator.share({ title, text, url }); return "shared"; }
+      catch (e) { if (e && e.name === "AbortError") return "cancelled"; }
+    }
+    try { await navigator.clipboard.writeText(text + " " + url); return "copied"; } catch (e) {}
+    try { window.prompt("Copy this link:", url); } catch (e) {}
+    return "copied";
+  };
+  window.LR.shareButton = function (message, label) {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "lr-share";
+    b.innerHTML = ICON + "<span></span>";
+    const span = b.querySelector("span"); span.textContent = label || "Share my score";
+    b.setAttribute("aria-label", (label || "Share my score") + ": " + message);
+    // stop the tap reaching the game underneath (some games start a new round on any tap)
+    ["pointerdown", "pointerup", "touchstart", "touchend", "mousedown"].forEach(t => b.addEventListener(t, e => e.stopPropagation()));
+    b.addEventListener("click", async e => {
+      e.preventDefault(); e.stopPropagation();
+      const r = await window.LR.share(typeof message === "function" ? message() : message);
+      if (r === "copied") { span.textContent = "Link copied!"; b.classList.add("done"); setTimeout(() => { span.textContent = label || "Share my score"; b.classList.remove("done"); }, 1800); }
+    });
+    return b;
+  };
+})();
+
 /* =====================================================================
    MOBILE KIT - switched on automatically for every game page
    (anything inside the games folder). Makes games behave like apps on

@@ -95,6 +95,7 @@
   .btn.ghost { background: #f1e6fb; color: var(--plum); box-shadow: 0 5px 0 #dcc7ef; font-size: 22px; padding: 6px 28px 4px; }
   .btn.ghost:active { box-shadow: 0 1px 0 #dcc7ef; }
   .btnRow { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .btnRow .lr-share { margin-top: 6px; }
   .nameForm { display: flex; flex-direction: column; gap: 6px; width: 100%; }
   .nameForm label { font-size: 16px; font-weight: 700; }
   .nameRow { display: flex; gap: 8px; width: 100%; }
@@ -109,7 +110,7 @@
   .scoreWrap { width: 100%; max-height: 272px; overflow-y: auto; }
   .scoreHead { margin: 4px 0 0; font-size: 20px; font-weight: 800; color: var(--plum); }
   table.scores { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 17px; font-variant-numeric: tabular-nums; text-align: left; }
-  .scores th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9a82b8; font-weight: 700; padding: 0 6px 4px; }
+  .scores th { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: #9a82b8; font-weight: 700; padding: 0 6px 4px; }
   .scores td { padding: 5px 6px; border-top: 2px solid #f3e8fb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .scores .c-rank { width: 40px; }
   .scores .c-date { width: 104px; font-size: 15px; color: #7a62a0; }
@@ -165,6 +166,40 @@
     .btn.ghost { font-size: 18px; padding: 5px 22px 3px; }
     .stars svg { width: 48px; height: 48px; }
     .scoreWrap { max-height: 150px; }
+  }
+  /* end screen: never taller than the screen, so Fly again and Share always show (the top scores list shrinks and scrolls instead) */
+  #endScreen .card { max-height: 100%; }
+  #endScreen .scoreWrap { min-height: 0; }
+  @media (max-width: 500px) and (max-height: 760px) {
+    #endScreen .card { gap: 6px; }
+    #endScreen h1 { font-size: 30px; }
+    #endScreen .stars svg { width: 42px; height: 42px; }
+    #endScreen .nameForm label { font-size: 14px; }
+    #endScreen .scoreHead { margin: 0; font-size: 18px; }
+    #endScreen .tally { font-size: 20px; }
+    #endScreen .sub { font-size: 15px; }
+    #endScreen .btnRow { gap: 8px; }
+    #endScreen .btnRow .btn { font-size: 22px; padding: 7px 30px 5px; }
+    #endScreen .btnRow .btn.ghost { font-size: 18px; padding: 6px 16px 4px; }
+    #endScreen .lr-share { font-size: 14px; min-height: 44px; padding: 8px 14px; }
+  }
+  /* phone on its side: results on the left, top scores on the right, buttons along the bottom */
+  @media (max-height: 600px) and (orientation: landscape) {
+    #endScreen .card { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); column-gap: 16px; row-gap: 3px; align-items: center; max-width: 760px; padding: 10px 16px; }
+    #endScreen #endTitle { grid-column: 1; grid-row: 1; font-size: 26px; }
+    #endScreen #endStars { grid-column: 1; grid-row: 2; }
+    #endScreen #endTally { grid-column: 1; grid-row: 3; font-size: 17px; }
+    #endScreen #endMsg { grid-column: 1; grid-row: 4; font-size: 14px; line-height: 1.25; }
+    #endScreen #nameForm, #endScreen #saveNote { grid-column: 2; grid-row: 1; }
+    #endScreen .nameForm label { font-size: 13px; }
+    #endScreen .nameRow input { font-size: 18px; }
+    #endScreen .scores .c-date { display: none; }
+    #endScreen .scoreHead { grid-column: 2; grid-row: 2; font-size: 16px; margin: 0; }
+    #endScreen .scoreWrap { grid-column: 2; grid-row: 3 / 5; align-self: stretch; contain: size; min-height: 48px; max-height: none; }
+    #endScreen .btnRow { grid-column: 1 / 3; grid-row: 5; margin-top: 2px; }
+    #endScreen .btnRow .btn { margin-top: 0; }
+    #endScreen .btnRow .lr-share { margin-top: 0; font-size: 14px; min-height: 44px; padding: 8px 14px; }
+    #endScreen .stars svg { width: 30px; height: 30px; }
   }
   /* same "All games" button as Sparklehoof's Maze */
   .back {
@@ -296,9 +331,9 @@
     <p class="tally" id="endTally"></p>
     <p class="sub" id="endMsg"></p>
     <form class="nameForm" id="nameForm" autocomplete="off">
-      <label for="playerName">Type your name for the top scores</label>
+      <label for="playerName">Type a nickname for the top scores</label>
       <div class="nameRow">
-        <input id="playerName" name="playerName" maxlength="14" placeholder="Your name" enterkeyhint="done">
+        <input id="playerName" name="playerName" maxlength="14" placeholder="Nickname" enterkeyhint="done">
         <button class="btn small" type="submit">Save</button>
       </div>
     </form>
@@ -307,6 +342,7 @@
     <div class="scoreWrap" id="endScores"></div>
     <div class="btnRow">
       <button class="btn" id="againBtn">Fly again</button>
+      <span id="shareSlot" style="display:contents"></span>
       <a class="btn ghost" href="../../" style="text-decoration:none">All games</a>
     </div>
   </div>
@@ -630,7 +666,7 @@
       el.appendChild(p); return;
     }
     const table = document.createElement('table'); table.className = 'scores';
-    table.innerHTML = '<thead><tr><th class="c-rank">#</th><th>Name</th><th class="c-date">Date</th><th class="c-score">Score</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th class="c-rank">#</th><th>Nickname</th><th class="c-date">Date</th><th class="c-score">Score</th></tr></thead>';
     const tb = document.createElement('tbody');
     list.forEach((s, i) => {
       const tr = document.createElement('tr');
@@ -712,6 +748,16 @@
     document.getElementById('saveNote').hidden = true;
     document.getElementById('playerName').value = lastName();
     renderScores(document.getElementById('endScores'));
+    // "Share my score" button next to Fly again (made fresh each round, so there's only ever one)
+    const slot = document.getElementById('shareSlot');
+    slot.innerHTML = '';
+    if (window.LR && LR.shareButton) {
+      const g = glitter, st = starsGot;
+      const starBit = st > 0 ? ` and won ${st} star${st === 1 ? '' : 's'}` : '';
+      slot.appendChild(LR.shareButton(g > 0
+        ? `I flew Rainbow to the finish in Glitter Sky Unicorn with ${g} glitter${starBit}! 🌈`
+        : 'I flew Rainbow to the finish line in Glitter Sky Unicorn! 🌈'));
+    }
     endScreen.hidden = false;
   }
 

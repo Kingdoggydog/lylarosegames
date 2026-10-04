@@ -80,6 +80,10 @@
   .tool.go{background:#51CF66;box-shadow:0 4px 0 #2F9E44}
   .tool.go.next{box-shadow:0 0 0 4px var(--pink),0 4px 0 #2F9E44}
   @keyframes nudge{to{transform:scale(1.12)}}
+  /* share button: top corner of the car wash while the shiny car is being painted and stickered */
+  .board .lr-share.washShare{position:absolute;z-index:3;top:6px;right:calc(var(--tb) + 6px);font-size:15px;padding:8px 14px}
+  .board.tall .lr-share.washShare{right:6px}
+  @media (max-height:520px), (max-width:420px){ .board .lr-share.washShare{font-size:14px;min-height:44px;padding:6px 12px;gap:6px} }
   /* paint pots: a row along the floor under the car */
   .pots{position:absolute;z-index:2;left:0;display:flex;align-items:center;justify-content:center;gap:6px;height:var(--ph);box-sizing:border-box;padding:4px;pointer-events:none}
   .board.wide .pots{bottom:0;right:var(--tb)}
@@ -857,6 +861,15 @@
     if(on){ potsEl.classList.remove('pop'); void potsEl.offsetWidth; potsEl.classList.add('pop'); markPot(); }
     stickTools.querySelectorAll('[data-sticker]').forEach(b => b.setAttribute('aria-pressed', b.dataset.sticker === sticker ? 'true' : 'false'));
     goBtn.classList.remove('next');
+    // share button for the finished car (a fresh one each car, so there's only ever one)
+    board.querySelectorAll('.washShare').forEach(b => b.remove());
+    if(on && window.LR && LR.shareButton){
+      const n = washedCount + 1;   // this car counts once it drives away
+      const sb = LR.shareButton(n === 1 ? "I washed my first car in Chomper's Car Wash! 🧽🚗" : 'I washed ' + n + " cars in Chomper's Car Wash! 🧽🚗", 'Share');
+      sb.classList.add('washShare');
+      sb.addEventListener('click', () => sb.blur());
+      board.appendChild(sb);
+    }
   }
   function startStyle(){ stage = 'style'; stageT = 0; goReadyT = 0; idleT = 0; showStyle(true); }
   function drive(){

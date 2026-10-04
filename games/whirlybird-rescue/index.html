@@ -674,6 +674,16 @@
       ovBtn.textContent = 'Try again';
       ovBtn2.hidden = true;
     }
+    // a "Share my score" button in the button row (from the site-wide helper, if it loaded)
+    const oldShare = overlay.querySelector('.lr-share'); if(oldShare) oldShare.remove();
+    if(window.LR && LR.shareButton){
+      const friends = n => n + (n === 1 ? ' animal friend' : ' animal friends');
+      const msg = state === 'over'
+        ? 'I rescued all ' + friends(info.friends) + ' on level ' + level + ' of Whirlybird Rescue and got ' + starsWon + (starsWon === 1 ? ' star' : ' stars') + '! 🚁'
+        : rescued > 0 ? 'I rescued ' + friends(rescued) + ' on level ' + level + ' of Whirlybird Rescue! 🚁'
+        : 'I went flying with Whirly the helicopter in Whirlybird Rescue! 🚁';
+      ovBtn2.after(LR.shareButton(msg));
+    }
     ovBtn.focus();
   }
 

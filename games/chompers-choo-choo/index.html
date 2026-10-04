@@ -87,6 +87,11 @@
   button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
   #ovBtn{background:var(--pink);box-shadow:0 5px 0 #C9306F}
   #ovBtn:active{transform:translateY(3px);box-shadow:0 2px 0 #C9306F}
+  /* main button with "Share my score" beside it (wraps underneath on narrow screens) */
+  .ovrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+  .ovrow #ovBtn{flex:1 1 50%}
+  .ovrow .lr-share{flex:0 1 auto}
+  @media (max-height:640px){ .panel:has(.lr-share) .key{display:none} .ovrow .lr-share{font-size:14px;min-height:44px;padding:6px 12px;gap:6px} }
   .back{font-weight:800;color:var(--purple-d);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
   .back:hover{text-decoration:underline}
   /* short screens: a more compact start panel so the Play button always fits */
@@ -241,7 +246,7 @@
         <p id="ovBig" class="big" hidden></p>
         <p id="ovText">Chomper is driving the train! Hold anywhere to go faster, let go to slow down. Stop so the carriage door lines up with the STOP sign to pick up dinosaur friends. Toot to shoo cows off the track!</p>
         <div class="levels" id="levels" role="group" aria-label="Choose a train line"></div>
-        <button id="ovBtn">Play</button>
+        <div class="ovrow" id="ovRow"><button id="ovBtn">Play</button></div>
         <div class="key" id="ovKey"></div>
       </div>
     </div>
@@ -1839,15 +1844,28 @@
       ovStars.hidden = false; ovStars.textContent = '★'.repeat(s) + '☆'.repeat(3 - s);
       ovStars.setAttribute('aria-label', s + ' stars out of 3');
       ovBig.hidden = false; ovBig.textContent = (newBest ? '🏆 New best! ' : '') + 'Score: ' + runScore;
+      addShare();
       ovText.textContent = 'Perfect stops: ' + perfects + ' of ' + graded + '  ·  Friends carried: ' + carried + (level === LEVELS ? '  ·  You drove every line - you are a super train driver!' : '');
     } else {
       ovTitle.textContent = 'All aboard!';
       ovStars.hidden = true; ovBig.hidden = true;
+      $('ovRow').querySelectorAll('.lr-share').forEach(b => b.remove());
       ovText.textContent = 'Chomper is driving the train! Hold anywhere to go faster, let go to slow down. Stop so the carriage door lines up with the STOP sign to pick up dinosaur friends. Toot to shoo cows off the track!';
     }
     setPlayText();
     overlay.hidden = false;
     setTimeout(() => { try { ovBtn.focus({preventScroll: true}); } catch(e){} }, 50);
+  }
+  // "Share my score" beside the main button on the finish panel; made fresh for each finished line
+  function addShare(){
+    const row = $('ovRow');
+    row.querySelectorAll('.lr-share').forEach(b => b.remove());
+    if(!(window.LR && LR.shareButton)) return;
+    const name = lineName(level), s = starsNow, n = carried;
+    const msg = 'I drove Chomper\'s Choo-Choo to every station on the ' + name +
+      (n > 0 ? ', carried ' + n + ' dinosaur friend' + (n === 1 ? '' : 's') : '') +
+      ' and got ' + s + ' star' + (s === 1 ? '' : 's') + '! 🚂🦖';
+    row.appendChild(LR.shareButton(msg));
   }
   ovBtn.addEventListener('click', () => {
     wake(); startMusic();

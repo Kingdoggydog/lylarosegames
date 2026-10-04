@@ -94,6 +94,7 @@
     .panel .big{font-size:36px}
     .panel .stars svg{width:34px;height:34px}
     .panel .key{display:none}
+    .panel .lr-share{min-height:42px;padding:6px 16px;font-size:15px}
   }
   /* PHONES ONLY: the table fills the whole screen; buttons and the score float over it */
   @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
@@ -1927,6 +1928,13 @@
       ovBest.className = newBest && score > 0 ? 'newbest' : 'best';
       ovBest.textContent = newBest && score > 0 ? 'New best score!' : 'Best score: ' + fmt(best);
       ovBtn.textContent = 'Play again ▶';
+    }
+    // "Share my score" button (end of game only) - one at a time, with this game's score
+    const oldShare = ovBtn.parentNode.querySelector('.lr-share');
+    if(oldShare) oldShare.remove();
+    if(mode === 'end' && window.LR && LR.shareButton){
+      const shareMsg = 'I scored ' + fmt(score) + ' in Unicorn Pinball! 🦄';
+      ovBtn.after(LR.shareButton(shareMsg));
     }
     overlay.hidden = false;
     setTimeout(() => { try { ovBtn.focus({preventScroll: true}); } catch(e){} }, 50);

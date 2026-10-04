@@ -488,6 +488,7 @@
     ovMode = mode;
     overlay.hidden = false;
     ovStars.hidden = true; ovBig.hidden = true; ovBtn2.hidden = true;
+    const oldShare = overlay.querySelector('.lr-share'); if(oldShare) oldShare.remove();
     if(mode === 'pause'){
       ovTitle.textContent = 'Having a rest';
       ovText.textContent = 'Starlight and Lenny are catching their breath. Ready to keep galloping?';
@@ -495,6 +496,11 @@
       ovBtn2.hidden = false;
     }
     ovBtn.focus({preventScroll:true});
+  }
+  // a "Share my score" button just under the main button (from the site-wide helper, if it loaded)
+  function addShare(message){
+    const oldShare = overlay.querySelector('.lr-share'); if(oldShare) oldShare.remove();
+    if(window.LR && LR.shareButton) ovBtn.after(LR.shareButton(message));
   }
   function hideOverlay(){ overlay.hidden = true; if(document.activeElement && document.activeElement.blur) document.activeElement.blur(); }
 
@@ -513,6 +519,7 @@
     const tips = stars === 3 ? 'Super sparkly! Three stars!' : stars === 2 ? 'Lovely galloping! Grab even more glitter for three stars.' : 'Safe across! Jump for the glitter to win more stars.';
     ovText.textContent = tips + (bestShown ? ' 🏆 New best: ' + best + '!' : '') + ' Next time Lenny is a bit speedier...';
     ovBtn.textContent = 'Next level ➜';
+    addShare('I finished level ' + level + ' in Glitter Getaway with ' + stars + (stars === 1 ? ' star' : ' stars') + (kept > 0 ? ' and kept ' + kept + ' glitter' : '') + '! ✨');
     ovBtn.focus({preventScroll:true});
   }
 
@@ -530,6 +537,7 @@
     ovBig.textContent = '✨ ' + glitter + ' glitter - you reached level ' + level;
     ovText.textContent = (bestShown ? '🏆 That is a new best! ' : 'Your best is ' + best + '. ') + 'Lenny is off to make a sparkly nest... Can you get further next time?';
     ovBtn.textContent = 'Try again';
+    addShare(glitter > 0 ? 'I got to level ' + level + ' in Glitter Getaway with ' + glitter + ' glitter! ✨' : 'I galloped to level ' + level + ' in Glitter Getaway! ✨');
     ovBtn.focus({preventScroll:true});
   }
 

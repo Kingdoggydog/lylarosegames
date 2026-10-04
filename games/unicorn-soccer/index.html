@@ -46,6 +46,9 @@
   .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:30px;margin:0;color:var(--pink)}
   .panel p{margin:0;font-size:15px}
   .panel .big{font-size:20px;font-weight:800}
+  .panel .lr-share{align-self:center}
+  /* small screens: tighter results panel so Try again and Share both fit */
+  @media (max-height:500px), (max-width:420px){ .panel{padding:12px 16px;gap:7px} .panel h2{font-size:26px} .panel .big{font-size:18px} .panel p{font-size:14px} .panel .lr-share{font-size:14px;min-height:44px;padding:8px 14px} }
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:10px 16px;background:var(--pink);color:#fff;font-size:16px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink)}
@@ -592,12 +595,27 @@
     ovBig.textContent = streak === 0 ? 'No goals this time' : streak === 1 ? 'You scored 1 goal' : 'You scored ' + streak + ' in a row!';
     ovText.textContent = newBest && streak > 0 ? '🏆 That is a new best! Can you beat it?' : 'Your best is ' + best + '. Have another go!';
     ovBtn.textContent = 'Try again';
+    addShare(streak, newBest);
     overlay.hidden = false;
     setKickBtn();
     ovBtn.focus();
   }
 
+  // "Share my score" button under Try again (made fresh each time, so there's only ever one)
+  let shareBtn = null;
+  function addShare(goals, isBest){
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
+    if(!(window.LR && LR.shareButton)) return;
+    const name = 'Unicorn Penalty Shoot-out';
+    const text = goals === 0 ? `I played ${name}! ⚽`
+      : goals === 1 ? `I scored a goal in ${name}! ⚽`
+      : `I got ${goals} goals in a row in ${name}!${isBest ? ' A new best!' : ''} ⚽`;
+    shareBtn = LR.shareButton(text);
+    ovBtn.after(shareBtn);
+  }
+
   ovBtn.addEventListener('click', () => {
+    if(shareBtn){ shareBtn.remove(); shareBtn = null; }
     wake(); startMusic();
     overlay.hidden = true;
     streak = 0; newBest = false;

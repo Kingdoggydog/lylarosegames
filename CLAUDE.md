@@ -17,7 +17,7 @@ games-data.js       THE MASTER LIST - every category and every game. Edit this t
 index.html          the home page (reads games-data.js)
 home.js             draws the game cards, filter buttons and Google data - no need to edit
 styles.css          shared look for the home page and category pages
-site.js             loaded by EVERY page: Google Analytics, logo, and the mobile kit for games
+site.js             loaded by EVERY page: Google Analytics, logo, the mobile kit for games and the share button
 unicorn-games/      one folder per category page, for Google (unicorn-games, sport-games,
 sport-games/          puzzle-games, flying-games, animal-games, action-games,
 puzzle-games/         dinosaur-games, car-games, train-games, digger-games). Each is a small index.html with its own
@@ -62,6 +62,12 @@ games/<folder>/     one folder per game, fully self-contained
 - Every game page must keep a way back home: `<a class="back" href="../../">← All games</a>`
 - Kid-safe: no external links out of the site, no ads, no sign-ups, no collecting personal details.
 - If the game's name, blurb or categories change, update its entry in `games-data.js` and the README table.
+- **End screens get a share button** (added to every game 4 Oct). When a round or level ends, add one with `if (window.LR && LR.shareButton) panel.appendChild(LR.shareButton("I got 3 stars in <Game name>! 🦄"));`
+  - The message uses that round's real result (score, level, stars). No names or personal details in it.
+  - Remove any old `.lr-share` button before adding a new one, so there's only ever one.
+  - The main pink button stays the biggest. Make sure clicking share doesn't start a new round (watch Space/Enter key handlers).
+  - An optional second word (e.g. `LR.shareButton(msg, "Share my town")`) changes the label. The button itself, its look and what it shares live in `site.js` - don't copy that code into games.
+- Top-score lists that ask for a name must ask for a **nickname** only, saved on the device (never sent anywhere).
 
 ### Phones and iPads - every game must:
 

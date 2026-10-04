@@ -77,6 +77,8 @@
   .panel .finds{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px;min-height:40px}
   .panel .finds img{width:44px;height:44px}
   .panel .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+  .panel .lr-share{font-size:15px;padding:8px 12px;gap:6px}
+  .panel .lr-share.done{font-size:13px;padding-left:8px;padding-right:8px}.panel .lr-share.done svg{display:none}
   button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--purple);color:#fff;font-size:17px;min-height:48px;min-width:48px}
   button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
   button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
@@ -1920,6 +1922,18 @@
       (f ? '<div class="finds" aria-label="Things you found">' + f + '</div>' : '') +
       '<button id="ovBtn" type="button" data-go="' + (last ? 'jobs' : 'job' + (jobIdx + 1)) + '">' + (last ? 'All jobs done! Pick a job ▶' : 'Next job: ' + JOBS[jobIdx + 1].icon + ' ▶') + '</button>' +
       '<div class="row">' + (last ? '' : '<button class="ghost" type="button" data-go="jobs">🗺️ Jobs</button>') + '<button class="ghost" type="button" data-go="shelf-end">🏆 Treasure shelf</button></div>', true);
+    // share this job (the panel is rebuilt each time, so there's only ever one button)
+    if(window.LR && LR.shareButton){
+      const what = (/'s /.test(job.name) ? '' : 'the ') + job.name;
+      const got = [];
+      if(bonesFound) got.push(bonesFound + ' dinosaur bone' + (bonesFound === 1 ? '' : 's'));
+      if(jobFinds.length) got.push(jobFinds.length + ' treasure' + (jobFinds.length === 1 ? '' : 's'));
+      const row = panel.querySelector('.row');
+      const sb = LR.shareButton('I finished ' + what + " in Chomper's Digger" + (got.length ? ' and found ' + got.join(' and ') : '') + '! 🚜🦴', 'Share');
+      // same as the other buttons: ignore a finger still tapping away at the party
+      sb.addEventListener('click', e => { if(performance.now() - panelAt < 800){ e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+      if(row) row.appendChild(sb);
+    }
   }
   panel.addEventListener('click', e => {
     const b = e.target.closest('button'); if(!b) return;
