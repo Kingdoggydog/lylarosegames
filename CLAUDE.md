@@ -20,7 +20,7 @@ styles.css          shared look for the home page and category pages
 site.js             loaded by EVERY page: Google Analytics, logo, the mobile kit for games and the share button
 unicorn-games/      one folder per category page, for Google (unicorn-games, sport-games,
 sport-games/          puzzle-games, flying-games, animal-games, action-games,
-puzzle-games/         dinosaur-games, car-games, train-games, digger-games, maze-games). Each is a small index.html with its own
+puzzle-games/         dinosaur-games, car-games, train-games, digger-games, maze-games, halloween-games). Each is a small index.html with its own
 maze-games/           Google title + description. The games on it come from games-data.js.
 flying-games/         Any new maze game goes in "mazes" (and "puzzles") with its breadcrumb pointing at maze-games/.
 animal-games/

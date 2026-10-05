@@ -25,6 +25,11 @@
     <image:image><image:loc>https://lylarosegames.com/brand/og-image.jpg</image:loc></image:image>
   </url>
   <url>
+    <loc>https://lylarosegames.com/halloween-games/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/trick-or-treat-maze/share.jpg</image:loc></image:image>
+  </url>
+  <url>
     <loc>https://lylarosegames.com/maze-games/</loc>
     <lastmod>2026-10-05</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/chompers-digger-maze/share.jpg</image:loc></image:image>
@@ -186,5 +191,11 @@
     <lastmod>2026-10-05</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/lenny-jungle-maze/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/lenny-jungle-maze/thumb.jpg</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://lylarosegames.com/games/trick-or-treat-maze/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/trick-or-treat-maze/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/trick-or-treat-maze/thumb.jpg</image:loc></image:image>
   </url>
 </urlset>

@@ -28,6 +28,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Chomper's Digger Maze | Mazes, Puzzles, Diggers & Trucks, Dinosaurs | 3+ | `games/chompers-digger-maze/` |
 | Whirly's Cloud Maze | Mazes, Puzzles, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
 | Lenny's Jungle Maze | Mazes, Puzzles, Animals | 3+ | `games/lenny-jungle-maze/` |
+| Trick-or-Treat Maze | Halloween, Mazes, Puzzles | 3+ | `games/trick-or-treat-maze/` |
 
 ## Age groups
 
@@ -48,6 +49,7 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 | Cars | `car-games/` |
 | Trains | `train-games/` |
 | Diggers | `digger-games/` |
+| Halloween | `halloween-games/` |
 
 ## For parents page
 

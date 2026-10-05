@@ -318,7 +318,8 @@ window.LR = window.LR || {};
         if (st.display === "none" || st.visibility === "hidden" || +st.opacity < 0.05) return;
         const r = el.getBoundingClientRect();
         if (r.width < 3 || r.height < 3 || r.right < 0 || r.bottom < 0 || r.left > vw || r.top > vh) return;
-        if (r.width * r.height > vw * vh * 0.25 || r.width >= vw * 0.9 || el.tagName === "CANVAS") return;
+        // skip big boxes (backgrounds, panels) - but a wide real button or title (e.g. a full-width "Let's go") still counts
+        if (r.width * r.height > vw * vh * 0.25 || (r.width >= vw * 0.9 && !el.matches(INTERACTIVE) && !label) || el.tagName === "CANVAS") return;
         r.hit = label || el.matches(INTERACTIVE) || !!el.closest(INTERACTIVE); out.push(r);
       });
       // a bar that just holds other buttons isn't a blocker itself - only the buttons inside it are
