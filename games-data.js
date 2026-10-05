@@ -298,6 +298,18 @@ const games = [
     categories: ["halloween", "mazes", "puzzles"],
     controls: "Arrow keys, WASD, swipe or tap the arrows"
   },
+  {
+    title: "Blossom's Pumpkin Faces",
+    folder: "blossoms-pumpkin-faces",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🎃",
+    colour: "#FFE0C2",
+    thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
+    blurb: "A Halloween pumpkin game for little ones! Pick a pumpkin from Blossom the Bunnycorn's patch, tap on silly eyes, noses, hats and moustaches, then light it up and watch it giggle, dance and sing on the porch.",
+    categories: ["halloween", "unicorns", "animals"],
+    controls: "Tap (drag if you like), or Tab and Enter"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

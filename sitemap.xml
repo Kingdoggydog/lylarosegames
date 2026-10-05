@@ -198,4 +198,10 @@
     <image:image><image:loc>https://lylarosegames.com/games/trick-or-treat-maze/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/trick-or-treat-maze/thumb.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://lylarosegames.com/games/blossoms-pumpkin-faces/</loc>
+    <lastmod>2026-10-05</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-pumpkin-faces/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-pumpkin-faces/thumb.jpg</image:loc></image:image>
+  </url>
 </urlset>
