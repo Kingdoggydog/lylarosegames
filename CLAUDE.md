@@ -34,7 +34,7 @@ for-parents/        the "For parents" page (safety, privacy, contact) - hand-wri
                       collecting details), update this page too - or better, don't add it.
 brand/              logo (icon.svg + png sizes) and og-image.jpg (the share picture)
 site.webmanifest    lets phones add the site to the home screen as a full-screen app
-sitemap.xml         list of pages for Google
+sitemap.xml         list of pages for Google, with the date each last changed and its pictures
 robots.txt          tells search engines they're welcome, and where the sitemap is
 CNAME               the custom domain for GitHub Pages - don't delete
 README.md           plain-English guide + table of all games
@@ -100,14 +100,14 @@ games/<folder>/     one folder per game, fully self-contained
 2. The game's `<head>` has the items listed above, it has its "For grown-ups" note, and it passes the phone/iPad rules.
 3. Add it to the `games` list in `games-data.js`, with every category it fits in `categories` (e.g. `["unicorns", "sport"]`) and its starting age in `ages` - one of `"2+"`, `"3+"` or `"4+"` (the `ageGroups` list at the top of games-data.js says what each means; ask Andy if unsure). It appears on the home page and every matching category page automatically, with an age badge on its card.
 4. Add a row to the table in `README.md` (including its age).
-5. Add a `<url>` line for it in `sitemap.xml`.
+5. Add a `<url>` block for it in `sitemap.xml` (copy another game's block): its address, `<lastmod>` = today's date (YYYY-MM-DD), and `<image:image>` lines for its `share.jpg` and `thumb.jpg`.
 
 ## Adding a NEW category - checklist
 
 1. Add a line to the `categories` list in `games-data.js` (id, slug, title, heading, emoji, colour, about). Slug = web address, e.g. `car-games`.
 2. Copy an existing category folder (e.g. `sport-games/`) to a new folder named after the slug.
 3. In the copy's `index.html`, change: `<title>`, `<meta name="description">`, `canonical` and `og:url` addresses, the `og:title`/`og:description`, `data-category="..."` on `<body>`, and the badge emoji/colour, heading and line under it. Write a fresh Google description - never copy another page's.
-4. Add a `<url>` line for it in `sitemap.xml`.
+4. Add a `<url>` block for it in `sitemap.xml` (copy another category's block) with today's date as `<lastmod>` and its share picture.
 5. Write its "about" text: a `<section class="about-text" data-for="<id>">` under the grid with a heading and 2-3 short paragraphs for grown-ups (what the games are, which ones, ages, free/no ads) with links to its games. Fresh wording - never copied from another page.
 
 ## About text on the home and category pages (hub only)
@@ -121,6 +121,7 @@ Analytics, Search Console, the home page design, `home.js`, `styles.css`, `site.
 - Google Analytics ID is `G-EM2WKCXBEL`, set in `site.js`, which switches it on for every page. Never paste Google's tag into game pages.
 - The ONE exception: the home page `index.html` has Google's tag written directly in its `<head>` - Search Console uses it to verify ownership. Do not remove it. `site.js` notices it and skips, so visits aren't counted twice. If the ID ever changes, change it in both places.
 - `robots.txt` points search engines at `sitemap.xml`. Keep the sitemap up to date whenever a game or category page is added.
+- **Whenever you change a page's words or game (any chat), set that page's `<lastmod>` in `sitemap.xml` to today's date.** It tells Google which pages are worth re-reading. Don't change dates for pages you didn't touch.
 
 ## Moving card pictures (hub only)
 
