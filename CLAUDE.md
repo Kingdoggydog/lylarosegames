@@ -61,6 +61,16 @@ games/<folder>/     one folder per game, fully self-contained
   - `<html lang="en-AU">`
   - optional: `<meta name="game-orientation" content="landscape">` (or `portrait`) - phones held the wrong way get a friendly "turn it sideways" screen
 - Every game page must keep a way back home: `<a class="back" href="../../">← All games</a>`
+- Every game page has a **"For grown-ups" note** just before `</body>` (Google reads it; site.js turns it into a little "i" button beside the back button that opens it as a pop-up card - don't style or move it yourself):
+  ```html
+  <details class="lr-about"><summary>For grown-ups</summary><div class="lr-about-body">
+    <h2>About <Game name></h2>
+    <p>What the game is and the age it suits (start with "<Game name> is a free ... game for kids aged about 3 and up").</p>
+    <p>What kids practise, and anything a parent would want to know (no losing, saves on the device, best held sideways...).</p>
+    <p>Free, no ads and no sign-up. More like this: <a href="../../<category>-games/">... games</a> and <a href="../../<category>-games/">... games</a>.</p>
+  </div></details>
+  ```
+  80-120 words, fresh wording (never copied from another game), links only to the site's own category pages.
 - Kid-safe: no external links out of the site, no ads, no sign-ups, no collecting personal details.
 - If the game's name, blurb, categories or age change, update its entry in `games-data.js` and the README table.
 - **End screens get a share button** (added to every game 4 Oct). When a round or level ends, add one with `if (window.LR && LR.shareButton) panel.appendChild(LR.shareButton("I got 3 stars in <Game name>! 🦄"));`
@@ -87,7 +97,7 @@ games/<folder>/     one folder per game, fully self-contained
 ## Adding a NEW game - checklist (do all of these)
 
 1. New folder `games/<short-name-with-dashes>/` containing `index.html`, `thumb.jpg` and `share.jpg`.
-2. The game's `<head>` has the items listed above, and it passes the phone/iPad rules.
+2. The game's `<head>` has the items listed above, it has its "For grown-ups" note, and it passes the phone/iPad rules.
 3. Add it to the `games` list in `games-data.js`, with every category it fits in `categories` (e.g. `["unicorns", "sport"]`) and its starting age in `ages` - one of `"2+"`, `"3+"` or `"4+"` (the `ageGroups` list at the top of games-data.js says what each means; ask Andy if unsure). It appears on the home page and every matching category page automatically, with an age badge on its card.
 4. Add a row to the table in `README.md` (including its age).
 5. Add a `<url>` line for it in `sitemap.xml`.

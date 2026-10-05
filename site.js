@@ -245,3 +245,140 @@ window.LR = window.LR || {};
   }
   if (document.body) build(); else document.addEventListener("DOMContentLoaded", build);
 })();
+
+/* =====================================================================
+   "FOR GROWN-UPS" INFO BUTTON - game pages only (added 5 Oct)
+   Each game page has a short hand-written note for parents, near the end of its page:
+     <details class="lr-about"><summary>For grown-ups</summary><div class="lr-about-body">...</div></details>
+   This turns it into a small "i" button beside the "All games" button, which opens the note
+   as a pop-up card. The words are in the page itself, so Google can read them too.
+   The button looks for a free spot (never on top of another button or a small panel).
+   ===================================================================== */
+(function () {
+  if (!/\/games\/[^/]+\//.test(location.pathname)) return;
+  const css = document.createElement("style");
+  css.textContent =
+    "details.lr-about{position:fixed;left:0;top:0;width:0;height:0;margin:0;padding:0;border:0;z-index:2147483000;font-family:Nunito,system-ui,sans-serif}" +
+    "details.lr-about>summary{position:fixed;left:-999px;top:0;list-style:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;" +
+    "height:40px;min-width:40px;padding:0 12px;border-radius:999px;background:#FFFFFFE8;color:#23413B;font:800 14px/1 Nunito,system-ui,sans-serif;" +
+    "box-shadow:0 3px 10px #0000002a;border:2px solid #FFFFFF;white-space:nowrap;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}" +
+    "details.lr-about>summary::-webkit-details-marker{display:none}" +
+    "details.lr-about>summary:focus-visible{outline:3px solid #FFC23D;outline-offset:2px}" +
+    "details.lr-about>summary .lr-i{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#4DABF7;color:#fff;font:800 14px/1 Georgia,serif;font-style:italic}" +
+    "details.lr-about.lr-small>summary{padding:0;width:40px}details.lr-about.lr-small>summary .lr-t{display:none}" +
+    "details.lr-about[open]>summary{visibility:hidden}" +
+    "details.lr-about .lr-about-body{display:none}" +
+    "details.lr-about[open] .lr-about-body{display:block;position:fixed;inset:0;background:#23413B99;overflow-y:auto;touch-action:pan-y;-webkit-overflow-scrolling:touch;" +
+    "padding:max(16px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom))}" +
+    ".lr-about-card{position:relative;max-width:560px;margin:24px auto;background:#fff;border-radius:22px;padding:22px 24px 20px;color:#23413B;box-shadow:0 18px 40px #0005;" +
+    "user-select:text;-webkit-user-select:text}" +
+    ".lr-about-card h2{font:400 26px/1.1 Chewy,'Comic Sans MS',cursive;margin:0 40px 10px 0;color:#F2559B}" +
+    ".lr-about-card p{margin:0 0 10px;font-size:15.5px;line-height:1.55;color:#3E5F58}" +
+    ".lr-about-card a{color:#C2307A;font-weight:800}" +
+    ".lr-about-x{position:absolute;right:12px;top:12px;width:40px;height:40px;border-radius:50%;border:0;background:#FDE2EC;color:#23413B;font:800 18px/1 system-ui;cursor:pointer}" +
+    ".lr-about-ok{display:block;margin:14px auto 0;min-height:44px;padding:0 28px;border:0;border-radius:14px;background:#F2559B;color:#fff;font:800 17px/1 Nunito,system-ui,sans-serif;cursor:pointer}";
+  (document.head || document.documentElement).appendChild(css);
+
+  function build() {
+    const d = document.querySelector("details.lr-about");
+    if (!d) return;
+    const sum = d.querySelector("summary");
+    const body = d.querySelector(".lr-about-body");
+    sum.innerHTML = '<span class="lr-i" aria-hidden="true">i</span><span class="lr-t">For grown-ups</span>';
+    sum.setAttribute("aria-label", "For grown-ups: about this game");
+    sum.title = "For grown-ups: about this game";
+    // wrap the words in a card with a close button
+    const card = document.createElement("div"); card.className = "lr-about-card";
+    while (body.firstChild) card.appendChild(body.firstChild);
+    const x = document.createElement("button"); x.type = "button"; x.className = "lr-about-x"; x.setAttribute("aria-label", "Close"); x.textContent = "✕";
+    const ok = document.createElement("button"); ok.type = "button"; ok.className = "lr-about-ok"; ok.textContent = "Back to the game";
+    card.prepend(x); card.append(ok); body.appendChild(card);
+    const close = () => { d.open = false; place(); };
+    x.addEventListener("click", close); ok.addEventListener("click", close);
+    body.addEventListener("click", e => { if (e.target === body) close(); });
+    document.addEventListener("keydown", e => { if (d.open && e.key === "Escape") { e.stopPropagation(); close(); } }, true);
+    // keep taps and keys inside the note from reaching the game underneath
+    ["pointerdown", "pointerup", "touchstart", "touchend", "mousedown", "mouseup", "click", "keydown", "keyup"].forEach(t => {
+      d.addEventListener(t, e => e.stopPropagation());
+    });
+    d.addEventListener("toggle", () => { if (d.open && window.gtag) gtag("event", "select_content", { content_type: "about", item_id: location.pathname }); });
+
+    const INTERACTIVE = "a,button,input,select,textarea,label,summary,[role=button],[onclick],[tabindex]:not([tabindex='-1'])";
+    // Things the button must never sit on: other buttons and links, plus small floating bits (score pills, panels, arrows).
+    // Big things (the game board, full-screen backgrounds) are fine to sit on.
+    const LABELS = "h1,h2,h3,h4,p,[class*=title],[class*=hud],[class*=score],[class*=pill],[class*=stat],[class*=chip],[class*=badge],[class*=count]";
+    function obstacles() {
+      const out = [], vw = innerWidth, vh = innerHeight;
+      document.querySelectorAll("body *").forEach(el => {
+        if (d.contains(el) || el.closest(".lr-rotate")) return;
+        const st = getComputedStyle(el);
+        const floating = st.position === "fixed" || st.position === "absolute" || st.position === "sticky";
+        const label = el.matches(LABELS);
+        if (!floating && !el.matches(INTERACTIVE) && !label) return;   // titles, pills and text count too
+        if (st.display === "none" || st.visibility === "hidden" || +st.opacity < 0.05) return;
+        const r = el.getBoundingClientRect();
+        if (r.width < 3 || r.height < 3 || r.right < 0 || r.bottom < 0 || r.left > vw || r.top > vh) return;
+        if (r.width * r.height > vw * vh * 0.25 || r.width >= vw * 0.9 || el.tagName === "CANVAS") return;
+        r.hit = label || el.matches(INTERACTIVE) || !!el.closest(INTERACTIVE); out.push(r);
+      });
+      // a bar that just holds other buttons isn't a blocker itself - only the buttons inside it are
+      const inside = (a, b) => a !== b && b.left >= a.left - 1 && b.right <= a.right + 1 && b.top >= a.top - 1 && b.bottom <= a.bottom + 1;
+      return out.filter(a => a.hit || !out.some(b => inside(a, b)));
+    }
+    let obs = [], hiddenNow = false;
+    function free(x, y, w, h) {
+      if (x < 4 || y < 4 || x + w > innerWidth - 4 || y + h > innerHeight - 4) return false;
+      const m = 4;
+      return !obs.some(r => x - m < r.right && x + w + m > r.left && y - m < r.bottom && y + h + m > r.top);
+    }
+    function place() {
+      if (d.open) return;
+      const phone = matchMedia("(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)").matches;
+      d.classList.toggle("lr-small", phone);
+      sum.style.visibility = "hidden"; sum.style.left = "-999px";
+      const w = sum.offsetWidth, h = sum.offsetHeight;
+      obs = obstacles();
+      const back = document.querySelector("a.back, a.back-link, a[href='../../']");
+      let spot = null;
+      const br = back && back.offsetParent !== null ? back.getBoundingClientRect() : null;
+      if (br && br.width) {
+        const y0 = br.top + (br.height - h) / 2;
+        for (let x = br.right + 8; !spot && x < innerWidth * 0.75; x += 6) if (free(x, y0, w, h)) spot = [x, y0];
+        for (let y = br.bottom + 8; !spot && y < innerHeight * 0.5; y += 6) if (free(br.left, y, w, h)) spot = [br.left, y];
+      }
+      // nothing free beside or under the "All games" button: search along all four edges of the screen, nearest to it first
+      if (!spot) {
+        const ox = br ? br.left : 10, oy = br ? br.top : 10, band = 90, step = 6, found = [];
+        const boards = [...document.querySelectorAll("canvas, svg.board, .board, #board, .maze, .stage canvas")].filter(el => !d.contains(el)).map(el => el.getBoundingClientRect()).filter(r => r.width > 50 && r.height > 50);
+        const ys = [], xs = [];
+        for (let y = 4; y <= innerHeight - h - 4; y += step) ys.push(y);
+        for (let x = 4; x <= innerWidth - w - 4; x += step) xs.push(x);
+        ys.push(Math.floor(innerHeight - h - 4)); xs.push(Math.floor(innerWidth - w - 4));   // tight up against the edges too
+        for (const y of ys) for (const x of xs) {
+          const edge = y < band || y > innerHeight - h - band || x < band * 0.7 || x > innerWidth - w - band * 0.7;
+          if (!edge || !free(x, y, w, h)) continue;
+          const onBoard = boards.some(r => x < r.right && x + w > r.left && y < r.bottom && y + h > r.top);   // over the game itself
+          found.push([x, y, Math.hypot(x - ox, y - oy) + (onBoard ? 5000 : 0)]);
+        }
+        found.sort((a, b) => a[2] - b[2]);
+        if (found.length) spot = found[0];
+      }
+      if (!spot) { sum.style.left = "-999px"; hiddenNow = true; return; }   // no room right now (e.g. a big menu on a tiny screen) - try again in a second
+      hiddenNow = false;
+      sum.style.left = Math.round(spot[0]) + "px"; sum.style.top = Math.round(spot[1]) + "px"; sum.style.visibility = "";
+    }
+    let t = 0; const later = () => { clearTimeout(t); t = setTimeout(place, 250); };
+    addEventListener("resize", later); addEventListener("orientationchange", later);
+    if (window.ResizeObserver) new ResizeObserver(later).observe(document.documentElement);
+    setTimeout(place, 60); setTimeout(place, 700);
+    // the game's buttons and score pills come and go (start screen, playing, end screen): every second, move if something now sits under the button
+    setInterval(() => {
+      if (d.open || document.hidden) return;
+      if (hiddenNow) { place(); return; }
+      const r = sum.getBoundingClientRect(); obs = obstacles();
+      if (!free(r.left, r.top, r.width, r.height)) place();
+    }, 1000);
+    window.LR = window.LR || {}; window.LR.placeAbout = place;
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build); else build();
+})();
