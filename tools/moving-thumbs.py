@@ -32,6 +32,8 @@ CSS = '''
   @keyframes bub{0%{opacity:0;transform:translate(0,0)}15%{opacity:.95}100%{opacity:0;transform:translate(var(--x,10px),-110px)}}
   .drop{opacity:0;animation:drop var(--d,1.6s) ease-in infinite;animation-delay:var(--l,0s)}
   @keyframes drop{0%{opacity:0;transform:translate(0,0)}10%{opacity:1}90%{opacity:1}100%{opacity:0;transform:translate(var(--x,0px),150px)}}
+  .sx{animation:sx var(--d,2s) ease-in-out infinite;animation-delay:var(--l,0s)}
+  @keyframes sx{0%,100%{transform:translateX(calc(var(--x,3px) * -1))}50%{transform:translateX(var(--x,3px))}}
   @media (prefers-reduced-motion: reduce){*{animation:none!important}.sp,.puff,.ht,.dust,.bub,.drop{opacity:0}}
 '''
 STAR='M0 -{a} L{b} -{b} L{a} 0 L{b} {b} L0 {a} L-{b} {b} L-{a} 0 L-{b} -{b}Z'
@@ -230,3 +232,12 @@ for i,(x,y) in enumerate(((672,170),(690,300),(676,470))):
     p.add(f'<circle class="puff" style="--l:{i*1.1}s" cx="{x}" cy="{y}" r="18"/>')
 p.star(300,90,10); p.star(560,300,10,.8); p.star(250,420,9,1.6)
 print('cloud maze', p.save())
+
+p=Pic('lenny-jungle-maze','Lenny swinging on the vine, the baby lemurs bobbing along behind Lenny, the toucan bobbing, a waving lost baby and sparkles')
+p.region('sx', p.rect(409,311,50,85,rx=4), '--x:2.5px;--d:1.6s')
+p.bob(588,188,66,72,dy=-3,dur=.9)
+for i,x in enumerate((470,512,552)): p.bob(x,205,40,52,dy=-3,dur=.9,delay=.15*(i+1))
+p.bob(636,64,84,50,dy=-3,dur=1.8)
+p.bob(680,408,40,50,dy=-3,dur=.8)
+p.star(565,92,10); p.star(100,492,10,.8); p.star(432,492,10,1.6); p.star(300,360,9,1.2); p.star(560,370,9,.4)
+print('jungle maze', p.save())

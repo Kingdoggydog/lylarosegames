@@ -17,7 +17,7 @@ const categories = [
   { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
   { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles",         heading: "Puzzle games",        emoji: "🧩", colour: "#FFF1C9", about: "Think it through - jigsaws, matching, mazes and more." },
-  { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger and helicopter mazes." },
+  { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger, helicopter and jungle mazes." },
   { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
   { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
@@ -280,6 +280,7 @@ const games = [
     emoji: "🐒",
     colour: "#D8F2DC",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A jungle maze game! Help Lenny the Lemur find the lost baby lemurs, lead them home to his treehouse in a wobbly line, swing across the river on vines and collect bananas.",
     categories: ["mazes", "puzzles", "animals"],
     controls: "Arrow keys, WASD, swipe or tap the arrows"
