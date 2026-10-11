@@ -204,4 +204,10 @@
     <image:image><image:loc>https://lylarosegames.com/games/blossoms-pumpkin-faces/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/blossoms-pumpkin-faces/thumb.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://lylarosegames.com/games/lenny-bubble-pop/</loc>
+    <lastmod>2026-10-11</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/lenny-bubble-pop/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/lenny-bubble-pop/thumb.jpg</image:loc></image:image>
+  </url>
 </urlset>

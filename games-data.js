@@ -310,6 +310,17 @@ const games = [
     categories: ["halloween", "unicorns", "animals"],
     controls: "Tap (drag if you like), or Tab and Enter"
   },
+  {
+    title: "Lenny's Bubble Pop",
+    folder: "lenny-bubble-pop",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🫧",
+    colour: "#D9F2FF",
+    thumb: "thumb.jpg",
+    blurb: "A bubble pop game for toddlers! Lenny the Lemur blows big shiny bubbles - tap to pop them and find fish, butterflies, bananas and baby lemurs hiding inside.",
+    categories: ["animals", "action"],
+    controls: "Tap (or Space / Enter)"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
