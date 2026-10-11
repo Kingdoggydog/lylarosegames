@@ -351,9 +351,9 @@
     plunger = {x1: XS, x2: XR, rest: b - 40, y: b - 40, pull: 0};
     // cotton candy cloud bumpers
     bumpers = [
-      {x: 212, y: t + 262, r: 33, col: '#FFB3D9', col2: '#FF8CC6', face: 0, flash: 0, cd: 0},
-      {x: MX(212), y: t + 262, r: 33, col: '#B5E4FF', col2: '#7CC7FF', face: 1, flash: 0, cd: 0},
-      {x: MID, y: t + 350, r: 33, col: '#D7C2FF', col2: '#B79CFF', face: 2, flash: 0, cd: 0}
+      {x: 198, y: t + 250, r: 27, col: '#FFB3D9', col2: '#FF8CC6', face: 0, flash: 0, cd: 0},
+      {x: MX(198), y: t + 250, r: 27, col: '#B5E4FF', col2: '#7CC7FF', face: 1, flash: 0, cd: 0},
+      {x: MID, y: t + 330, r: 27, col: '#D7C2FF', col2: '#B79CFF', face: 2, flash: 0, cd: 0}
     ];
     // the five glitter stars - a smile shape across the middle
     const hf = b - t;
@@ -388,6 +388,18 @@
       {side: 1, who: 'rainbow', x: MX(162.5), y: b - 160, L: 106, r0: 11, r1: 6, rest: 0.52, up: -0.44, a: 0.52, A: Math.PI - 0.52, W: 0, held: false, blink: 0, sparkT: 0, whinT: 0, nod: 0}
     ];
     if(keepF.length) flips.forEach((f, i) => { f.held = keepF[i].held; });
+    // a string of rainbow light bulbs all the way round the purple rim of the table
+    lightPts = [];
+    const rimR = R + 6, gapL = 21;
+    for(let y = b - 250; y > cy; y -= gapL) lightPts.push([X0 - 6, y]);
+    const nArc = Math.round(Math.PI*rimR/gapL);
+    for(let i = 0; i <= nArc; i++){ const a = Math.PI + Math.PI*i/nArc; lightPts.push([cx + Math.cos(a)*rimR, cy + Math.sin(a)*rimR]); }
+    for(let y = cy + gapL; y < b - 30; y += gapL) lightPts.push([XR + 6, y]);
+    // three arrows pointing up into the rainbow ramp's entrance
+    { const mx = (rampMouth.x1 + rampMouth.x2)/2, my = (rampMouth.y1 + rampMouth.y2)/2;
+      let nx = rampMouth.y2 - rampMouth.y1, ny = -(rampMouth.x2 - rampMouth.x1); const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+      if(ny < 0){ nx = -nx; ny = -ny; }
+      arrows = [30, 52, 74].map((d, i) => ({x: mx + nx*d, y: my + ny*d, a: Math.atan2(-ny, -nx), i})); }
     bridges = [
       {x: 41, y: b - 252, lit: bridges[0] ? bridges[0].lit : true, relight: 0, glow: 0},
       {x: MX(41), y: b - 252, lit: bridges[1] ? bridges[1].lit : true, relight: 0, glow: 0}
@@ -406,6 +418,8 @@
   let babies = null;             // the baby unicorns popping up to cheer
   let catcher = null;            // the friendly cloud that catches a drained ball
   let starsDoneT = 0;
+  let lastWhinny = -9;           // when a unicorn last whinnied
+  let lightPts = [], lightPhase = 0, lightsFlash = 0, rings = [], arrows = [];
   const keys = new Set();
   const ptrs = new Map();        // finger/mouse id -> 'L', 'R' or 'P' (the spring)
   let kbPull = false;
@@ -448,7 +462,8 @@
   const now = () => actx ? actx.currentTime : 0;
   const ok = () => audio() && actx.state === 'running';
   const sfx = {
-    flick(side){ if(!ok()) return; noise(now(), 0.08, 'bandpass', side ? 1900 : 1600, 1.2, 0.05, 0.005); tone(side ? 560 : 470, 0.07, 'triangle', 0.05, side ? 840 : 700); },
+    // a soft little "fwip" - quiet, and a slightly different note each time so it doesn't nag
+    flick(side){ if(!ok()) return; const k = rand(0.93, 1.08); tone((side ? 500 : 430)*k, 0.06, 'sine', 0.03, (side ? 640 : 560)*k); },
     // a soft little horse whinny: a wobbly voice sliding up then down
     whinny(side){
       if(!ok()) return;
@@ -565,6 +580,7 @@
   }
   function startParty(){
     partyT = 20; partyM = 100;
+    lightsFlash = 1.5;
     sfx.fanfare();
     popWord('UNICORN PARTY!', MID, TOP + 470, '#FF4F9A', 44, 2.2);
     bridges.forEach(b => { b.lit = true; b.relight = 0; });
@@ -680,8 +696,17 @@
       const sd = bl.catchSide;
       bl.x = bridges[sd].x; bl.y = BOT - 280; bl.vx = sd ? -170 : 170; bl.vy = -1250;
       burst(bl.x, bl.y, 10, 'spark', ['#FF8FB8', '#FFE066', '#8BE38F', '#7CC7FF', '#B79CFF']);
+    } else if(!laneBall() && !balls.some(b => b !== bl && b.mode === 'play' && b.x > XS)){
+      // back on to the spring for a fresh launch round the top of the table
+      burst(MID, BOT - 44, 12, 'puff', ['#FFFFFF', '#F3EDFF']);
+      bl.x = 565; bl.y = plunger.rest - BR; bl.vx = 0; bl.vy = 0; bl.inField = false;
+      burst(bl.x, bl.y, 10, 'puff', ['#FFFFFF', '#F3EDFF']);
+      launchWait = 0.7;
+      sfx.kick();
     } else {
-      bl.x = MID; bl.y = BOT - 44; bl.vx = 0; bl.vy = -1180;
+      // the spring is busy (party time, lots of balls): the cloud bounces it up and off to one side instead
+      const sd = Math.random() < 0.5 ? -1 : 1;
+      bl.x = MID; bl.y = BOT - 44; bl.vx = sd*rand(330, 400); bl.vy = -1300;
       burst(bl.x, bl.y, 12, 'puff', ['#FFFFFF', '#F3EDFF']);
       sfx.kick();
     }
@@ -692,6 +717,8 @@
   function hitBumper(bm, bl){
     if(bm.cd > 0) return;
     bm.cd = 0.08; bm.flash = 1;
+    lightsFlash = Math.max(lightsFlash, 0.45);
+    rings.push({x: bm.x, y: bm.y, r: bm.r, t: 0, col: bm.col2});
     add(100, bm.x, bm.y - bm.r);
     meter(4);
     sfx.boing(bm.face);
@@ -704,11 +731,14 @@
     if(!st.lit){
       st.lit = true;
       sfx.chime(st.i);
+      lightsFlash = Math.max(lightsFlash, 0.6);
+      rings.push({x: st.x, y: st.y, r: 18, t: 0, col: '#FFD43B'});
       add(250, st.x, st.y);
       meter(8);
       burst(st.x, st.y, 12, 'spark', ['#FFE066', '#FFFFFF', '#FFD43B']);
       if(stars.every(s => s.lit)){
         starsDoneT = 3;
+        lightsFlash = 1.4;
         add(5000, MID, starsY - 40);
         meter(15);
         babies = {t: 0};
@@ -724,6 +754,7 @@
   function hitHeart(hk){
     if(hk.cd > 0) return;
     hk.cd = 0.1; hk.flash = 1;
+    rings.push({x: hk.x, y: hk.y, r: 22, t: 0, col: '#FF7EB6'});
     add(50, hk.x, hk.y - 10, false);
     meter(2);
     sfx.kick();
@@ -732,6 +763,7 @@
   function hitLenny(bl){
     if(lenny.cd > 0) return;
     lenny.cd = 1.3; lenny.hitT = 1.3;
+    lightsFlash = 1;
     sfx.hey(); after(0.3, () => sfx.giggle());
     popWord('Hey!', lenny.cx + 34, lenny.cy - 40, '#7B4FD6', 30, 1.1);
     add(500, lenny.cx, lenny.cy - 20);
@@ -741,6 +773,7 @@
   function startRamp(bl){
     bl.mode = 'ramp'; bl.rampS = 0;
     sfx.ramp();
+    lightsFlash = 1.2;
     popWord('Rainbow ramp!', rampMouth.x2 + 30, rampMouth.y2 - 20, '#FF4F9A', 24, 1.1);
   }
   function finishRamp(bl){
@@ -821,6 +854,8 @@
         f.sparkT = clock;
         burst(cx + nx*rad, cy + ny*rad, 9, 'spark', ['#FFFFFF', '#FFE066', '#FFF3B0', '#FFB3D9'], 180);
         sfx.tink();
+        // a happy whinny now and then when a horn gives the ball a good whack (not on every press)
+        if(clock - lastWhinny > 5 && Math.random() < 0.5){ lastWhinny = clock; sfx.whinny(f.side); }
       }
     }
     if(f.held && f.W === 0) bl.cradleT = clock;
@@ -927,6 +962,11 @@
   // ===== UPDATE =====
   function update(dt){
     clock += dt;
+    // the rim lights chase round: slowly while waiting, faster in a game, very fast at a party
+    lightPhase += dt*((partyT > 0 ? 16 : playing ? 5 : 2.5) + lightsFlash*14);
+    lightsFlash = Math.max(0, lightsFlash - dt*1.6);
+    for(const rg of rings) rg.t += dt;
+    rings = rings.filter(rg => rg.t < 0.5);
     const run = playing && !paused;
     if(run){
       // the spring: pulled by a finger on it or the Down / Space key, otherwise it pops by itself
@@ -1268,7 +1308,7 @@
         ctx.lineWidth = 2.2; ctx.strokeStyle = '#E08E00'; ctx.stroke();
         if(!reduced) for(let k = 0; k < 2; k++){ const a = clock*2 + k*Math.PI + st.i; star4(ctx, Math.cos(a)*20, Math.sin(a)*20, 3 + Math.sin(clock*6 + k)*1.5, clock, '#FFFFFF'); }
       } else {
-        star5(ctx, 0, 1, 15, 0, 0.5); ctx.fillStyle = '#FFF8E0'; ctx.fill();
+        star5(ctx, 0, 1, 15, 0, 0.5); ctx.fillStyle = ['#FFE3F0', '#FFF0D6', '#FFF8D0', '#E3F8E4', '#DFF1FF'][st.i]; ctx.fill();
         ctx.lineWidth = 2; ctx.strokeStyle = '#E8C66A'; ctx.stroke();
         ctx.fillStyle = 'rgba(232,198,106,0.8)'; circ(-4, -1, 1.4); ctx.fill(); circ(4, -1, 1.4); ctx.fill();
       }
@@ -1295,7 +1335,7 @@
       ctx.save();
       const bob = reduced ? 0 : Math.sin(clock*2 + bm.face*2)*1.5;
       ctx.translate(bm.x, bm.y + bob);
-      const s = 1 + bm.flash*0.16;
+      const s = (1 + bm.flash*0.16)*bm.r/33;
       ctx.scale(s, s);
       // glow
       const gl = ctx.createRadialGradient(0, 0, 10, 0, 0, 48);
@@ -1780,10 +1820,55 @@
   }
 
   // ===== DRAW =====
+  // the light bulbs round the rim: a rainbow that chases round the table and flashes when you hit things
+  function drawLights(){
+    const n = lightPts.length, party = partyT > 0, fl = Math.min(1, lightsFlash);
+    ctx.save();
+    for(let i = 0; i < n; i++){
+      const [x, y] = lightPts[i];
+      const col = RAIN[((i + Math.floor(reduced ? 0 : lightPhase)) % 6 + 6) % 6];
+      // a bright spot runs round the rim (two at a party)
+      const runner = reduced ? 0 : Math.max(0, 1 - Math.abs(((i - lightPhase*2.2) % 18 + 18) % 18 - 9)/2.5);
+      const on = party ? 0.75 + 0.25*Math.sin(clock*14 + i) : 0.55 + 0.45*Math.max(runner, fl);
+      ctx.globalAlpha = 0.28*on + 0.25*fl;
+      ctx.fillStyle = fl > 0.5 ? '#FFFFFF' : col; circ(x, y, 11); ctx.fill();
+      ctx.globalAlpha = 0.6 + 0.4*on;
+      ctx.fillStyle = col; circ(x, y, 5.6); ctx.fill();
+      ctx.globalAlpha = on; ctx.fillStyle = '#FFFFFF'; circ(x - 1.6, y - 1.6, 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // arrows into the rainbow ramp light up one after another
+  function drawArrows(){
+    ctx.save();
+    for(const ar of arrows){
+      const k = reduced ? 1 : ((Math.floor(clock*4) % 3) === 2 - ar.i ? 1 : 0.35);
+      ctx.save(); ctx.translate(ar.x, ar.y); ctx.rotate(ar.a); ctx.scale(1.4, 1.4);
+      ctx.globalAlpha = 0.25 + 0.75*k;
+      ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-5, -10); ctx.lineTo(-5, -4); ctx.lineTo(-1, 0); ctx.lineTo(-5, 4); ctx.lineTo(-5, 10); ctx.closePath();
+      ctx.fillStyle = RAIN[(ar.i*2 + (reduced ? 0 : Math.floor(clock*3))) % 6]; ctx.fill();
+      ctx.lineWidth = 1.5; ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  // a coloured ring pops out of anything the ball hits
+  function drawRings(){
+    if(reduced) return;
+    ctx.save();
+    for(const rg of rings){
+      const u = rg.t/0.5;
+      ctx.globalAlpha = 1 - u; ctx.strokeStyle = rg.col; ctx.lineWidth = 5*(1 - u) + 1;
+      circ(rg.x, rg.y, rg.r + 6 + u*26); ctx.stroke();
+    }
+    ctx.restore();
+  }
   function draw(){
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(bgc, 0, 0);
     ctx.setTransform(PX*S, 0, 0, PX*S, PX*offX, PX*offY);
+    drawLights();
+    drawArrows();
     drawPartyLetters();
     drawBridges();
     drawStars();
@@ -1796,6 +1881,7 @@
       ctx.restore();
     }
     drawBumpers();
+    drawRings();
     drawLenny();
     bananas.forEach(drawBanana);
     drawSpring();
@@ -1820,7 +1906,6 @@
     if(v && !f.held){
       sfx.flick(f.side);
       f.blink = 0.18;
-      if(clock - f.whinT > 0.55){ f.whinT = clock; sfx.whinny(f.side); }
     }
     f.held = v;
   }
@@ -1983,6 +2068,13 @@
   }
 
   /* test-hook */
+  if(/[?&]test\b/.test(location.search)) window.__pb = {
+    get state(){ return {playing, saveT, partyT, score, ballsLeft, balls: balls.map(b => ({mode: b.mode, x: Math.round(b.x), y: Math.round(b.y), vx: Math.round(b.vx), vy: Math.round(b.vy), kind: b.catchKind})), lights: lightPts.length, BOT, TOP}; },
+    start(){ newGame(); },
+    drop(x){ const bl = balls.find(b => b.mode === 'play') || balls[0]; Object.assign(bl, {mode: 'play', x: x || MID, y: BOT - 120, vx: 0, vy: 300, inField: true, saverGiven: true}); saveT = 15; },
+    flip(side, on){ setHeld(flips[side], !!on); },
+    flash(){ lightsFlash = 1.4; }
+  };
   resize();
   buildKey();
   showPanel('start');
