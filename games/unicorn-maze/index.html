@@ -78,6 +78,7 @@
     .btns button{font-size:13px;padding:8px 10px}
     .stage{grid-column:2;grid-row:1 / 4;height:100%;aspect-ratio:1/1;min-height:0}
   }
+  #zoomBtn{display:none}
   /* ===== PHONES ONLY: the maze gets the whole screen, everything else floats over the spare space ===== */
   @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
     .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
@@ -102,6 +103,12 @@
       .stage{padding:6px 110px 6px 196px;place-items:center}
       .stats{flex-direction:column;align-items:flex-end}
     }
+    /* the play area fills the whole phone screen; the maze is drawn inside it with a garden around it
+       (big mazes zoom in and the view follows Sparklehoof). Buttons float over the garden. */
+    .stage{padding:0;place-items:stretch}
+    .board{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none;background:#8FCF9C}
+    #zoomBtn{display:grid;place-items:center;position:fixed;z-index:3;right:calc(8px + env(safe-area-inset-right,0px));bottom:calc(60px + env(safe-area-inset-bottom,0px));
+      width:56px;height:56px;padding:0;border-radius:50%;font-size:24px;background:#2E6E61CC;box-shadow:0 2px 8px #1F4F4533}
   }
 </style>
 
@@ -216,6 +223,7 @@
       <button class="down" data-d="down" aria-label="Down">▼</button>
       <button class="right" data-d="right" aria-label="Right">▶</button>
     </div>
+    <button id="zoomBtn" aria-label="See the whole maze" title="See the whole maze" hidden>🔍</button>
     <p class="help">Every level the maze grows bigger. Your rainbow trail shows where you've been.</p>
     <div class="btns">
       <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
@@ -289,6 +297,7 @@
     got = 0;
     elapsed = 0;
     updateHud();
+    overviewHold = true; overviewUntil = 0; // phones: show the whole maze until the level starts
     resize();
   }
 
@@ -300,13 +309,89 @@
   }
 
   let size = 600, cell = 25, dpr = 1;
+  // ---- phones: the board fills the screen. Small mazes are shown whole; big ones zoom in to
+  // comfy squares and a camera follows Sparklehoof (with a "see the whole maze" button). ----
+  const phoneMQ = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  const zoomBtn = document.getElementById('zoomBtn');
+  const MIN_TILE = 44, CAM_TILE = 46;
+  let phone = false, W = 600, H = 600;
+  // camera: maze drawn zoomed by z with its top-left corner at (ox,oy); (tcx,tcy) = the maze point it is heading to show in the middle of the safe area.
+  const cam = {on:false, z:1, ox:0, oy:0, tz:1, tcx:0, tcy:0, fx:null, fy:null, fit:25, safe:{l:0,t:0,r:600,b:600}};
+  let overviewUntil = 0, overviewHold = false, lastFrame = 0;
+  function computeSafe(r){
+    // the part of the screen not covered by floating buttons - Sparklehoof is kept inside it
+    const rect = sel => { const el = document.querySelector(sel); return el && el.getClientRects().length ? el.getBoundingClientRect() : null; };
+    const pad = rect('.pad'), nb = rect('#newBtn'), st = rect('.stats'), bk = rect('.back'), bt = rect('.btns');
+    const info = rect('details.lr-about>summary'), infoOn = info && info.left >= 0;
+    const s = {l:6, t:6, r:r.width-6, b:r.height-6};
+    if(r.width > r.height){ // sideways: buttons down the left and right edges
+      if(pad) s.l = Math.max(s.l, pad.right - r.left + 6);
+      [bk, bt].forEach(e => { if(e) s.l = Math.max(s.l, Math.min(e.right - r.left + 6, r.width*0.3)); });
+      [nb, st].forEach(e => { if(e) s.r = Math.min(s.r, e.left - r.left - 6); });
+      s.r = Math.min(s.r, r.width - 70); // the round "see the whole maze" button sits on the right edge
+    } else { // upright: corner buttons along the top, arrows by the thumbs at the bottom
+      [bk, bt, st, infoOn ? info : null].forEach(e => { if(e) s.t = Math.max(s.t, e.bottom - r.top + 6); });
+      s.t = Math.max(s.t, 100); // room for the grown-ups "i" button, which site.js may tuck under the back button
+      s.b = Math.min(s.b, r.height - 140);
+      if(pad) s.b = Math.min(s.b, pad.top - r.top - 6);
+    }
+    if(s.r - s.l < 120){ s.l = 6; s.r = r.width - 6; }
+    if(s.b - s.t < 120){ s.t = 6; s.b = r.height - 6; }
+    cam.safe = s;
+  }
+  function inOverview(){ return cam.on && (overviewHold || performance.now() < overviewUntil); }
+  function camTarget(){
+    const s = cam.safe, sw = s.r - s.l, sh = s.b - s.t, M = N*cell;
+    if(!cam.on){ cam.tz = 1; cam.tcx = cam.tcy = M/2; return; }
+    if(inOverview()){ cam.tz = cam.fit / cell; cam.tcx = cam.tcy = M/2; return; }
+    cam.tz = 1;
+    const px = (anim.x+.5)*cell, py = (anim.y+.5)*cell;
+    if(cam.fx === null){ cam.fx = px; cam.fy = py; }
+    // dead zone: only move when Sparklehoof gets near the edge of the safe area
+    const dzx = Math.max(0, sw/2 - Math.min(sw*0.3, cell*2.2)), dzy = Math.max(0, sh/2 - Math.min(sh*0.3, cell*2.2));
+    if(px - cam.fx > dzx) cam.fx = px - dzx; if(px - cam.fx < -dzx) cam.fx = px + dzx;
+    if(py - cam.fy > dzy) cam.fy = py - dzy; if(py - cam.fy < -dzy) cam.fy = py + dzy;
+    // never show past the edge of the maze (centre it if it is narrower than the view)
+    cam.fx = M <= sw ? M/2 : Math.min(Math.max(cam.fx, sw/2), M - sw/2);
+    cam.fy = M <= sh ? M/2 : Math.min(Math.max(cam.fy, sh/2), M - sh/2);
+    cam.tcx = cam.fx; cam.tcy = cam.fy;
+  }
+  // the camera glides the maze's corner position (ox,oy) and zoom together, so while zooming
+  // every square - Sparklehoof included - slides in a straight line from where it was to where it is going
+  function camAnchor(){ const s = cam.safe; return [(s.l+s.r)/2, (s.t+s.b)/2]; }
+  function camSnap(){ camTarget(); const [ax, ay] = camAnchor(); cam.z = cam.tz; cam.ox = ax - cam.tcx*cam.tz; cam.oy = ay - cam.tcy*cam.tz; }
+  function camStep(dt){
+    camTarget();
+    const [ax, ay] = camAnchor(), tox = ax - cam.tcx*cam.tz, toy = ay - cam.tcy*cam.tz;
+    const zooming = Math.abs(cam.z - cam.tz) > 0.01;
+    const k = reduced ? 1 : 1 - Math.exp(-dt / (zooming ? 0.22 : 0.12));
+    cam.z += (cam.tz - cam.z)*k; cam.ox += (tox - cam.ox)*k; cam.oy += (toy - cam.oy)*k;
+  }
+  function seeWholeMaze(ms){ if(cam.on) overviewUntil = performance.now() + (ms || 3000); }
+  zoomBtn.addEventListener('click', () => seeWholeMaze(3000));
+
   function resize(){
     const r = board.getBoundingClientRect();
     dpr = window.devicePixelRatio || 1;
-    size = r.width;
-    cvs.width = size*dpr; cvs.height = size*dpr;
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    cell = size / N;
+    phone = phoneMQ.matches;
+    if(!phone){
+      cam.on = false; zoomBtn.hidden = true;
+      size = r.width; W = H = size;
+      cvs.width = size*dpr; cvs.height = size*dpr;
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      cell = size / N;
+      return;
+    }
+    W = r.width; H = r.height; size = Math.max(W, H);
+    cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
+    computeSafe(r);
+    const s = cam.safe;
+    cam.fit = Math.min(s.r - s.l, s.b - s.t) / N;
+    cam.on = cam.fit < MIN_TILE;
+    cell = cam.on ? CAM_TILE : cam.fit;
+    zoomBtn.hidden = !cam.on;
+    cam.fx = cam.fy = null;
+    camSnap();
   }
   addEventListener('resize', () => { if(grid) resize(); });
   // also redraw at the right size whenever the board itself changes size (turning the device, etc.)
@@ -316,6 +401,7 @@
     if(!running) return;
     const m = {up:[0,-1,0],right:[1,0,1],down:[0,1,2],left:[-1,0,3]}[d];
     if(!m) return;
+    overviewUntil = 0; // a direction press ends the "see the whole maze" view
     const c = grid[player.y][player.x];
     if(c.w[m[2]]) { if(bump <= 0) Sound.bump(); bump = 6; return; }
     player.x += m[0]; player.y += m[1];
@@ -370,6 +456,8 @@
     Sound.init();
     startTime = performance.now() - elapsed;
     running = true;
+    // phones, big maze: glance at the whole maze for a moment, then glide in to Sparklehoof
+    if(overviewHold){ overviewHold = false; overviewUntil = reduced ? 0 : performance.now() + 1500; }
   }
 
   ovBtn.addEventListener('click', () => {
@@ -399,13 +487,60 @@
   board.addEventListener('pointerdown', e => { sx=e.clientX; sy=e.clientY; });
   board.addEventListener('pointermove', e => {
     if(sx===null) return;
-    const dx=e.clientX-sx, dy=e.clientY-sy, th=Math.max(18, cell*0.6);
+    const dx=e.clientX-sx, dy=e.clientY-sy, th=Math.max(18, cell*(phone ? cam.z : 1)*0.6);
     if(Math.abs(dx)>th || Math.abs(dy)>th){
       move(Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up'));
       sx=e.clientX; sy=e.clientY;
     }
   });
   ['pointerup','pointercancel','pointerleave'].forEach(ev=>board.addEventListener(ev,()=>{sx=sy=null}));
+
+  // phones: a garden of grass, bushes and flowers around the hedge maze (fills the screen around it)
+  function hash(x, y){ let h = (x*374761393 + y*668265263) | 0; h = (h ^ (h >>> 13)) * 1274126177; return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+  const FLOWERS = ['#FF8FC0','#FFD43B','#FFFFFF','#B197FC'];
+  function drawGarden(x0, y0, x1, y1){
+    ctx.fillStyle = '#8FCF9C';
+    ctx.fillRect(x0 - 2, y0 - 2, x1 - x0 + 4, y1 - y0 + 4);
+    const c = cell, M = N*c;
+    const i0 = Math.floor(x0/c) - 1, i1 = Math.ceil(x1/c) + 1, j0 = Math.floor(y0/c) - 1, j1 = Math.ceil(y1/c) + 1;
+    // soft lighter grass tufts and flowers, a few bushes further out
+    for(let j=j0;j<=j1;j++) for(let i=i0;i<=i1;i++){
+      if(i>=0 && j>=0 && i<N && j<N) continue;
+      const ring = Math.max(i<0 ? -i : i-N+1, j<0 ? -j : j-N+1);
+      if(ring <= 1) continue;
+      const h = hash(i, j), h2 = hash(j+91, i-37);
+      const X = i*c, Y = j*c;
+      ctx.fillStyle = (i+j)%2 ? '#8ACC97' : '#93D29F';
+      ctx.fillRect(X, Y, c, c);
+      if(h < 0.18){
+        ctx.fillStyle = '#4C9A7E';
+        ctx.beginPath(); ctx.arc(X+c*(.3+h), Y+c*.55, c*.3, 0, Math.PI*2); ctx.arc(X+c*(.6+h*.5), Y+c*.45, c*.26, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#69B58C';
+        ctx.beginPath(); ctx.arc(X+c*(.25+h), Y+c*.45, c*.12, 0, Math.PI*2); ctx.fill();
+      } else if(h < 0.55){
+        const n = 1 + Math.floor(h2*3);
+        for(let f=0; f<n; f++){
+          const fx = X + c*(.2 + hash(i*3+f, j*7)*.6), fy = Y + c*(.2 + hash(j*5+f, i*11)*.6);
+          ctx.fillStyle = FLOWERS[Math.floor(hash(i+f, j-f)*4)];
+          ctx.beginPath(); ctx.arc(fx, fy, c*.07, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#FFC23D';
+          ctx.beginPath(); ctx.arc(fx, fy, c*.03, 0, Math.PI*2); ctx.fill();
+        }
+      }
+    }
+    // a thick hedge wrapped all the way round the maze
+    const hw = c*0.5;
+    ctx.fillStyle = '#2E6E61';
+    ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-hw, -hw, M + hw*2, M + hw*2, hw) : ctx.rect(-hw, -hw, M + hw*2, M + hw*2); ctx.fill();
+    // leafy bumps along the hedge
+    for(let k = 0; k <= N*2; k++){
+      const a = k*c/2, r1 = hw*(0.42 + hash(k, 7)*0.2);
+      ctx.fillStyle = k%2 ? '#3F8A70' : '#4C9A7E';
+      for(const [bx, by] of [[a, -hw*0.5], [a, M + hw*0.5], [-hw*0.5, a], [M + hw*0.5, a]]){
+        ctx.beginPath(); ctx.arc(bx, by, r1, 0, Math.PI*2); ctx.fill();
+      }
+    }
+  }
 
   function drawEmoji(ch, cx, cy, s){
     ctx.font = `${s}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
@@ -420,8 +555,20 @@
     const k = reduced ? 1 : 0.35;
     anim.x += (player.x - anim.x)*k; anim.y += (player.y - anim.y)*k;
 
+    if(phone){
+      // camera: everything on the maze is drawn in maze space and moves with it
+      const now = t || performance.now(), dt = Math.min(0.1, Math.max(0, (now - (lastFrame || now))/1000));
+      lastFrame = now;
+      camStep(dt);
+      const z = cam.z, ox = cam.ox, oy = cam.oy;
+      ctx.setTransform(dpr*z,0,0,dpr*z, dpr*ox, dpr*oy);
+      drawGarden(-ox/z, -oy/z, (W-ox)/z, (H-oy)/z);
+      ctx.fillStyle = '#EAF7EC';
+      ctx.fillRect(0,0,N*cell,N*cell);
+    } else {
     ctx.fillStyle = '#EAF7EC';
     ctx.fillRect(0,0,size,size);
+    }
 
     // subtle checker on path
     ctx.fillStyle = '#DDF1E1';
@@ -635,6 +782,53 @@
   musicBtn.addEventListener('click', () => { Sound.init(); Sound.toggleMusic(); paintSoundBtns(); });
   sfxBtn.addEventListener('click', () => { Sound.init(); Sound.toggleSfx(); paintSoundBtns(); });
   paintSoundBtns();
+
+  // ===== test helper (only with ?test in the address) =====
+  if(/[?&]test\b/.test(location.search)){
+    const DIRS = [['up',0,-1,0],['right',1,0,1],['down',0,1,2],['left',-1,0,3]];
+    function route(from, to, avoid){ // shortest path of direction words, not stepping on `avoid`
+      const key = p => p.x+','+p.y, prev = new Map([[key(from), null]]), q = [from];
+      while(q.length){
+        const p = q.shift();
+        if(p.x===to.x && p.y===to.y) break;
+        for(const [d,dx,dy,w] of DIRS){
+          const n = {x:p.x+dx, y:p.y+dy}, k = key(n);
+          if(grid[p.y][p.x].w[w] || prev.has(k) || (avoid && n.x===avoid.x && n.y===avoid.y)) continue;
+          prev.set(k, [p, d]); q.push(n);
+        }
+      }
+      const out = []; let k = key(to);
+      while(prev.get(k)){ const [p, d] = prev.get(k); out.unshift(d); k = key(p); }
+      return out;
+    }
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    window.__um = {
+      get state(){
+        const br = board.getBoundingClientRect(), s = cam.safe, z = phone ? cam.z : 1;
+        const wx = (anim.x+.5)*cell, wy = (anim.y+.5)*cell;
+        const sx = phone ? wx*z + cam.ox : wx, sy = phone ? wy*z + cam.oy : wy;
+        return {level, N, running, overlay: !overlay.hidden, player:{...player}, goal:{...goal},
+          stars:{got, total: starsList.length}, phone,
+          cam:{on: cam.on, tile: cell*z, z, fit: cam.fit, overview: inOverview(), safe: {...cam.safe}},
+          playerScreen:{x: br.left + sx, y: br.top + sy}};
+      },
+      start(n){ level = n || 1; newLevel(); start(); },
+      press(d){ move(d); },
+      unlockAll(){ return true; }, // every level is always open in this game
+      seeWholeMaze(ms){ seeWholeMaze(ms); },
+      route,
+      async autoplay(stepMs, onStep){
+        stepMs = stepMs || 70;
+        while(starsList.some(s => !s.got) && running){
+          let best = null;
+          starsList.filter(s => !s.got).forEach(s => { const r = route(player, s, goal); if(!best || r.length < best.length) best = r; });
+          for(const d of best){ move(d); if(onStep) onStep(); await sleep(stepMs); }
+        }
+        for(const d of route(player, goal)){ if(!running) break; move(d); if(onStep) onStep(); await sleep(stepMs); }
+        return {won: player.x===goal.x && player.y===goal.y, got, total: starsList.length};
+      }
+    };
+  }
 
   newLevel();
   requestAnimationFrame(draw);

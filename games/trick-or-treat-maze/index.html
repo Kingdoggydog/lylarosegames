@@ -76,6 +76,8 @@
   #hintBtn svg{width:38px;height:38px;display:block}
   #hintBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #B9A6E8}
   .lbl{white-space:nowrap}
+  /* "see the whole maze" button - phones only (shown when the view is zoomed in on the trick-or-treater) */
+  .seeall{display:none}
   @media (hover:hover) and (pointer:fine){.pad{display:none}}
   @media (pointer:coarse){ .help{display:none} .btns{flex-wrap:nowrap} }
   @media (pointer:coarse) and (min-width:700px) and (min-height:700px){ .pad{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(2,68px)} .pad button{font-size:28px} }
@@ -144,8 +146,9 @@
     .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
     /* the stage covers the screen (inside the safe area); the maze sits in the space left over */
     .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
-      box-sizing:border-box;padding:54px 6px 136px}
-    .board{border-radius:14px}
+      box-sizing:border-box;padding:0}
+    /* the maze canvas fills the whole screen; the view zooms in and follows the trick-or-treater */
+    .board{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none;background:#3D6B48}
     /* back, levels, music and sound: small round buttons in the top-left corner */
     .back,#lvlBtn,#musicBtn,#sfxBtn{position:fixed;z-index:3;top:calc(6px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;
       display:grid;place-items:center;font-size:19px;background:#FFFFFFC7;box-shadow:0 2px 8px #2A174F33;text-decoration:none}
@@ -162,13 +165,17 @@
     /* the arrows by the left thumb, the ghost hint by the right thumb */
     .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
       grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
-    .pad button{background:#FF8A2BE6;font-size:24px}
+    .pad button{background:#FF8A2BB8;box-shadow:0 4px 0 #D9661AB0;font-size:24px}
+    .pad button:active,.pad button.on{box-shadow:0 1px 0 #D9661AB0}
     #hintBtn{position:fixed;z-index:3;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
-      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 4px 0 #B9A6E8,0 4px 12px #2A174F44}
+      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;background:#F4EEFFD9;box-shadow:0 4px 0 #B9A6E8C0,0 4px 12px #2A174F44}
     #hintBtn svg{width:48px;height:48px}
+    .seeall{display:grid;place-items:center;position:fixed;z-index:3;right:calc(15px + env(safe-area-inset-right,0px));bottom:calc(96px + env(safe-area-inset-bottom,0px));
+      width:56px;height:56px;min-width:56px;min-height:56px;padding:0;border-radius:50%;background:#F4EEFFD9;box-shadow:0 4px 0 #B9A6E8C0,0 4px 12px #2A174F44}
+    .seeall:active,.seeall.on{transform:translateY(3px);box-shadow:0 1px 0 #B9A6E8C0}
+    .seeall svg{width:38px;height:38px;display:block}
     /* sideways: maze in the middle, buttons and arrows in the left gap, collected things and hint in the right gap */
     @media (orientation: landscape) {
-      .stage{padding:6px 92px 6px 198px}
       .stats{flex-direction:column;align-items:flex-end;top:calc(8px + env(safe-area-inset-top,0px))}
     }
   }
@@ -278,6 +285,7 @@
     <p class="help">Move with the arrow keys. Walk up to the <b>glowing doors</b> to knock for treats, then find the <b>party house</b>!</p>
     <div class="btns">
       <button id="hintBtn" aria-label="Hint: the little ghost shows the way"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 40 V22 A14 14 0 0 1 38 22 V40 Q34 36 31 40 Q27.5 44 24 40 Q20.5 36 17 40 Q13.5 44 10 40 Z" fill="#FFFFFF" stroke="#8E7CC3" stroke-width="2.4" stroke-linejoin="round"/><ellipse cx="19" cy="22" rx="2.8" ry="3.6" fill="#2E2350"/><ellipse cx="29" cy="22" rx="2.8" ry="3.6" fill="#2E2350"/><circle cx="20" cy="20.8" r="1" fill="#fff"/><circle cx="30" cy="20.8" r="1" fill="#fff"/><ellipse cx="24" cy="29" rx="3" ry="2.6" fill="#7A2E5A"/><ellipse cx="15" cy="27" rx="2.6" ry="1.6" fill="#FF9EC2"/><ellipse cx="33" cy="27" rx="2.6" ry="1.6" fill="#FF9EC2"/><path d="M41 6 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z" fill="#FFC23D"/><path d="M5 8 l1.2 2.8 2.8 1.2 -2.8 1.2 -1.2 2.8 -1.2 -2.8 -2.8 -1.2 2.8 -1.2z" fill="#FF8A2B"/></svg><span class="lbl">Hint</span></button>
+      <button class="seeall" id="seeAllBtn" aria-label="See the whole maze" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M5 12 L16 8 L30 12 L42 8 V36 L30 40 L16 36 L5 40 Z" fill="#FFF4DC" stroke="#6C43B8" stroke-width="2.4" stroke-linejoin="round"/><path d="M16 8 V36 M30 12 V40" stroke="#C9B3E8" stroke-width="2"/><path d="M9 33 Q13 24 20 26 T28 18" fill="none" stroke="#FF8A2B" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="1 4.2"/><circle cx="31" cy="28" r="8" fill="#FFFFFF99" stroke="#4B2C8A" stroke-width="3"/><path d="M37 34 L43 40" stroke="#4B2C8A" stroke-width="4.5" stroke-linecap="round"/><path d="M36 10 l1 2.4 2.4 1 -2.4 1 -1 2.4 -1 -2.4 -2.4 -1 2.4 -1z" fill="#FFC23D"/></svg></button>
       <button class="ghost" id="lvlBtn" aria-label="Pick a level">🗺️<span class="lbl"> Levels</span></button>
       <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
       <button class="ghost" id="sfxBtn" aria-pressed="true">🔊<span class="lbl"> Sounds on</span></button>
@@ -490,6 +498,11 @@
 
   // ===== DRAWING HELPERS =====
   let T = 40, dpr = 1, size = 360, sizeH = 360;
+  // ----- phones: the canvas fills the screen and a camera follows the trick-or-treater -----
+  // VX, VY = where the maze's top-left corner sits on the canvas (CSS px). On iPads and computers they stay 0.
+  const PHONE_Q = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  let phone = false, VX = 0, VY = 0, BT = 40;   // BT = square size the background picture is drawn at
+  const cam = {on: false, TC: 46, Tall: 30, fx: 0, fy: 0, tx: 0, ty: 0, ax: 0, ay: 0, k: 0, allT: 0, safe: [0, 0, 0, 0]};
   const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
   let bgDirty = true;
   const FOOT = 0.3;                          // characters stand a little below the middle of their square
@@ -1211,6 +1224,8 @@
     phase = 'play';
     overlay.hidden = true;
     bgDirty = true; resize();
+    // phones: start by showing the whole maze, then glide in to the trick-or-treater
+    if(cam.on){ cam.k = 1; cam.allT = 1.5; applyCam(); }
     updateHud();
     say(() => heroHead(), lv.say, 3.6);
   }
@@ -1253,6 +1268,7 @@
   }
   const canGo = d => canWalk(hero.x + DX[d], hero.y + DY[d]);
   function request(d){
+    if(cam.allT > 0) cam.allT = 0;              // pressing a direction ends the "whole maze" look
     if(phase !== 'play') return;
     wake(); startMusic();
     if(hero.knock){ queued = d; return; }
@@ -1623,7 +1639,7 @@
     if(!sw) return;
     if(!sw.moved){
       const r = board.getBoundingClientRect();
-      const px = (e.clientX - r.left)/T - (hero.fx + 0.5), py = (e.clientY - r.top)/T - (hero.fy + 0.5);
+      const px = (e.clientX - r.left - VX)/T - (hero.fx + 0.5), py = (e.clientY - r.top - VY)/T - (hero.fy + 0.5);
       if(Math.hypot(px, py) > 0.45) request(Math.abs(px) > Math.abs(py) ? (px > 0 ? 1 : 3) : (py > 0 ? 2 : 0));
     }
     sw = null;
@@ -1712,12 +1728,76 @@
     const r = board.getBoundingClientRect();
     if(r.width < 2) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    size = sizeH = r.width;
-    cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
-    T = size/SX; bgDirty = true;
+    phone = PHONE_Q.matches && r.height > 2;
+    if(!phone){
+      size = sizeH = r.width;
+      cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
+      T = size/SX; BT = T; VX = VY = 0; cam.on = false; bgDirty = true;
+      seeAllBtn.hidden = true;
+      return;
+    }
+    // phones: the canvas is the whole screen
+    size = r.width; sizeH = r.height;
+    cvs.width = Math.round(size*dpr); cvs.height = Math.round(sizeH*dpr);
+    // where the buttons float (left, top, right, bottom): keep the trick-or-treater out of those strips
+    const side = size > sizeH;
+    cam.safe = side ? [196, 0, 86, 0] : [0, 50, 0, 150];
+    const [sl, st, sr, sb] = cam.safe;
+    const fit = Math.min((size - sl - sr)/SX, (sizeH - st - sb)/SY);
+    cam.Tall = Math.min((size - 12)/SX, (sizeH - 12)/SY);
+    if(fit >= 44){
+      // the whole maze fits nice and big: no camera needed
+      cam.on = false; cam.k = 0; cam.allT = 0;
+      T = BT = fit;
+      VX = sl + (size - sl - sr - SX*T)/2; VY = st + (sizeH - st - sb - SY*T)/2;
+    } else {
+      cam.on = true;
+      cam.TC = BT = clamp(Math.round(Math.min(size, sizeH)/8.5), 44, 48);
+      cam.ax = (size - SX*cam.Tall)/2; cam.ay = (sizeH - SY*cam.Tall)/2;
+      cam.tx = camAxis(0, null); cam.ty = camAxis(1, null);
+      cam.fx = cam.tx; cam.fy = cam.ty;
+      applyCam();
+    }
+    seeAllBtn.hidden = !cam.on;
+    bgDirty = true;
   }
+  // the follow camera along one axis (0 = across, 1 = down). Returns where the maze's edge should sit on screen.
+  function camAxis(axis, cur){
+    const view = axis ? sizeH : size, n = axis ? SY : SX, M = n*cam.TC;
+    const a = cam.safe[axis ? 1 : 0], b = cam.safe[axis ? 3 : 2];
+    const lo = view - b - M, hi = a;                 // keep the maze edges no further in than the button strips
+    if(lo >= hi) return (lo + hi)/2;                 // the maze fits in the free space: centre it
+    const hp = ((axis ? hero.fy : hero.fx) + 0.5)*cam.TC;
+    const m = Math.min(cam.TC*2.2, (view - a - b)*0.3);
+    let t = cur == null ? view/2 - hp + (a - b)/2 : cur;
+    const s = t + hp;
+    if(s < a + m) t = a + m - hp; else if(s > view - b - m) t = view - b - m - hp;
+    return clamp(t, lo, hi);
+  }
+  const easeIO = u => { u = clamp(u, 0, 1); return u*u*(3 - 2*u); };
+  function applyCam(){
+    const e = easeIO(cam.k);
+    T = lerp(cam.TC, cam.Tall, e);
+    VX = lerp(cam.fx, cam.ax, e); VY = lerp(cam.fy, cam.ay, e);
+  }
+  function updateCam(dt){
+    if(!phone || !cam.on) return;
+    if(cam.allT > 0) cam.allT = Math.max(0, cam.allT - dt);
+    const want = cam.allT > 0 ? 1 : 0;
+    cam.k = reduced ? want : want ? Math.min(1, cam.k + dt/0.7) : Math.max(0, cam.k - dt/0.8);
+    cam.tx = camAxis(0, cam.tx); cam.ty = camAxis(1, cam.ty);
+    const a = reduced ? 1 : 1 - Math.exp(-dt*5);
+    cam.fx += (cam.tx - cam.fx)*a; cam.fy += (cam.ty - cam.fy)*a;
+    applyCam();
+    seeAllBtn.classList.toggle('on', cam.allT > 0);
+  }
+  function seeAll(secs){ if(cam.on){ cam.allT = secs || 3; } }
+  const seeAllBtn = $('seeAllBtn');
+  seeAllBtn.addEventListener('pointerdown', e => e.stopPropagation());
+  seeAllBtn.addEventListener('click', () => { wake(); seeAll(3); seeAllBtn.blur(); });
   addEventListener('resize', resize);
   if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+  if(PHONE_Q.addEventListener) PHONE_Q.addEventListener('change', resize);
 
   function isBorder(x, y){ return x === 0 || y === 0 || x === SX - 1 || y === SY - 1; }
   function nearHouse(x, y){ return y === H.y && Math.abs(x - H.x) <= 1; }
@@ -1732,9 +1812,60 @@
   }
   function drawBackground(){
     const c = bgc;
-    bg.width = Math.round(size*dpr); bg.height = Math.round(sizeH*dpr);
-    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);   // draw in squares: 1 unit = 1 square
+    if(phone){ bg.width = Math.round(SX*BT*dpr); bg.height = Math.round(SY*BT*dpr); }
+    else { bg.width = Math.round(size*dpr); bg.height = Math.round(sizeH*dpr); }
+    c.setTransform(dpr*BT, 0, 0, dpr*BT, 0, 0);   // draw in squares: 1 unit = 1 square
     paintGround(c);
+    if(phone) makeWoods();
+  }
+  // ----- phones: the woods and evening sky around the maze (a repeating picture of trees and hedges) -----
+  const PW = 6, woods = document.createElement('canvas');
+  let woodsPat = null;
+  function makeWoods(){
+    const c = woods.getContext('2d');
+    woods.width = Math.round(PW*BT*dpr); woods.height = Math.round(PW*BT*dpr);
+    c.setTransform(woods.width/PW, 0, 0, woods.height/PW, 0, 0);
+    c.fillStyle = lv.floor; c.fillRect(0, 0, PW, PW);
+    c.fillStyle = lv.floor2; for(let y = 0; y < PW; y++) for(let x = 0; x < PW; x++) if((x + y) % 2) c.fillRect(x, y, 1, 1);
+    const farm = lv.theme === 'farm', items = [];
+    for(let y = 0; y < PW; y++) for(let x = 0; x < PW; x++){
+      const k = hash(x + 31, y + 17);
+      if(k < 0.2){ c.save(); c.translate(x + 0.5, y + 0.5); c.rotate(k*30); c.scale(0.12, 0.12); autumnLeaf(c, ['#D9772E', '#E6A23C', '#C5502E'][Math.floor(k*15) % 3]); c.restore(); continue; }
+      const kind = farm ? (k < 0.55 ? 'tree' : k < 0.8 ? 'corn' : 'hay') : (k < 0.6 ? 'tree' : 'hedge');
+      items.push([kind, x, y]);
+    }
+    // each tree is drawn on every side too, so the picture joins up seamlessly when it repeats
+    const wrap = f => { for(const oy of [-PW, 0, PW]) for(const ox of [-PW, 0, PW]){ c.save(); c.translate(ox, oy); f(); c.restore(); } };
+    items.forEach(([kind, x, y]) => wrap(() => { c.fillStyle = 'rgba(20,40,30,0.25)'; ell(c, x + 0.55, y + 0.64, 0.48, 0.34); c.fill(); }));
+    items.forEach(([kind, x, y]) => wrap(() => drawWall(c, kind, x, y)));
+    // a little darker and duskier than the maze, so the maze stands out
+    c.fillStyle = lv.moon ? 'rgba(35,25,100,0.34)' : 'rgba(60,35,120,0.3)'; c.fillRect(0, 0, PW, PW);
+    woodsPat = null;
+  }
+  function paintOutside(g){
+    if(!woodsPat) woodsPat = g.createPattern(woods, 'repeat');
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const k = T/BT;
+    if(woodsPat.setTransform && window.DOMMatrix) woodsPat.setTransform(new DOMMatrix().translate(VX*dpr, VY*dpr).scale(k, k));
+    g.fillStyle = woodsPat; g.fillRect(0, 0, cvs.width, cvs.height);
+    // the evening sky above the top of the maze (where the party house is)
+    const top = VY*dpr;
+    if(top > 0){
+      const gs = g.createLinearGradient(0, top - 260*dpr, 0, top);
+      gs.addColorStop(0, '#3A2C78'); gs.addColorStop(0.6, '#6A4BA8'); gs.addColorStop(1, '#B377B8');
+      g.fillStyle = gs; g.fillRect(0, 0, cvs.width, top);
+      g.setTransform(dpr*T, 0, 0, dpr*T, dpr*VX, dpr*VY);
+      for(let i = 0; i < 70; i++){
+        const sx = -14 + hash(i, 5)*(SX + 28), sy = -0.4 - hash(5, i)*12;
+        if((VY + sy*T) < 0) continue;
+        twinkle(g, sx, sy, 0.05 + hash(i, i)*0.07 + (reduced ? 0 : Math.sin(clock*2 + i)*0.02), 'rgba(255,255,255,0.85)');
+      }
+      // a soft line of far-off treetops along the bottom of the sky
+      g.fillStyle = '#3B2D6E';
+      for(let x = Math.floor(-VX/T) - 1; x < (size - VX)/T + 1; x++){ circ(g, x + 0.5, -0.05, 0.42 + hash(x, 3)*0.18); g.fill(); }
+      g.fillRect(-VX/T - 1, -0.1, size/T + 2, 0.1);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+    }
   }
   // everything that doesn't move: the lawn, footpaths, hedges, fences, walls, trees and little houses
   function paintGround(c){
@@ -1967,9 +2098,10 @@
     if(bgDirty && !poster){ drawBackground(); bgDirty = false; }
     g.setTransform(1, 0, 0, 1, 0, 0);
     if(poster){ g.setTransform(dpr*T, 0, 0, dpr*T, 0, 0); paintGround(g); }
+    else if(phone){ paintOutside(g); g.drawImage(bg, VX*dpr, VY*dpr, SX*T*dpr, SY*T*dpr); }
     else g.drawImage(bg, 0, 0);
     const c = g;
-    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);
+    c.setTransform(dpr*T, 0, 0, dpr*T, dpr*VX, dpr*VY);
     const t = clock;
     // glowing doorsteps (so you can see where to knock)
     doors.forEach(d => { if(d.visited) return; const p = reduced ? 0.5 : (Math.sin(t*3 + d.ph) + 1)/2; glow(c, d.x + 0.5, d.y + 1.12, 0.6, 'rgba(255,214,107,A)', 0.22 + p*0.18); });
@@ -2092,7 +2224,7 @@
     });
     c.globalAlpha = 1;
     // words and speech bubbles (drawn in pixels so the text stays sharp)
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.setTransform(dpr, 0, 0, dpr, dpr*VX, dpr*VY);
     words.forEach(w => {
       const u = w.t/1.2, x = w.x*T, y = (w.y - u*0.6)*T;
       const fs = clamp(T*0.4, 14, 30);
@@ -2102,6 +2234,7 @@
       c.fillStyle = w.col; c.fillText(w.text, x, y);
     });
     c.globalAlpha = 1;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0);
     if(!poster || poster.bubbles) bubbles.forEach(b => drawBubble(c, b));
     if(finaleT > 0) drawFinale(c);
   }
@@ -2137,11 +2270,11 @@
     b.text.split(' ').forEach(wd => { const tt = cur ? cur + ' ' + wd : wd; if(c.measureText(tt).width > maxW - 20 && cur){ lines.push(cur); cur = wd; } else cur = tt; });
     if(cur) lines.push(cur);
     const bw = Math.max(...lines.map(l => c.measureText(l).width)) + 22, bh = lines.length*fs*1.15 + 12;
-    const tx = p.x*T, ty = p.y*T;
+    const tx = VX + p.x*T, ty = VY + p.y*T, top = phone ? 52 : 6;
     let bx = clamp(tx - bw/2, 6, size - bw - 6), by = ty - bh - 10;
     let below = false;
-    if(by < 6){ by = ty + 0.9*T; below = true; }
-    by = clamp(by, 6, sizeH - bh - 6);
+    if(by < top){ by = ty + 0.9*T; below = true; }
+    by = clamp(by, top, sizeH - bh - 6);
     c.globalAlpha = a;
     c.fillStyle = '#fff'; c.strokeStyle = O; c.lineWidth = 2.2; c.lineJoin = 'round';
     const kx = clamp(tx, bx + 14, bx + bw - 14);
@@ -2161,14 +2294,15 @@
     const u = Math.min(1, finaleT/0.8), t = clock;
     c.save();
     c.globalAlpha = 0.94*u;
-    const gr = c.createLinearGradient(0, 0, 0, size);
+    const gr = c.createLinearGradient(0, 0, 0, sizeH);
     gr.addColorStop(0, '#4A3A8C'); gr.addColorStop(0.55, '#A066C4'); gr.addColorStop(1, '#F6A869');
-    c.fillStyle = gr; c.fillRect(0, 0, size, size);
+    c.fillStyle = gr; c.fillRect(0, 0, size, sizeH);
     c.globalAlpha = 1;
     if(u < 0.3){ c.restore(); return; }
     const fade = Math.min(1, (u - 0.3)/0.4);
     c.globalAlpha = fade;
-    const S2 = size/7;
+    const S2 = Math.min(size, sizeH)/7, fox = (size - S2*7)/2, foy = (sizeH - S2*7)/2;
+    c.translate(fox, foy);
     c.scale(S2, S2);
     // stars and a string of fairy lights
     for(let i = 0; i < 14; i++){ const tw = reduced ? 0.6 : (Math.sin(t*3 + i*1.7) + 1)/2; twinkle(c, hash(i, 1)*7, 0.2 + hash(1, i)*1.6, 0.05 + tw*0.05, '#FFFFFF'); }
@@ -2220,15 +2354,16 @@
     c.save();
     c.font = Math.round(S2*0.6) + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.lineWidth = S2*0.12; c.lineJoin = 'round'; c.strokeStyle = '#FFFFFF'; c.globalAlpha = fade;
-    c.strokeText('Halloween party!', size/2, S2*0.55); c.fillStyle = '#FF8A2B'; c.fillText('Halloween party!', size/2, S2*0.55);
+    c.strokeText('Halloween party!', size/2, foy + S2*0.55); c.fillStyle = '#FF8A2B'; c.fillText('Halloween party!', size/2, foy + S2*0.55);
     c.restore();
   }
 
   // ===== MAIN LOOP =====
   let lastT = performance.now();
   function loop(tm){
-    const dt = Math.min(0.05, (tm - lastT)/1000)*timeScale; lastT = tm;
+    const rdt = Math.min(0.05, (tm - lastT)/1000), dt = rdt*timeScale; lastT = tm;
     if(phase !== 'paused') update(dt);
+    updateCam(rdt);
     render(ctx, null);
     requestAnimationFrame(loop);
   }
@@ -2257,7 +2392,10 @@
     get state(){ return {level: level + 1, name: lv.name, phase, who, x: hero.x, y: hero.y, moving: !!hero.move, knocking: !!hero.knock, size: SX,
       cell: T, board: size, doors: doors.filter(d => d.visited).length + '/' + doors.length, treats: treatsGot, doorsLeft: doorsLeft(),
       corns: corns.filter(c => c.got).length + '/' + corns.length, stars: endStars, overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)),
-      hint: !!ghost, lit: lanterns.filter(l => l.lit).length + '/' + lanterns.length, prints: prints.length, finale: finaleT}; },
+      hint: !!ghost, lit: lanterns.filter(l => l.lit).length + '/' + lanterns.length, prints: prints.length, finale: finaleT,
+      cam: {on: cam.on, phone, tile: T, follow: cam.TC, whole: cam.on ? cam.Tall : T, k: cam.k, x: VX, y: VY, view: [size, sizeH],
+        hero: [VX + (hero.fx + 0.5)*T, VY + (hero.fy + 0.5)*T]}}; },
+    seeAll(secs){ seeAll(secs); return cam.on; },
     start(n){ startLevel(n - 1); },
     press(d){ request(typeof d === 'string' ? DN[d] : d); },
     hold(d){ d = typeof d === 'string' ? DN[d] : d; if(!held.includes(d)) held.push(d); request(d); }, release(){ held.length = 0; },
@@ -2281,7 +2419,8 @@
   function makePoster(w, h, o){
     const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
     const g = cv.getContext('2d');
-    const keep = {level, lv, SX, SY, grid, doors, corns, lanterns, webs, scarecrows, H: Object.assign({}, H), S: Object.assign({}, S), prints, parts, words, bubbles, leaves, bats, lights, flyers, ghost, phase, T, dpr, size, sizeH, finaleT, clock, treatsGot};
+    const keep = {level, lv, SX, SY, grid, doors, corns, lanterns, webs, scarecrows, H: Object.assign({}, H), S: Object.assign({}, S), prints, parts, words, bubbles, leaves, bats, lights, flyers, ghost, phase, T, dpr, size, sizeH, finaleT, clock, treatsGot, VX, VY, phone};
+    VX = VY = 0; phone = false;
     level = o.level || 0; lv = Object.assign({}, LEVELS[level], o.lv || {});
     loadMap(o.map);
     T = o.T; dpr = 1; size = w; sizeH = h; clock = o.clock || 1.3;
@@ -2301,7 +2440,7 @@
     render(g, {bubbles: true});
     const url = cv.toDataURL('image/png');
     posterHeroes = null; posterGhost = null; posterSky = false; lanternR = 0.11;
-    ({level, lv, SX, SY, grid, doors, corns, lanterns, webs, scarecrows, prints, parts, words, bubbles, leaves, bats, lights, flyers, ghost, phase, T, dpr, size, sizeH, finaleT, clock, treatsGot} = keep);
+    ({level, lv, SX, SY, grid, doors, corns, lanterns, webs, scarecrows, prints, parts, words, bubbles, leaves, bats, lights, flyers, ghost, phase, T, dpr, size, sizeH, finaleT, clock, treatsGot, VX, VY, phone} = keep);
     H = keep.H; S = keep.S;
     resize();
     return url;

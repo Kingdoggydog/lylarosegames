@@ -67,6 +67,7 @@
   #hintBtn svg{width:38px;height:38px;display:block}
   #hintBtn:active{transform:translateY(3px);box-shadow:0 1px 0 #E8A200}
   .lbl{white-space:nowrap}
+  #zoomBtn{display:none}
   @media (hover:hover) and (pointer:fine){.pad{display:none}}
   @media (pointer:coarse){ .help{display:none} .btns{flex-wrap:nowrap} }
   @media (pointer:coarse) and (min-width:700px) and (min-height:700px){ .pad{grid-template-columns:repeat(3,68px);grid-template-rows:repeat(2,68px)} .pad button{font-size:28px} }
@@ -129,8 +130,14 @@
     .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
     /* the stage covers the screen (inside the safe area); the maze sits in the space left over */
     .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
-      box-sizing:border-box;padding:52px 6px 136px}
-    .board{border-radius:14px}
+      box-sizing:border-box;padding:0}
+    /* the jungle fills the whole screen; a camera follows Lenny on the big levels */
+    .board{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none}
+    /* "see the whole maze" button, above the toucan */
+    #zoomBtn{position:fixed;z-index:3;right:calc(15px + env(safe-area-inset-right,0px));bottom:calc(94px + env(safe-area-inset-bottom,0px));
+      display:grid;place-items:center;width:56px;height:56px;min-width:56px;min-height:56px;padding:0;border-radius:50%;background:#FFFFFFC7;box-shadow:0 3px 0 #2B7A4166,0 3px 10px #1F3B2A33}
+    #zoomBtn svg{width:36px;height:36px;display:block}
+    #zoomBtn:active{transform:translateY(2px)}
     /* back, levels, music and sound: small round buttons in the top-left corner */
     .back,#lvlBtn,#musicBtn,#sfxBtn{position:fixed;z-index:3;top:calc(6px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;
       display:grid;place-items:center;font-size:19px;background:#FFFFFFC7;box-shadow:0 2px 8px #1F3B2A26;text-decoration:none}
@@ -146,13 +153,12 @@
     /* the arrows by the left thumb, the toucan hint by the right thumb */
     .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
       grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
-    .pad button{background:#3FA35BE6;font-size:24px}
+    .pad button{background:#3FA35BB8;font-size:24px}
     #hintBtn{position:fixed;z-index:3;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
-      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 4px 0 #E8A200,0 4px 12px #1F3B2A33}
+      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;background:#FFD43BE0;box-shadow:0 4px 0 #E8A200,0 4px 12px #1F3B2A33}
     #hintBtn svg{width:46px;height:46px}
-    /* sideways: maze in the middle, buttons and arrows in the left gap, collected things and hint in the right gap */
+    /* sideways: buttons and arrows down the left, collected things and hint down the right */
     @media (orientation: landscape) {
-      .stage{padding:6px 92px 6px 198px}
       .stats{flex-direction:column;align-items:flex-end;top:calc(8px + env(safe-area-inset-top,0px))}
     }
   }
@@ -262,6 +268,7 @@
     <p class="help">Move with the arrow keys. Find the <b>lost baby lemurs</b> and lead them home to the treehouse. Step onto a <b>vine</b> to swing across the river!</p>
     <div class="btns">
       <button id="hintBtn" aria-label="Hint: the toucan shows the way"><svg viewBox="0 0 48 48" aria-hidden="true"><g stroke="#1F3B2A" stroke-width="2.4" stroke-linejoin="round"><ellipse cx="17" cy="28" rx="11" ry="12" fill="#2B2B35"/><path d="M7 34 L2 44 L13 38 Z" fill="#2B2B35"/><ellipse cx="21" cy="27" rx="5" ry="7" fill="#FFF3B0" stroke="none"/><circle cx="21" cy="16" r="8" fill="#2B2B35"/><ellipse cx="23" cy="17" rx="4.5" ry="5" fill="#FFE066" stroke="none"/><path d="M26 11 C36 8 44 11 46 18 C40 17 33 19 27 20 Z" fill="#FF922B"/><path d="M40 14.5 C43 15 45 16 46 18 C43 17.6 41 17.6 39 17.8 Z" fill="#E03131" stroke="none"/></g><circle cx="24" cy="14.5" r="2.6" fill="#4DABF7"/><circle cx="24.4" cy="14.5" r="1.3" fill="#111"/><path d="M40 3 l1.6 4 4 1.6 -4 1.6 -1.6 4 -1.6 -4 -4 -1.6 4 -1.6z" fill="#FF4F9A"/><path d="M6 6 l1.2 2.8 2.8 1.2 -2.8 1.2 -1.2 2.8 -1.2 -2.8 -2.8 -1.2 2.8 -1.2z" fill="#2F8A4C"/></svg><span class="lbl">Hint</span></button>
+      <button id="zoomBtn" type="button" aria-label="See the whole maze" hidden><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="17" cy="17" r="11" fill="#E4F7D9" stroke="#1E6B37" stroke-width="4"/><path d="M11 19 q3 -6 6 -2 t6 -2" fill="none" stroke="#2F8A4C" stroke-width="2.4" stroke-linecap="round"/><circle cx="14" cy="13" r="2" fill="#FFD43B"/><path d="M25.5 25.5 L34 34" stroke="#1E6B37" stroke-width="5.5" stroke-linecap="round"/></svg></button>
       <button class="ghost" id="lvlBtn" aria-label="Pick a level">🗺️<span class="lbl"> Levels</span></button>
       <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
       <button class="ghost" id="sfxBtn" aria-pressed="true">🔊<span class="lbl"> Sounds on</span></button>
@@ -464,6 +471,13 @@
 
   // ===== DRAWING HELPERS =====
   let T = 40, dpr = 1, size = 360;
+  // phones: the canvas fills the screen (VW x VH) and a camera follows Lenny when the squares would be too small
+  const PHONE_MQ = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  const MIN_T = 44, CAM_T = 46;               // smallest square we show on a phone, and the square size when following Lenny
+  let phone = false, VW = 360, VH = 360;
+  const cam = {on: false, x: 0, y: 0, k: 40, fit: 40, overT: 0, safe: {l: 0, t: 0, r: 360, b: 360}};
+  let RV = {ox: 0, oy: 0, k: 40, w: 360, h: 360, safe: null};   // the view being drawn right now
+  const zoomBtn = $('zoomBtn');
   const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
   let bgDirty = true;
   const FOOT = 0.3;                          // characters stand a little below the middle of their square
@@ -761,6 +775,8 @@
     phase = 'play';
     overlay.hidden = true;
     bgDirty = true; resize();
+    // phones with the camera: show the whole maze for a moment, then glide in to Lenny
+    if(phone && cam.on){ cam.overT = 1.5; snapCam(); }
     updateHud();
     say(() => lennyHead(), lv.say, 3.6);
   }
@@ -790,6 +806,7 @@
   function request(d){
     if(phase !== 'play') return;
     wake(); startMusic();
+    cam.overT = 0;                           // pressing a way to go ends the "whole maze" view
     if(len.move){
       // turning right round: go straight back the way we came
       if(len.move.kind === 'walk' && d === (len.move.d + 2) % 4){
@@ -1116,6 +1133,7 @@
     }
   });
   $('hintBtn').addEventListener('click', () => { showHint(); $('hintBtn').blur(); });
+  $('zoomBtn').addEventListener('click', () => { wake(); startMusic(); seeAll(); $('zoomBtn').blur(); });
 
   // ----- the lemur family picture: every baby brought home so far sits on the big branch -----
   function drawFamily(cv){
@@ -1201,7 +1219,7 @@
     if(!sw) return;
     if(!sw.moved){
       const r = board.getBoundingClientRect();
-      const px = (e.clientX - r.left)/T - (len.fx + 0.5), py = (e.clientY - r.top)/T - (len.fy + 0.5);
+      const px = (e.clientX - r.left - cam.x)/cam.k - (len.fx + 0.5), py = (e.clientY - r.top - cam.y)/cam.k - (len.fy + 0.5);
       if(Math.hypot(px, py) > 0.45) request(Math.abs(px) > Math.abs(py) ? (px > 0 ? 1 : 3) : (py > 0 ? 2 : 0));
     }
     sw = null;
@@ -1310,12 +1328,107 @@
     const r = board.getBoundingClientRect();
     if(r.width < 2) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    size = r.width;
-    cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
-    T = size/SX; bgDirty = true;
+    phone = PHONE_MQ.matches;
+    if(!phone){
+      // iPads and computers: the square maze fills the square board, just like always
+      size = r.width; VW = VH = size;
+      cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
+      T = size/SX; bgDirty = true;
+      cam.on = false; cam.overT = 0; cam.x = cam.y = 0; cam.k = cam.fit = T;
+    } else {
+      // phones: the canvas covers the whole screen. Lenny is kept in the "safe" part (away from the arrows and corner buttons)
+      VW = r.width; VH = r.height; size = Math.min(VW, VH);
+      cvs.width = Math.round(VW*dpr); cvs.height = Math.round(VH*dpr);
+      const land = VW > VH;
+      cam.safe = land ? {l: 200, t: 8, r: VW - 96, b: VH - 8} : {l: 6, t: 56, r: VW - 6, b: VH - 154};
+      const s = cam.safe;
+      cam.fit = Math.min((s.r - s.l)/SX, (s.b - s.t)/SY);
+      cam.on = cam.fit < MIN_T;
+      T = cam.on ? CAM_T : cam.fit;
+      if(!cam.on) cam.overT = 0;
+      bgDirty = true;
+      snapCam();
+    }
+    zoomBtn.hidden = !(phone && cam.on);
   }
   addEventListener('resize', resize);
   if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+  try { PHONE_MQ.addEventListener('change', resize); } catch(e){}
+
+  // ===== THE CAMERA (phones only) =====
+  // where the maze should sit on screen: the whole maze (start of a level, the "see it all" button, the menu), or following Lenny
+  function camTarget(){
+    if(!phone) return {x: 0, y: 0, k: T};
+    const s = cam.safe, whole = !cam.on || cam.overT > 0 || phase === 'menu';
+    const k = whole ? Math.min(T, cam.fit) : T, mw = SX*k, mh = SY*k;
+    const mx = (s.l + s.r)/2, my = (s.t + s.b)/2;
+    if(whole) return {x: mx - mw/2, y: my - mh/2, k};
+    // keep Lenny in the middle of the safe area, but never show a gap inside it (the jungle carries on outside the maze)
+    let x = mx - (len.fx + 0.5)*k, y = my - (len.fy + 0.35)*k;
+    x = mw <= s.r - s.l ? mx - mw/2 : clamp(x, s.r - mw, s.l);
+    y = mh <= s.b - s.t ? my - mh/2 : clamp(y, s.b - mh, s.t);
+    return {x, y, k};
+  }
+  function snapCam(){ const t = camTarget(); cam.x = t.x; cam.y = t.y; cam.k = t.k; }
+  function updateCam(dt){
+    if(!phone) return;
+    if(cam.overT > 0) cam.overT = Math.max(0, cam.overT - dt);
+    const t = camTarget();
+    if(reduced){ cam.x = t.x; cam.y = t.y; cam.k = t.k; return; }
+    // glide (a little slower while zooming in or out)
+    const zooming = Math.abs(t.k - cam.k) > 0.5;
+    const a = 1 - Math.exp(-dt*(zooming ? 4 : 6));
+    cam.k = lerp(cam.k, t.k, a); cam.x = lerp(cam.x, t.x, a); cam.y = lerp(cam.y, t.y, a);
+    if(Math.abs(cam.k - t.k) < 0.01) cam.k = t.k;
+  }
+  // the "see the whole maze" button: zoom out for about 3 seconds (pressing a way to go ends it sooner)
+  function seeAll(){ if(phone && cam.on && phase === 'play') cam.overT = 3; }
+
+  // the jungle carrying on outside the maze: a little tile of trees that repeats (drawn once per level and size)
+  const OUTN = 6;
+  const outC = document.createElement('canvas'), outG = outC.getContext('2d');
+  let outPat = null;
+  function makeOutside(){
+    const px = T*dpr;
+    outC.width = outC.height = Math.max(1, Math.round(OUTN*px));
+    const c = outG;
+    c.setTransform(outC.width/OUTN, 0, 0, outC.height/OUTN, 0, 0);
+    c.fillStyle = lv.floor; c.fillRect(0, 0, OUTN, OUTN);
+    c.fillStyle = lv.floor2; for(let y = 0; y < OUTN; y++) for(let x = 0; x < OUTN; x++) if((x + y) % 2) c.fillRect(x, y, 1, 1);
+    const kinds = ['tree', 'bush', 'tree', 'palm', 'fern', 'bush', 'tree', 'rock'];
+    // each tree is drawn again one tile-width over on every side, so the edges join up with no seams
+    const all = (fn) => { for(let oy = -OUTN; oy <= OUTN; oy += OUTN) for(let ox = -OUTN; ox <= OUTN; ox += OUTN) fn(ox, oy); };
+    for(let y = 0; y < OUTN; y++) for(let x = 0; x < OUTN; x++) all((ox, oy) => { c.fillStyle = 'rgba(15,50,25,0.28)'; ell(c, x + ox + 0.55, y + oy + 0.62, 0.5, 0.36); c.fill(); });
+    for(let y = 0; y < OUTN; y++) for(let x = 0; x < OUTN; x++){
+      const kind = kinds[Math.floor(hash(x + 40 + level*3, y + 17)*kinds.length)];
+      all((ox, oy) => drawWall(c, kind, x + ox, y + oy));
+    }
+    outPat = ctx.createPattern(outC, 'repeat');
+  }
+  // place the repeating jungle so it lines up with the maze squares (screen pixel = ox + square*k)
+  function fillOutside(g, ox, oy, k, w, h){
+    if(!outPat) return;
+    const s = k/T;
+    if(outPat.setTransform && window.DOMMatrix) outPat.setTransform(new DOMMatrix([s, 0, 0, s, ox, oy]));
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = outPat; g.fillRect(0, 0, w, h);
+    g.restore();
+  }
+  // rivers that reach the edge of the maze keep flowing off into the jungle
+  function riverOut(c, x0, y0, x1, y1){
+    const L = [[-0.02, '#3C7F45'], [0.06, '#3FA7DE'], [0.2, '#62BEEC'], [0.33, 'rgba(160,225,250,0.55)']];
+    L.forEach(([ins, col]) => {
+      c.fillStyle = col;
+      for(let y = 1; y < SY - 1; y++){
+        if(waterLook(0, y)) c.fillRect(x0, y + ins, -x0, 1 - ins*2);
+        if(waterLook(SX - 1, y)) c.fillRect(SX, y + ins, x1 - SX, 1 - ins*2);
+      }
+      for(let x = 1; x < SX - 1; x++){
+        if(waterLook(x, 0)) c.fillRect(x + ins, y0, 1 - ins*2, -y0);
+        if(waterLook(x, SY - 1)) c.fillRect(x + ins, SY, 1 - ins*2, y1 - SY);
+      }
+    });
+  }
 
   // the outside edge of the maze shows the river running off the map
   function isBorder(x, y){ return x === 0 || y === 0 || x === SX - 1 || y === SY - 1; }
@@ -1337,6 +1450,17 @@
   }
   function drawBackground(){
     const c = bgc;
+    if(phone){
+      // phones: the picture has one square of jungle all round, so the edge trees can spill over it
+      makeOutside();
+      const px = T*dpr;
+      bg.width = Math.round((SX + 2)*px); bg.height = Math.round((SY + 2)*px);
+      fillOutside(c, px, px, T, bg.width, bg.height);
+      c.setTransform(px, 0, 0, px, px, px);
+      riverOut(c, -1, -1, SX + 1, SY + 1);
+      paintGround(c);
+      return;
+    }
     bg.width = Math.round(size*dpr); bg.height = Math.round(size*dpr);
     c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);   // draw in squares: 1 unit = 1 square
     paintGround(c);
@@ -1561,10 +1685,23 @@
   function render(g, poster){
     if(bgDirty && !poster){ drawBackground(); bgDirty = false; }
     g.setTransform(1, 0, 0, 1, 0, 0);
+    // the view: on phones the camera says where the maze sits and how big the squares are
+    if(poster || !phone) RV = {ox: 0, oy: 0, k: T, w: size, h: size, safe: null};
+    else RV = {ox: Math.round(cam.x*dpr)/dpr, oy: Math.round(cam.y*dpr)/dpr, k: cam.k, w: VW, h: VH, safe: cam.safe};
     if(poster) { g.setTransform(dpr*T, 0, 0, dpr*T, 0, 0); paintGround(g); }
-    else g.drawImage(bg, 0, 0);
+    else if(!phone) g.drawImage(bg, 0, 0);
+    else {
+      const px = dpr*RV.k, ox = dpr*RV.ox, oy = dpr*RV.oy;
+      fillOutside(g, ox, oy, RV.k, cvs.width, cvs.height);
+      g.setTransform(px, 0, 0, px, ox, oy);
+      riverOut(g, -RV.ox/RV.k - 1, -RV.oy/RV.k - 1, (RV.w - RV.ox)/RV.k + 1, (RV.h - RV.oy)/RV.k + 1);
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      const sc = RV.k/T;
+      if(Math.abs(sc - 1) < 0.001) g.drawImage(bg, Math.round(ox - px), Math.round(oy - px));
+      else g.drawImage(bg, ox - px, oy - px, bg.width*sc, bg.height*sc);
+    }
     const c = g;
-    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);
+    c.setTransform(dpr*RV.k, 0, 0, dpr*RV.k, dpr*RV.ox, dpr*RV.oy);
     drawWaterBits(c);
     // paw prints (they fade slowly, so you can see where you've been)
     prints.forEach(p => {
@@ -1690,8 +1827,8 @@
     // words and speech bubbles (drawn in pixels so the text stays sharp)
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     words.forEach(w => {
-      const u = w.t/1.2, x = w.x*T, y = (w.y - u*0.6)*T;
-      const fs = clamp(T*0.42, 14, 32);
+      const u = w.t/1.2, x = RV.ox + w.x*RV.k, y = RV.oy + (w.y - u*0.6)*RV.k;
+      const fs = clamp(RV.k*0.42, 14, 32);
       c.globalAlpha = clamp((1 - u)*2, 0, 1);
       c.font = fs + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
       c.lineWidth = Math.max(3, fs*0.22); c.strokeStyle = '#fff'; c.lineJoin = 'round'; c.strokeText(w.text, x, y);
@@ -1731,18 +1868,20 @@
     const p = b.get(); if(!p) return;
     const a = Math.min(1, b.t*6, (b.dur - b.t)*4);
     if(a <= 0) return;
-    const fs = clamp(T*0.36, 13, 22);
+    const fs = clamp(RV.k*0.36, 13, 22);
     c.font = fs + 'px ' + FONT;
-    const maxW = Math.min(size - 16, Math.max(140, T*4));
+    // the space a bubble may use: the whole board, or on phones the part clear of the buttons
+    const S = RV.safe || {l: 0, t: 0, r: RV.w, b: RV.h};
+    const maxW = Math.min(S.r - S.l - 16, Math.max(140, RV.k*4));
     const lines = []; let cur = '';
     b.text.split(' ').forEach(wd => { const t = cur ? cur + ' ' + wd : wd; if(c.measureText(t).width > maxW - 20 && cur){ lines.push(cur); cur = wd; } else cur = t; });
     if(cur) lines.push(cur);
     const bw = Math.max(...lines.map(l => c.measureText(l).width)) + 22, bh = lines.length*fs*1.15 + 12;
-    const tx = p.x*T, ty = p.y*T;
-    let bx = clamp(tx - bw/2, 6, size - bw - 6), by = ty - bh - 10;
+    const tx = RV.ox + p.x*RV.k, ty = RV.oy + p.y*RV.k;
+    let bx = clamp(tx - bw/2, S.l + 6, S.r - bw - 6), by = ty - bh - 10;
     let below = false;
-    if(by < 6){ by = ty + 0.9*T; below = true; }
-    by = clamp(by, 6, size - bh - 6);
+    if(by < S.t + 6){ by = ty + 0.9*RV.k; below = true; }
+    by = clamp(by, S.t + 6, S.b - bh - 6);
     c.globalAlpha = a;
     c.fillStyle = '#fff'; c.strokeStyle = O; c.lineWidth = 2.2; c.lineJoin = 'round';
     const kx = clamp(tx, bx + 14, bx + bw - 14);
@@ -1762,13 +1901,16 @@
     const u = Math.min(1, finaleT/0.8);
     c.save();
     c.globalAlpha = 0.9*u;
-    const gr = c.createLinearGradient(0, 0, 0, size);
+    const gr = c.createLinearGradient(0, 0, 0, RV.h);
     gr.addColorStop(0, '#FFE3B3'); gr.addColorStop(0.6, '#FFC9DE'); gr.addColorStop(1, '#BDE6C2');
-    c.fillStyle = gr; c.fillRect(0, 0, size, size);
+    c.fillStyle = gr; c.fillRect(0, 0, RV.w, RV.h);
     c.globalAlpha = 1;
     if(u < 0.3){ c.restore(); return; }
     c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
-    const S2 = size/7;
+    // a square party scene in the middle of the view (on a phone it sits in the clear space between the buttons)
+    const F = RV.safe || {l: 0, t: 0, r: RV.w, b: RV.h};
+    const S2 = Math.min(F.r - F.l, F.b - F.t)/7, fx0 = (F.l + F.r)/2 - S2*3.5, fy0 = (F.t + F.b)/2 - S2*3.5;
+    c.translate(fx0, fy0);
     c.scale(S2, S2);
     // big leaves round the edges
     [[0, 0], [7, 0], [0, 7], [7, 7]].forEach(([x, y]) => { leafy(c, x, y, 1.6, '#2E8B4A'); leafy(c, x + (x ? -0.25 : 0.25), y + (y ? -0.2 : 0.2), 1.1, '#3FA05A'); });
@@ -1804,7 +1946,7 @@
     c.save();
     c.font = Math.round(S2*0.62) + 'px ' + FONT; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.lineWidth = S2*0.12; c.lineJoin = 'round'; c.strokeStyle = '#FFFFFF'; c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
-    c.strokeText('Jungle party!', size/2, S2*0.5); c.fillStyle = '#FF4F9A'; c.fillText('Jungle party!', size/2, S2*0.5);
+    c.strokeText('Jungle party!', fx0 + S2*3.5, fy0 + S2*0.5); c.fillStyle = '#FF4F9A'; c.fillText('Jungle party!', fx0 + S2*3.5, fy0 + S2*0.5);
     c.restore();
   }
 
@@ -1813,6 +1955,7 @@
   function loop(t){
     const dt = Math.min(0.05, (t - lastT)/1000)*timeScale; lastT = t;
     if(phase !== 'paused') update(dt);
+    updateCam(dt);
     render(ctx, null);
     requestAnimationFrame(loop);
   }
@@ -1843,7 +1986,9 @@
     get state(){ return {level: level + 1, name: lv.name, phase, x: len.x, y: len.y, moving: !!len.move, swinging: !!(len.move && len.move.kind === 'swing'), size: SX,
       cell: T, board: size, following: train.length, home: homeCount(), babies: babies.length, waiting: babies.filter(b => b.st === 'wait').length,
       bananas: bananas.filter(b => b.got).length + '/' + bananas.length, stars: endStars, overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)),
-      hint: !!toucan, prints: prints.length, vines: vines.map(v => ({x: v.x, y: v.y, d: v.d, from: [v.ax, v.ay], to: [v.lx, v.ly]}))}; },
+      hint: !!toucan, prints: prints.length, phone, cam: {on: cam.on, tile: T, k: cam.k, fit: cam.fit, x: cam.x, y: cam.y, whole: phone && (cam.overT > 0 || phase === 'menu')},
+      // where Lenny is drawn on the screen (CSS pixels from the top-left of the page)
+      lenny: (() => { const r = board.getBoundingClientRect(), k = phone ? cam.k : T, ox = phone ? cam.x : 0, oy = phone ? cam.y : 0; return {x: r.left + ox + (len.fx + 0.5)*k, y: r.top + oy + (len.fy + 0.5)*k}; })(), vines: vines.map(v => ({x: v.x, y: v.y, d: v.d, from: [v.ax, v.ay], to: [v.lx, v.ly]}))}; },
     start(n){ startLevel(n - 1); },
     press(d){ request(typeof d === 'string' ? DN[d] : d); },
     hold(d){ d = typeof d === 'string' ? DN[d] : d; if(!held.includes(d)) held.push(d); request(d); }, release(){ held.length = 0; },
@@ -1855,6 +2000,7 @@
     tp(x, y){ len.x = len.fx = x; len.y = len.fy = y; len.move = null; trail.push({x, y, k: 'walk'}); },
     route(x, y, noVines){ const p = route(len.x, len.y, new Set([x + ',' + y]), noVines); return p && p.slice(1).map(s => s.d); },
     menu(){ phase = 'menu'; showMenu(); },
+    seeAll(){ seeAll(); return cam.overT; },
     calm(){ callT = birdT = fishT = 999; bubbles = []; parts = []; words = []; },
     // pictures for the game card and share preview
     poster(w, h, opts){ return makePoster(w, h, opts || {}); }

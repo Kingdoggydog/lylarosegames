@@ -60,6 +60,7 @@
   .back{font-weight:800;color:var(--teal);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
   .back:hover{text-decoration:underline}
   .lbl2{margin-left:4px}
+  .zoom{display:none}
   @media (hover:hover) and (pointer:fine){ .pad{display:none} }
   @media (pointer:coarse){ .help{display:none} }
   @media (max-height:760px){ .sub{display:none} h1{font-size:30px} .pill{font-size:14px;padding:5px 10px} }
@@ -107,9 +108,16 @@
     body{padding:0;background:linear-gradient(170deg,var(--sky) 0%,var(--sky2) 100%)}
     .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
     h1,.sub,.help{display:none}
+    /* the maze canvas covers the whole screen; the game draws grass and trees around the maze and a camera follows Whirly on big levels */
     .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
-      box-sizing:border-box;padding:54px 6px 150px;min-height:0;place-items:start center}
-    .board{border-radius:14px}
+      box-sizing:border-box;padding:0;min-height:0;display:block}
+    .board{width:100%;height:100%;aspect-ratio:auto;border-radius:0;box-shadow:none;background:#7CC96A}
+    /* "see the whole maze" button (only shown when the camera is following Whirly) */
+    .zoom{position:fixed;z-index:3;right:calc(84px + env(safe-area-inset-right,0px));bottom:calc(15px + env(safe-area-inset-bottom,0px));
+      width:56px;height:56px;min-width:56px;min-height:56px;padding:0;border-radius:50%;display:grid;place-items:center;font-size:26px;line-height:1;
+      background:#FFFFFFD0;color:var(--ink);box-shadow:0 3px 0 #2E6E6133,0 2px 8px #2E6E6126}
+    .zoom:active{transform:translateY(2px)}
+    .zoom.on{background:#FFF1B8}
     /* round icon buttons in the top-left corner */
     .top{position:fixed;z-index:6;top:calc(6px + env(safe-area-inset-top,0px));left:calc(6px + env(safe-area-inset-left,0px));gap:6px}
     .btns{gap:6px}
@@ -130,7 +138,7 @@
     .panel h2{font-size:27px}
     .panel .starrow{font-size:34px}
     @media (orientation: landscape) {
-      .stage{padding:6px 124px 6px 196px;place-items:center}
+      .zoom{right:calc(13px + env(safe-area-inset-right,0px));bottom:calc(86px + env(safe-area-inset-bottom,0px))}
       .pad{grid-template-columns:repeat(3,56px);grid-template-rows:repeat(2,56px)}
       header{top:calc(8px + env(safe-area-inset-top,0px));bottom:auto}
       .overlay{padding:52px 12px 6px}
@@ -260,6 +268,7 @@
     </div>
     <p class="help">Fly with the arrow keys or WASD (or tap where you want to go). Whirly keeps flying until the next corner. Stuck? Press P to peek under the clouds.</p>
     <button class="peek" id="peekBtn" aria-label="Peek under the clouds"><span class="sun">☀️</span><span>Peek</span></button>
+    <button class="zoom" id="zoomBtn" aria-label="See the whole maze" hidden>🔍</button>
   </div>
 </div>
 
@@ -277,6 +286,7 @@
   const savedEl = document.getElementById('saved');
   const starsEl = document.getElementById('stars');
   const peekBtn = document.getElementById('peekBtn');
+  const zoomBtn = document.getElementById('zoomBtn');
   const musicBtn = document.getElementById('musicBtn');
   const sfxBtn = document.getElementById('sfxBtn');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -612,6 +622,7 @@
     if(!DIRS[d]) return;
     startSound();
     if(state !== 'play') return;
+    if(cam.zoomT > 0){ cam.zoomT = 0; zoomBtn.classList.remove('on'); }
     if(W.busy > 0 || W.push){ return; }
     if(W.moving){
       if(d === REV[W.dir]){
@@ -842,6 +853,68 @@
   }
 
   let size = 600, T = 60, dpr = 1, bgDirty = true;
+
+  // ----- PHONES ONLY: the maze fills the screen, and on big levels a camera follows Whirly -----
+  // iPads and computers: cam.phone is false, the board is the same square as always and nothing moves.
+  const PHONE_Q = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  const FOLLOW_T = 48, MIN_FIT_T = 42;   // squares are 48px when the camera follows; the whole maze is shown if it fits at 42px+
+  const cam = {phone: false, on: false, vw: 600, vh: 600, ox: 0, oy: 0, BT: 60, fitT: 60, fx: 0, fy: 0, z: 1, zoomT: 0, snap: true,
+               safe: {l: 0, t: 0, r: 600, b: 600}};
+  function whirlyFocus(){
+    const u = W.moving ? (W.push ? W.t : ease(W.t)) : 0;
+    return {x: lerp(W.fx, W.tx, u) + 0.5, y: lerp(W.fy, W.ty, u) + 0.5 - 0.35};
+  }
+  // where the maze's top-left corner goes on one axis: centred in the safe area if it fits, otherwise centred on Whirly
+  // but never pulled further in than the edge of the safe area (the grass and trees fill the rest)
+  function camAxis(lo, hi, tile, pos){
+    const M = S*tile;
+    if(M <= hi - lo) return lo + (hi - lo - M)/2;
+    return clamp((lo + hi)/2 - pos*tile, hi - M, lo);
+  }
+  function updateCam(dt){
+    if(!cam.phone){ T = size/S; cam.ox = 0; cam.oy = 0; return; }
+    const sf = cam.safe, ft = cam.fitT;
+    const wox = sf.l + (sf.r - sf.l - S*ft)/2, woy = sf.t + (sf.b - sf.t - S*ft)/2;   // the whole maze
+    if(!cam.on){ T = ft; cam.ox = wox; cam.oy = woy; return; }
+    const p = whirlyFocus();
+    const tx = camAxis(sf.l, sf.r, cam.BT, p.x), ty = camAxis(sf.t, sf.b, cam.BT, p.y);
+    if(cam.zoomT > 0){ cam.zoomT -= dt; if(cam.zoomT <= 0) zoomBtn.classList.remove('on'); }
+    const zt = cam.zoomT > 0 || state === 'menu' || state === 'party' || state === 'done' ? 1 : 0;
+    if(cam.snap){ cam.fx = tx; cam.fy = ty; cam.snap = false; }
+    else { const k = Math.min(1, dt*5); cam.fx += (tx - cam.fx)*k; cam.fy += (ty - cam.fy)*k; }
+    cam.z = reduced ? zt : cam.z + (zt - cam.z)*Math.min(1, dt*3.2);
+    if(Math.abs(cam.z - zt) < 0.002) cam.z = zt;
+    const e = cam.z*cam.z*(3 - 2*cam.z);
+    T = lerp(cam.BT, ft, e);
+    cam.ox = Math.round(lerp(cam.fx, wox, e)*dpr)/dpr; cam.oy = Math.round(lerp(cam.fy, woy, e)*dpr)/dpr;
+  }
+  function showWhole(secs){
+    if(!cam.on || state !== 'play') return;
+    startSound();
+    cam.zoomT = secs || 3; zoomBtn.classList.add('on');
+  }
+  zoomBtn.addEventListener('click', () => { showWhole(3); zoomBtn.blur(); });
+  if(PHONE_Q.addEventListener) PHONE_Q.addEventListener('change', () => resize());
+
+  // grass, trees and flowers all around the maze (phones only, where the maze doesn't fill the screen)
+  function drawScenery(c){
+    const th = THEMES[L.theme];
+    c.setTransform(1, 0, 0, 1, 0, 0);
+    c.fillStyle = th.grass; c.fillRect(0, 0, cvs.width, cvs.height);
+    c.setTransform(dpr*T, 0, 0, dpr*T, dpr*cam.ox, dpr*cam.oy);
+    const x0 = Math.floor(-cam.ox/T) - 1, x1 = Math.ceil((cam.vw - cam.ox)/T) + 1;
+    const y0 = Math.floor(-cam.oy/T) - 1, y1 = Math.ceil((cam.vh - cam.oy)/T) + 1;
+    const inside = (x, y) => x >= 0 && y >= 0 && x < S && y < S;
+    c.fillStyle = th.grass2;
+    for(let y = y0; y <= y1; y++) for(let x = x0; x <= x1; x++) if(!inside(x, y) && ((x + y) % 2 + 2) % 2) c.fillRect(x, y, 1, 1);
+    // a soft shadow around the maze so it stands out from the grass around it
+    c.fillStyle = 'rgba(30,70,40,0.16)'; rr(c, -0.18, -0.12, S + 0.36, S + 0.36, 0.4); c.fill();
+    const kinds = th.walls.filter(k => k !== 'house').concat(['tree', 'bush']);
+    for(let y = y0; y <= y1; y++) for(let x = x0; x <= x1; x++){
+      if(inside(x, y) || hash(x*1.7 + 41, y*1.3 - 23) > 0.34) continue;
+      drawWall(c, kinds[Math.floor(hash(x - 7, y + 13)*kinds.length)], x, y);
+    }
+  }
   const bg = document.createElement('canvas'), bgc = bg.getContext('2d');
 
   // ----- the town, park and hills (drawn once per level, then reused) -----
@@ -852,6 +925,7 @@
   function drawBackground(){
     const c = bgc, th = THEMES[L.theme];
     bg.width = Math.round(size*dpr); bg.height = Math.round(size*dpr);
+    const T = cam.BT;   // the picture is drawn once at the biggest square size used, then scaled
     c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);   // draw in squares: 1 unit = 1 square
     // grass everywhere, with a soft checker
     c.fillStyle = th.grass; c.fillRect(0, 0, S, S);
@@ -1247,7 +1321,13 @@
     // a pale blue shade and a white top on every puff, which makes the round puffy bumps
     const layers = [['rgba(60,90,130,0.16)', 0.16, 1.05], ['#F4F8FF', 0, 1.0], ['#DCE7F7', 0.05, 0.78], ['#FFFFFF', -0.03, 0.66]];
     const puffs = [];
-    for(let y = 0; y < S; y++) for(let x = 0; x < S; x++){
+    // phones with the camera: skip the squares that are off the screen
+    let vx0 = 0, vx1 = S - 1, vy0 = 0, vy1 = S - 1;
+    if(cam.phone){
+      vx0 = Math.max(0, Math.floor(-cam.ox/T) - 1); vx1 = Math.min(S - 1, Math.ceil((cam.vw - cam.ox)/T));
+      vy0 = Math.max(0, Math.floor(-cam.oy/T) - 1); vy1 = Math.min(S - 1, Math.ceil((cam.vh - cam.oy)/T));
+    }
+    for(let y = vy0; y <= vy1; y++) for(let x = vx0; x <= vx1; x++){
       const a = fogV[y][x]*(1 - peekV);
       if(a < 0.02) continue;
       // 3 puffs per square, each a different size and in a different spot, so the clouds look natural
@@ -1354,11 +1434,12 @@
     c.save(); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.globalAlpha = Math.max(0, a);
     c.font = fsz + 'px "Chewy","Comic Sans MS",cursive';
     const tw = c.measureText(b.text).width + fsz*0.9, th = fsz*1.45, tip = fsz*0.45;
-    const x = clamp(p.x*T, tw/2 + 4, size - tw/2 - 4), y = Math.max(th + 4, p.y*T - T*0.35);
+    const sx = cam.ox + p.x*T, sy = cam.oy + p.y*T;
+    const x = clamp(sx, tw/2 + 4, (cam.phone ? cam.vw : size) - tw/2 - 4), y = Math.max(th + 4, sy - T*0.35);
     c.translate(x, y); c.scale(s, s);
     c.fillStyle = b.call ? '#FFF6D6' : '#FFFFFF'; c.strokeStyle = b.call ? '#F2A922' : '#F2559B'; c.lineWidth = 2;
     rr(c, -tw/2, -th, tw, th, th*0.45); c.fill(); c.stroke();
-    const px = clamp(p.x*T - x, -tw/2 + 12, tw/2 - 12);
+    const px = clamp(sx - x, -tw/2 + 12, tw/2 - 12);
     c.beginPath(); c.moveTo(px - tip*0.6, -1); c.lineTo(px, tip); c.lineTo(px + tip*0.6, -1); c.closePath(); c.fill();
     c.fillStyle = '#23413B'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.fillText(b.text, 0, -th/2 + 1);
@@ -1378,10 +1459,15 @@
   function draw(){
     if(!L) return;
     if(bgDirty){ drawBackground(); bgDirty = false; }
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.drawImage(bg, 0, 0);
     const c = ctx;
-    c.setTransform(dpr*T, 0, 0, dpr*T, 0, 0);
+    if(!cam.phone){ ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(bg, 0, 0); }
+    else {
+      drawScenery(c);
+      c.setTransform(dpr*T, 0, 0, dpr*T, dpr*cam.ox, dpr*cam.oy);
+      c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+      c.drawImage(bg, 0, 0, S, S);
+    }
+    c.setTransform(dpr*T, 0, 0, dpr*T, dpr*cam.ox, dpr*cam.oy);
     // things on the ground
     winds.forEach(w => drawWind(c, w));
     gates.forEach(g => drawGate(c, g));
@@ -1462,7 +1548,8 @@
   // the big picnic party at the end of Big Sky Rescue: everyone dancing!
   function drawFinale(c){
     const u = Math.min(1, finale/0.8);
-    c.fillStyle = 'rgba(255,240,248,' + (0.85*u).toFixed(3) + ')'; c.fillRect(0, 0, S, S);
+    c.fillStyle = 'rgba(255,240,248,' + (0.85*u).toFixed(3) + ')';
+    if(cam.phone) c.fillRect(-cam.ox/T, -cam.oy/T, cam.vw/T, cam.vh/T); else c.fillRect(0, 0, S, S);
     if(u < 0.3) return;
     c.save(); c.globalAlpha = Math.min(1, (u - 0.3)/0.4);
     const cx = S/2, base = S*0.78, sc = S/7;
@@ -1484,7 +1571,7 @@
       c.restore();
     });
     drawWhirlyAt(c, cx, base - sc*2.1 + (reduced ? 0 : Math.sin(clock*2.4)*sc*0.08), sc*0.0075, {face: Math.cos(clock*0.8) > 0 ? 1 : -1, tilt: 0, rotor: W.rotor, cheer: true, look: {x: 0, y: 1}, spin: -1});
-    c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    c.setTransform(dpr, 0, 0, dpr, dpr*cam.ox, dpr*cam.oy);
     c.font = Math.round(sc*T*0.55) + 'px "Chewy","Comic Sans MS",cursive'; c.textAlign = 'center'; c.textBaseline = 'middle';
     c.lineWidth = sc*T*0.1; c.lineJoin = 'round'; c.strokeStyle = '#FFFFFF'; c.strokeText("Everyone's safe!", cx*T, sc*T*0.7);
     c.fillStyle = '#F2559B'; c.fillText("Everyone's safe!", cx*T, sc*T*0.7);
@@ -1495,9 +1582,30 @@
     const r = board.getBoundingClientRect();
     if(r.width < 2) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2.5);
-    size = r.width;
-    cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
-    T = size/S; bgDirty = true;
+    cam.phone = PHONE_Q.matches;
+    if(!cam.phone){
+      // iPads and computers: the same square board as always
+      cam.on = false;
+      size = r.width;
+      cvs.width = Math.round(size*dpr); cvs.height = Math.round(size*dpr);
+      T = size/S; cam.BT = T; cam.vw = cam.vh = size;
+    } else {
+      // phones: the canvas covers the whole screen. The "safe area" is the part not covered by the corner
+      // buttons and the arrows - the maze (and Whirly) are kept inside it.
+      const vw = r.width, vh = r.height, land = vw > vh;
+      cam.vw = vw; cam.vh = vh;
+      cvs.width = Math.round(vw*dpr); cvs.height = Math.round(vh*dpr);
+      cam.safe = land ? {l: 196, t: 4, r: vw - 110, b: vh - 4} : {l: 4, t: 54, r: vw - 4, b: vh - 150};
+      cam.fitT = Math.max(8, Math.min(cam.safe.r - cam.safe.l, cam.safe.b - cam.safe.t)/S);
+      cam.on = cam.fitT < MIN_FIT_T;
+      cam.BT = cam.on ? Math.max(FOLLOW_T, cam.fitT) : cam.fitT;
+      size = S*cam.BT;
+      cam.snap = true;
+    }
+    zoomBtn.hidden = !cam.on;
+    if(!cam.on){ cam.zoomT = 0; zoomBtn.classList.remove('on'); }
+    bgDirty = true;
+    updateCam(0);
   }
   addEventListener('resize', resize);
   if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
@@ -1524,8 +1632,8 @@
   }
   function el(tag, cls, html){ const e = document.createElement(tag); if(cls) e.className = cls; if(html !== undefined) e.innerHTML = html; return e; }
   let mainBtn = null;
-  function openPanel(){ overlay.hidden = false; peekBtn.disabled = true; held = []; }
-  function closePanel(){ overlay.hidden = true; panel.innerHTML = ''; mainBtn = null; peekBtn.disabled = false; }
+  function openPanel(){ overlay.hidden = false; peekBtn.disabled = true; zoomBtn.disabled = true; held = []; }
+  function closePanel(){ overlay.hidden = true; panel.innerHTML = ''; mainBtn = null; peekBtn.disabled = false; zoomBtn.disabled = false; }
 
   function showLevels(first){
     if(state === 'play') state = 'paused';
@@ -1585,6 +1693,7 @@
     resize();
     state = 'play';
     closePanel();
+    if(cam.on){ cam.z = 1; cam.zoomT = 1.5; }   // phones: a quick look at the whole maze, then glide in to Whirly
     say(() => wPos(), i === 0 ? "Let's find Dilly!" : L.name + '!', 2);
     if(i === 2) setTimeout(() => { if(state === 'play' && levelI === 2) say(() => wPos(), 'Pop a balloon to open its gate!', 2.6); }, 2300);
     if(i === 3) setTimeout(() => { if(state === 'play' && levelI === 3) say(() => wPos(), 'Wind puffs give you a push!', 2.6); }, 2300);
@@ -1639,7 +1748,7 @@
     if(!sw || e.pointerId !== sw.id) return;
     if(!sw.moved && state === 'play'){
       const r = board.getBoundingClientRect();
-      const tx = (e.clientX - r.left)/T, ty = (e.clientY - r.top)/T;
+      const tx = (e.clientX - r.left - cam.ox)/T, ty = (e.clientY - r.top - cam.oy)/T;
       const wx = W.fx + 0.5, wy = W.fy + 0.5 - 0.3;
       const dx = tx - wx, dy = ty - wy;
       if(Math.hypot(dx, dy) > 0.45) press(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
@@ -1653,6 +1762,7 @@
   function loop(t){
     const dt = Math.min(0.05, (t - last)/1000)*timeScale; last = t;
     update(dt);
+    updateCam(Math.min(0.05, dt));
     draw();
     requestAnimationFrame(loop);
   }
@@ -1701,7 +1811,10 @@
   if(TEST) window.__wcm = {
     get state(){ return {state, level: levelI + 1, name: L.name, x: W.x, y: W.y, moving: W.moving, busy: W.busy > 0, carrying: W.carry && W.carry.kind,
       home: friendsHome(), friends: friends.length, stars: starsGot + '/' + stars.length, rating: rating(), panel: !overlay.hidden,
-      cleared: fog.flat().filter(v => !v).length + '/' + S*S, gatesOpen: gates.filter(g => g.open).length + '/' + gates.length, prog: JSON.parse(JSON.stringify(prog))}; },
+      cleared: fog.flat().filter(v => !v).length + '/' + S*S, gatesOpen: gates.filter(g => g.open).length + '/' + gates.length, prog: JSON.parse(JSON.stringify(prog)),
+      cam: (() => { const p = whirlyFocus(); return {on: cam.on, phone: cam.phone, tile: +T.toFixed(2), followTile: +cam.BT.toFixed(2), fitTile: +cam.fitT.toFixed(2), zoom: +cam.z.toFixed(3),
+        whirly: {x: Math.round(cam.ox + p.x*T), y: Math.round(cam.oy + p.y*T)}, view: {w: cam.vw, h: cam.vh}, safe: Object.assign({}, cam.safe)}; })()}; },
+    wholeMaze(secs){ showWhole(secs); },
     start(n){ startLevel(n - 1); },
     press(d){ press(d); },
     autoplay(on){ auto = on !== false; },

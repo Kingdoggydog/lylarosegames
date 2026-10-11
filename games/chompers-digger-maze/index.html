@@ -131,8 +131,9 @@
     .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
     /* the stage covers the screen (inside the safe area); the maze sits in the middle of the space left over */
     .stage{position:fixed;z-index:0;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);
-      box-sizing:border-box;padding:52px 6px 134px}
-    .board{border-radius:14px}
+      box-sizing:border-box;padding:0}
+    /* the maze canvas covers the whole screen; the game zooms in and follows the digger on big levels */
+    .board{border-radius:0;box-shadow:none;background:#E7C27C}
     /* back, levels, music and sound: small round buttons in the top-left corner */
     .back,#lvlBtn,#musicBtn,#sfxBtn{position:fixed;z-index:3;top:calc(6px + env(safe-area-inset-top,0px));width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;
       display:grid;place-items:center;font-size:19px;background:#FFFFFFC7;box-shadow:0 2px 8px #2F235026;text-decoration:none}
@@ -148,14 +149,23 @@
     /* the arrows by the left thumb, the hint hard hat by the right thumb */
     .pad{position:fixed;z-index:3;left:calc(8px + env(safe-area-inset-left,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));
       grid-template-columns:repeat(3,58px);grid-template-rows:repeat(2,58px);gap:5px}
-    .pad button{background:#E8A200E6;font-size:24px}
+    .pad button{background:#E8A200B8;font-size:24px}
     #hintBtn{position:fixed;z-index:3;right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(14px + env(safe-area-inset-bottom,0px));
-      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 4px 0 #E8A200,0 4px 12px #2F235033}
+      width:66px;height:66px;padding:0;border-radius:50%;justify-content:center;background:#FFD43BD0;box-shadow:0 4px 0 #E8A200C0,0 4px 12px #2F235033}
     #hintBtn svg{width:44px;height:44px}
-    /* sideways: maze in the middle, buttons and arrows in the left gap, collected things and hint in the right gap */
+    /* "see the whole maze" (only shown when the game is zoomed in) */
+    #seeAllBtn{position:fixed;z-index:3;right:calc(88px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));
+      width:56px;height:56px;min-width:56px;min-height:56px;padding:0;border-radius:50%;display:grid;place-items:center;
+      background:#FFFFFFC7;box-shadow:0 3px 0 #D9B57A,0 3px 10px #2F235026}
+    #seeAllBtn svg{width:36px;height:36px;display:block}
+    #seeAllBtn:active,#seeAllBtn.on{transform:translateY(2px);box-shadow:0 1px 0 #D9B57A}
+    #seeAllBtn.on{background:#FFE08AE0}
+    /* sideways: buttons and arrows on the left, collected things and hint on the right */
     @media (orientation: landscape) {
-      .stage{padding:6px 92px 6px 198px}
       .stats{flex-direction:column;align-items:flex-end;top:calc(8px + env(safe-area-inset-top,0px))}
+      #seeAllBtn{right:calc(15px + env(safe-area-inset-right,0px));bottom:calc(94px + env(safe-area-inset-bottom,0px))}
+      /* leave a little room at the sides of the panels for the grown-ups "i" on small phones */
+      .panel{max-width:min(620px, calc(100vw - 128px))}
     }
   }
 </style>
@@ -266,6 +276,7 @@
     <p class="help">Drive with the arrow keys. Bump into <b>brown dirt</b> to dig a shortcut! Grey rocks and fences are too hard to dig.</p>
     <div class="btns">
       <button id="hintBtn" aria-label="Hint: show me the way"><svg viewBox="0 0 48 48" aria-hidden="true"><g stroke="#2F2350" stroke-width="3" stroke-linejoin="round"><path d="M8 32 A16 15 0 0 1 40 32 Z" fill="#FFD43B"/><rect x="4" y="30" width="40" height="7" rx="3.5" fill="#FFC21A"/><path d="M24 17 v13" stroke="#E8A200" stroke-width="4" stroke-linecap="round"/></g><ellipse cx="17" cy="23" rx="4" ry="2.2" fill="#fff" opacity=".7" transform="rotate(-35 17 23)"/><path d="M40 4 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FF4F9A"/><path d="M8 6 l1.3 3 3 1.3 -3 1.3 -1.3 3 -1.3 -3 -3 -1.3 3 -1.3z" fill="#7B4FD6"/></svg><span class="lbl">Hint</span></button>
+      <button id="seeAllBtn" aria-label="See the whole maze" hidden><svg viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="5" width="22" height="22" rx="4" fill="#F8E2A6" stroke="#6B421C" stroke-width="2.5"/><path d="M9 11h7v5h5M9 21h6" stroke="#FF7A1A" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="24" cy="23" r="9" fill="#FFFFFFB0" stroke="#2F2350" stroke-width="3.2"/><path d="M30.5 29.5l6 6" stroke="#2F2350" stroke-width="4.5" stroke-linecap="round"/><path d="M20 20.5a5 5 0 0 1 5-2.5" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round"/></svg></button>
       <button class="ghost" id="lvlBtn" aria-label="Pick a level">🗺️<span class="lbl"> Levels</span></button>
       <button class="ghost" id="musicBtn" aria-pressed="true">🎵<span class="lbl"> Music on</span></button>
       <button class="ghost" id="sfxBtn" aria-pressed="true">🔊<span class="lbl"> Sounds on</span></button>
@@ -799,13 +810,25 @@
 
   // ===== LAYOUT (works out how big the maze can be on this screen) =====
   let lastSize = '';
+  // phones: the maze canvas covers the whole screen. If the whole maze can't be shown with big enough squares,
+  // the view zooms in and follows the digger (with a "see the whole maze" button)
+  const phoneMQ = matchMedia('(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)');
+  const MIN_TILE = 44, CAM_TILE = 48;
+  const seeAllBtn = $('seeAllBtn');
+  const cam = {s: 40, cx: 0, cy: 0, ready: false, ovT: 0};
+  // the parts of the screen the buttons float over (the digger is kept out of them)
+  // (upright, the top strip holds the corner buttons with the grown-ups "i" just under them)
+  function phoneInsets(W, H){ return W > H ? {l: 196, r: 86, t: 6, b: 6} : {l: 4, r: 4, t: 100, b: 134}; }
   function layout(force){
+    const phone = phoneMQ.matches;
     const st = getComputedStyle(stage);
     const pw = stage.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
     const ph = stage.clientHeight - parseFloat(st.paddingTop) - parseFloat(st.paddingBottom);
-    const key = pw + 'x' + ph + ':' + NX + ':' + (window.devicePixelRatio || 1);
+    const key = pw + 'x' + ph + ':' + NX + ':' + (window.devicePixelRatio || 1) + ':' + phone;
     if(!force && key === lastSize) return;
     lastSize = key;
+    if(phone){ layoutPhone(Math.floor(pw), Math.floor(ph)); return; }
+    seeAllBtn.hidden = true;
     // Tipper's parking bay goes beside the maze on wide screens, underneath it on tall ones
     const cR = Math.min(pw/(NX + BAY + PAD*2), ph/(NY + PAD*2));
     const cB = Math.min(pw/(NX + PAD*2), ph/(NY + BAY + PAD*2));
@@ -818,8 +841,58 @@
     board.style.width = W + 'px'; board.style.height = H + 'px';
     cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
   }
+  function layoutPhone(W, H){
+    const ins = phoneInsets(W, H), sw = W - ins.l - ins.r, sh = H - ins.t - ins.b;
+    const cR = Math.min(sw/(NX + BAY + PAD*2), sh/(NY + PAD*2));
+    const cB = Math.min(sw/(NX + PAD*2), sh/(NY + BAY + PAD*2));
+    const bay = cR >= cB*0.97 ? 'right' : 'bottom';
+    const fit = Math.max(6, Math.floor((bay === 'right' ? cR : cB)*4)/4);
+    const on = fit < MIN_TILE;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    L = {cs: fit, ox: 0, oy: 0, bay, W, H, dpr, phone: true, cam: on, fit, tile: on ? CAM_TILE : fit, ins};
+    board.style.width = W + 'px'; board.style.height = H + 'px';
+    cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
+    seeAllBtn.hidden = !on;
+    if(!on) cam.ovT = 0;
+    cam.ready = false; updateCam(0);
+  }
+  // where the camera wants to be: {s: square size, cx, cy: the maze point in the middle of the free part of the screen}
+  function camTarget(){
+    const ins = L.ins, sw = L.W - ins.l - ins.r, sh = L.H - ins.t - ins.b;
+    const xL = -PAD, yT = -PAD, xR = NX + PAD + (L.bay === 'right' ? BAY : 0), yB = NY + PAD + (L.bay === 'bottom' ? BAY : 0);
+    if(!L.cam || cam.ovT > 0) return {s: L.fit, cx: (xL + xR)/2, cy: (yT + yB)/2};
+    const s = L.tile, hx = sw/2/s, hy = sh/2/s;
+    let fx = dig.fx + 0.5, fy = dig.fy + 0.5;
+    if(phase === 'end'){ const p = tipperSpot(); fx = (fx + p.x)/2; fy = (fy + p.y - 0.5)/2; }
+    return {s,
+      cx: xR - xL <= hx*2 ? (xL + xR)/2 : clamp(fx, xL + hx, xR - hx),
+      cy: yB - yT <= hy*2 ? (yT + yB)/2 : clamp(fy, yT + hy, yB - hy)};
+  }
+  function updateCam(dt){
+    if(!L.phone) return;
+    if(cam.ovT > 0 && overlay.hidden && phase === 'play'){ cam.ovT -= dt; if(cam.ovT <= 0){ cam.ovT = 0; seeAllBtn.classList.remove('on'); } }
+    const T = camTarget();
+    if(!cam.ready || reduced){ cam.s = T.s; cam.cx = T.cx; cam.cy = T.cy; cam.ready = true; }
+    else {
+      const k = 1 - Math.exp(-dt*4.5);
+      cam.s = Math.exp(lerp(Math.log(cam.s), Math.log(T.s), k));
+      cam.cx = lerp(cam.cx, T.cx, k); cam.cy = lerp(cam.cy, T.cy, k);
+      if(Math.abs(cam.s - T.s) < 0.01) cam.s = T.s;
+    }
+    const ins = L.ins;
+    L.cs = cam.s;
+    L.ox = ins.l + (L.W - ins.l - ins.r)/2 - cam.cx*cam.s;
+    L.oy = ins.t + (L.H - ins.t - ins.b)/2 - cam.cy*cam.s;
+  }
+  function seeAll(on){
+    if(!L.phone || !L.cam) return;
+    cam.ovT = (on == null ? cam.ovT <= 0 : on) ? 3 : 0;
+    seeAllBtn.classList.toggle('on', cam.ovT > 0);
+  }
+  seeAllBtn.addEventListener('click', () => { wake(); seeAll(); });
   if(window.ResizeObserver) new ResizeObserver(() => layout()).observe(stage);
   addEventListener('resize', () => layout());
+  if(phoneMQ.addEventListener) phoneMQ.addEventListener('change', () => layout(true));
 
   // where things are, in maze squares (0,0 = top-left corner of the maze)
   function tipperSpot(){
@@ -990,7 +1063,14 @@
     updateHud();
     lennySay(lv.say, 4);
     lenny.cheerT = 1;
+    // phones, zoomed in: show the whole maze for a moment, then glide in to the digger
+    cam.ovT = L.phone && L.cam ? 1.5 : 0; cam.ready = false; seeAllBtn.classList.remove('on');
+    updateCam(0);
+    aboutToCorner();
   }
+  // phones: once the panel has gone, ask site.js to put the grown-ups "i" back in its corner spot under the back button
+  // (the maze leaves that strip free); while a panel is showing it may have moved lower down
+  function aboutToCorner(){ if(L.phone) setTimeout(() => { if(overlay.hidden && window.LR && LR.placeAbout) LR.placeAbout(); }, 80); }
   function lennySay(text, dur){ lenny.say = text; lenny.sayT = dur || 2.6; }
 
   // ===== DRIVING =====
@@ -1005,6 +1085,7 @@
   function request(d){
     if(phase !== 'play') return;
     wake(); startMusic();
+    if(cam.ovT > 0) seeAll(false);
     if(dig.move){
       // turning right round: go straight back the way we came
       if(d === (dig.move.d + 2) % 4){
@@ -1267,7 +1348,7 @@
     else if(go === 'bones') showBones('menu');
     else if(go === 'bones-end') showBones('end');
     else if(go === 'end') showEnd();
-    else if(go === 'resume'){ overlay.hidden = true; phase = 'play'; }
+    else if(go === 'resume'){ overlay.hidden = true; phase = 'play'; aboutToCorner(); }
   });
   $('lvlBtn').addEventListener('click', () => {
     wake(); startMusic(); $('lvlBtn').blur();
@@ -1477,6 +1558,7 @@
     g.fillStyle = lv.edge; g.fillRect(0, 0, Lo.W, Lo.H);
     // from here on, 1 unit = 1 maze square
     g.setTransform(dpr*cs, 0, 0, dpr*cs, dpr*Lo.ox, dpr*Lo.oy);
+    if(Lo.phone) scenery(g, Lo);
     const lw = Math.max(0.03, 1.6/cs);
     // the parking bay: a little road where Tipper waits
     g.fillStyle = '#B9B2A7';
@@ -1637,20 +1719,25 @@
     const right = Lo.bay === 'right';
     let bx = right ? lx - cs*0.5 - bw : lx + cs*0.5;
     let by = hy - bh/2;
-    bx = clamp(bx, 6, Lo.W - bw - 6); by = clamp(by, 6, Lo.H - bh - 6);
+    // (on phones the bubble stays in the part of the screen the buttons don't cover)
+    const ins = Lo.phone ? Lo.ins : {l: 0, r: 0, t: 0, b: 0};
+    bx = clamp(bx, ins.l + 6, Lo.W - ins.r - bw - 6); by = clamp(by, ins.t + 6, Lo.H - ins.b - bh - 6);
     g.globalAlpha = a;
     g.fillStyle = '#fff'; g.strokeStyle = O; g.lineWidth = 2.5; g.lineJoin = 'round';
     const ty = clamp(hy, by + 10, by + bh - 10);
     const ex = right ? bx + bw : bx, tipX = right ? lx - cs*0.3 : lx + cs*0.3;
-    g.beginPath(); g.moveTo(ex, ty - 7); g.lineTo(tipX, ty + 4); g.lineTo(ex, ty + 6); g.closePath(); g.fill(); g.stroke();
+    // the tail only when Lenny is right beside the bubble (when zoomed in he may be off the screen)
+    const tail = !Lo.phone || (Math.abs(tipX - ex) < cs*0.9 && hy > by - cs*0.6 && hy < by + bh + cs*0.6);
+    if(tail){ g.beginPath(); g.moveTo(ex, ty - 7); g.lineTo(tipX, ty + 4); g.lineTo(ex, ty + 6); g.closePath(); g.fill(); g.stroke(); }
     rr(g, bx, by, bw, bh, 12); g.fill(); g.stroke();
-    g.fillRect(right ? ex - 4 : ex + 1, ty - 5, 3, 10);
+    if(tail) g.fillRect(right ? ex - 4 : ex + 1, ty - 5, 3, 10);
     g.fillStyle = O; g.textAlign = 'center'; g.textBaseline = 'middle';
     lines.forEach((l, i) => g.fillText(l, bx + bw/2, by + 7 + fs*0.58 + i*fs*1.15));
     g.globalAlpha = 1;
   }
   function drawTheDigger(g, poster){
-    const s = (posterSpr || (L.cs < 42 ? 1.62 : 1.42))/380;
+    // (on phones the size changes smoothly, as the view zooms in and out)
+    const s = (posterSpr || (L.phone ? lerp(1.62, 1.42, clamp((L.cs - 38)/8, 0, 1)) : L.cs < 42 ? 1.62 : 1.42))/380;
     let bx = 0, by = 0;
     if(dig.bumpT > 0 && !reduced){ const k = Math.sin(dig.bumpT*40)*0.06*dig.bumpT/0.35; bx = DX[dig.bumpDir]*k; by = DY[dig.bumpDir]*k; }
     const cx = dig.fx + 0.5 + bx, cy = dig.fy + 0.5 + by;
@@ -1673,6 +1760,45 @@
     const bounce = dig.move && !reduced ? Math.sin(clock*30)*2 : 0;
     drawDigger(g, {reach, curl, lift, load, bounce, tread: dig.tread*dig.face, happy: dig.happyT > 0 || phase === 'end', open, blink: dig.blink > 0, moving: !!dig.move, lookY: dig.dir === 2 ? 3 : dig.dir === 0 ? -1 : 1});
     g.restore();
+  }
+  // phones: the building site ground all round the maze (pebbles, grass, dirt heaps and the odd traffic cone),
+  // drawn in maze squares so it moves with the view
+  function scenery(g, Lo){
+    const cs = Lo.cs;
+    const x0 = Math.floor(-Lo.ox/cs) - 1, x1 = Math.ceil((Lo.W - Lo.ox)/cs) + 1;
+    const y0 = Math.floor(-Lo.oy/cs) - 1, y1 = Math.ceil((Lo.H - Lo.oy)/cs) + 1;
+    const bx1 = NX + (Lo.bay === 'right' ? BAY : 0), by1 = NY + (Lo.bay === 'bottom' ? BAY : 0);
+    for(let j = y0; j < y1; j++) for(let i = x0; i < x1; i++){
+      if(i >= 0 && j >= 0 && i < bx1 && j < by1) continue;          // the maze and Tipper's road cover these
+      let h = Math.imul(i*73856093 ^ j*19349663 ^ level*83492791, 2654435761) >>> 0;
+      const R = () => { h = Math.imul(h ^ h >>> 15, 2246822519) >>> 0; h = Math.imul(h ^ h >>> 13, 3266489917) >>> 0; h = (h ^ h >>> 16) >>> 0; return h/4294967296; };
+      if((i + j) & 1){ g.fillStyle = 'rgba(120,80,40,0.07)'; g.fillRect(i, j, 1, 1); }
+      for(let k = 0; k < 2; k++){ g.fillStyle = 'rgba(150,110,70,0.3)'; ell(g, i + R(), j + R(), 0.04 + R()*0.05, 0.03 + R()*0.03, R()*3); g.fill(); }
+      const kind = R(), px = i + 0.25 + R()*0.5, py = j + 0.3 + R()*0.45;
+      const nearMaze = i >= -1 && j >= -1 && i <= bx1 && j <= by1;   // keep the squares next to the fence tidy
+      if(kind < 0.18){
+        g.strokeStyle = 'rgba(90,150,60,0.6)'; g.lineWidth = 0.03;
+        for(let t = -1; t <= 1; t++) line(g, px, py, px + t*0.07, py - 0.14 + Math.abs(t)*0.04);
+      } else if(kind < 0.26 && !nearMaze){
+        // a little dirt heap
+        g.fillStyle = 'rgba(70,45,20,0.18)'; ell(g, px + 0.03, py + 0.08, 0.3, 0.1); g.fill();
+        g.fillStyle = '#A56B3B'; g.strokeStyle = '#5E3A1E'; g.lineWidth = 0.035;
+        g.beginPath(); g.moveTo(px - 0.3, py + 0.08); g.quadraticCurveTo(px - 0.12, py - 0.3, px + 0.02, py - 0.24); g.quadraticCurveTo(px + 0.2, py - 0.22, px + 0.3, py + 0.08); g.closePath(); g.fill(); g.stroke();
+        g.fillStyle = '#C58A52'; ell(g, px - 0.08, py - 0.12, 0.08, 0.04, -0.3); g.fill();
+      } else if(kind < 0.31 && !nearMaze){
+        // a traffic cone
+        g.fillStyle = 'rgba(70,45,20,0.18)'; ell(g, px + 0.02, py + 0.06, 0.2, 0.06); g.fill();
+        g.lineWidth = 0.03; g.strokeStyle = O;
+        g.fillStyle = '#FF7A1A'; rr(g, px - 0.19, py - 0.02, 0.38, 0.08, 0.02); g.fill(); g.stroke();
+        poly(g, [[px - 0.12, py - 0.02], [px - 0.03, py - 0.4], [px + 0.03, py - 0.4], [px + 0.12, py - 0.02]]); g.fill(); g.stroke();
+        g.fillStyle = '#fff'; poly(g, [[px - 0.085, py - 0.16], [px - 0.055, py - 0.27], [px + 0.055, py - 0.27], [px + 0.085, py - 0.16]]); g.fill();
+      } else if(kind < 0.36 && !nearMaze){
+        // a grey rock
+        g.fillStyle = 'rgba(40,40,60,0.18)'; ell(g, px + 0.03, py + 0.06, 0.16, 0.08); g.fill();
+        g.fillStyle = '#9AA0AE'; g.strokeStyle = '#4A4E5E'; g.lineWidth = 0.035; ell(g, px, py - 0.04, 0.16, 0.12); g.fill(); g.stroke();
+        g.fillStyle = '#C3C8D2'; ell(g, px - 0.05, py - 0.08, 0.06, 0.035, -0.3); g.fill();
+      }
+    }
   }
   // one wall, along the edge from (x1,y1) to (x2,y2)
   function drawWall(g, type, x1, y1, x2, y2, seed){
@@ -1763,10 +1889,11 @@
   }
 
   // ===== MAIN LOOP =====
-  let lastT = performance.now();
+  let lastT = performance.now(), camT = lastT;
   function loop(t){
     const dt = Math.min(0.05, (t - lastT)/1000)*timeScale; lastT = t;
     if(phase === 'play' || phase === 'end' || phase === 'menu' || phase === 'paused') update(phase === 'paused' ? 0 : dt);
+    updateCam(Math.min(0.05, (t - camT)/1000)); camT = t;
     render(ctx, L, null);
     requestAnimationFrame(loop);
   }
@@ -1782,7 +1909,10 @@
   if(TEST) window.__dmz = {
     get state(){ return {level: level + 1, phase, x: dig.x, y: dig.y, moving: !!dig.move, scooping: !!dig.scoop, n: NX, bay: L.bay, cell: L.cs, board: [L.W, L.H], digs,
       items: items.map(i => ({kind: i.kind, x: i.x, y: i.y, got: i.got})), button: button && {x: button.x, y: button.y, pressed: button.pressed}, gateOpen,
-      overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)), tracks: tracks.length, hint: !!hint}; },
+      overlay: !overlay.hidden, prog: JSON.parse(JSON.stringify(prog)), tracks: tracks.length, hint: !!hint,
+      cam: {phone: !!L.phone, on: !!L.cam, tile: L.phone ? L.tile : L.cs, fit: L.phone ? L.fit : L.cs, cs: L.cs, overview: cam.ovT > 0, ox: L.ox, oy: L.oy, W: L.W, H: L.H, ins: L.ins || null},
+      digScreen: [L.ox + (dig.fx + 0.5)*L.cs, L.oy + (dig.fy + 0.5)*L.cs]}; },
+    seeAll(on){ seeAll(on); },
     start(n, seed){ startLevel(n - 1, seed); },
     wall(x, y, d){ return wallType(x, y, d); },
     // the directions (0 up, 1 right, 2 down, 3 left) to drive from where the digger is to a square, without digging
