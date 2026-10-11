@@ -266,3 +266,12 @@ p.halo(110,70,52)
 p.halo(524,258,40); p.halo(708,316,44); p.halo(676,266,34); p.halo(740,392,34); p.halo(462,384,34)
 p.star(470,248,10,.4); p.star(760,298,10,1.4); p.star(200,330,9,2.0); p.star(380,30,8,1.0); p.star(30,190,8,2.4)
 print('pumpkin faces', p.save())
+
+p=Pic('lenny-bubble-pop','little bubbles rising from Lenny\'s wand, the fish wiggling and the butterfly flapping inside their bubbles, and sparkles')
+p.sway_ell(500,200,82,52,deg=5,dur=1.6)
+p.sway_ell(688,377,44,48,deg=7,dur=0.9)
+# small shiny bubbles drifting up from the wand
+for i,(x,y,r,d,dx) in enumerate([(318,372,14,3.2,-20),(330,360,10,2.6,25),(305,368,8,3.6,10),(322,380,12,2.9,40)]):
+    p.add(f'<g class="bub" style="--l:{i*0.8}s;--d:{d}s;--x:{dx}px"><circle cx="{x}" cy="{y}" r="{r}" fill="rgba(255,255,255,.25)" stroke="#9FD8FF" stroke-width="2"/><circle cx="{x-r*0.35}" cy="{y-r*0.35}" r="{max(2,r*0.25)}" fill="#fff"/></g>')
+p.star(448,72,10,.3); p.star(760,250,9,1.3); p.star(320,268,9,2.1); p.star(150,60,8,.9); p.star(600,300,8,1.8)
+print('bubble pop', p.save())
