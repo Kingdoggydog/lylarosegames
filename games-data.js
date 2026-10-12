@@ -317,6 +317,7 @@ const games = [
     emoji: "🫧",
     colour: "#D9F2FF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A bubble pop game for toddlers! Lenny the Lemur blows big shiny bubbles - tap to pop them and find fish, butterflies, bananas and baby lemurs hiding inside.",
     categories: ["animals", "action"],
     controls: "Tap (or Space / Enter)"
