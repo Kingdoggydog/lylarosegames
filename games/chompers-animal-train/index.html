@@ -468,7 +468,10 @@
       ctx.beginPath(); ctx.arc(x, y - w*0.45, w*0.6, Math.PI*0.22, Math.PI*0.78); ctx.stroke();
     }
   }
-  const lift = (o, i) => o.walk ? Math.max(0, Math.sin(o.walk + (i === 0 || i === 3 ? 0 : Math.PI)))*7 : 0;
+  const lift = (o, i) => {
+    if(o.wave && !o.walk && i === 3) return 10 + Math.abs(Math.sin(o.t*9))*8;   // waving: the front foot lifts up and shakes
+    return o.walk ? Math.max(0, Math.sin(o.walk + (i === 0 || i === 3 ? 0 : Math.PI)))*7 : 0;
+  };
   function cheek(x, y, r){ ctx.fillStyle = 'rgba(255,120,170,0.45)'; ell(ctx, x, y, r, r*0.65); ctx.fill(); }
   // a little waving paw (or hoof) beside the head
   function wavePaw(col, x, y, t){
@@ -501,7 +504,6 @@
     if(o.talk > 0.05){ ctx.fillStyle = '#7A2E45'; ell(ctx, 50, -42, 6, 2 + 3*o.talk); ctx.fill(); }
     eye(40, -64, 0.9, o.happy); eye(52, -65, 0.9, o.happy);
     ctx.fillStyle = '#FFD43B'; ctx.strokeStyle = O; ctx.lineWidth = 2; ell(ctx, 38, -38, 6, 6); ctx.fill(); ctx.stroke();
-    if(o.wave) wavePaw('#fff', 64, -60, o.t);
   }
   function drawSheep(o){
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -518,7 +520,6 @@
     eye(37, -46, 0.75, o.happy); eye(44, -45, 0.6, o.happy);
     if(o.talk > 0.05){ ctx.fillStyle = '#FF8FB1'; ell(ctx, 42, -35, 3.5, 2 + 2.5*o.talk); ctx.fill(); }
     else { ctx.fillStyle = '#FFB3C7'; ell(ctx, 42, -36, 3, 2); ctx.fill(); }
-    if(o.wave) wavePaw('#3B3355', 50, -40, o.t);
   }
   function drawPig(o){
     const P = '#FFB3C7', PD = '#FF8FB1';
@@ -539,7 +540,6 @@
     eye(34, -53, 0.85, o.happy); eye(44, -54, 0.75, o.happy);
     mouth(44, -34, 9, o);
     cheek(30, -42, 4.5);
-    if(o.wave) wavePaw(P, 60, -30, o.t);
   }
   function drawDuck(o){
     const Y = o.v === 1 ? '#FFFFFF' : '#FFE066', YD = o.v === 1 ? '#E6E1F0' : '#FFC94D';
@@ -589,7 +589,6 @@
     ctx.fillStyle = BD; ctx.strokeStyle = O; ctx.lineWidth = 2.5;
     const ef = Math.sin(o.t*5)*0.08;
     ell(ctx, 27, -58, 7, 14, 0.35 + ef); ctx.fill(); ctx.stroke();
-    if(o.wave) wavePaw(B, 60, -34, o.t);
   }
   function drawCat(o){
     const C = o.v === 1 ? '#B8B8C8' : '#FFA94D', CD = o.v === 1 ? '#8E8EA4' : '#E8790F';
@@ -612,7 +611,6 @@
     mouth(46, -42, 6, o);
     ctx.strokeStyle = O; ctx.lineWidth = 1.3; line(ctx, 48, -46, 60, -49); line(ctx, 48, -44, 60, -43);
     cheek(36, -46, 3.5);
-    if(o.wave) wavePaw(C, 52, -30, o.t);
   }
   function drawGiraffe(o){
     const Y = '#FFC94D', SP = '#D9822B';
@@ -644,7 +642,6 @@
     mouth(68, -153, 6, o);
     cheek(56, -158, 3.5);
     ctx.restore();
-    if(o.wave) wavePaw(Y, 30, -100, o.t);
   }
   function drawElephant(o){
     const G = '#A9B8CC', GD = '#8C9CB4';
@@ -655,7 +652,7 @@
     // head
     ell(ctx, 46, -76, 28, 27); ctx.fill(); ctx.stroke();
     // trunk (lifts up when trumpeting)
-    const up = clamp(o.talk*1.4, 0, 1) + (o.happy ? 0.6 : 0);
+    const up = clamp(o.talk*1.4 + (o.wave ? 0.55 + Math.sin(o.t*7)*0.35 : 0), 0, 1) + (o.happy ? 0.6 : 0);
     const tx = 82 + up*8, ty = lerp(-28, -96, Math.min(1, up));
     ctx.strokeStyle = O; ctx.lineWidth = 19; ctx.beginPath(); ctx.moveTo(64, -70); ctx.quadraticCurveTo(84, -58 - up*30, tx, ty); ctx.stroke();
     ctx.strokeStyle = G; ctx.lineWidth = 13; ctx.beginPath(); ctx.moveTo(64, -70); ctx.quadraticCurveTo(84, -58 - up*30, tx, ty); ctx.stroke();
@@ -673,7 +670,6 @@
     eye(56, -86, 0.95, o.happy);
     cheek(58, -72, 5);
     if(o.talk > 0.05){ ctx.fillStyle = '#7A2E45'; ell(ctx, 56, -60, 4, 2 + 3*o.talk); ctx.fill(); }
-    if(o.wave) wavePaw(G, -30, -88, o.t);
   }
   function drawLion(o){
     const L = '#FFC24D', M = '#E8790F', F = '#FFD27A';
@@ -698,7 +694,6 @@
     eye(33, -60, 0.85, o.happy); eye(44, -60, 0.85, o.happy);
     mouth(41, -44, 7, o);
     cheek(30, -50, 3.5);
-    if(o.wave) wavePaw(L, 64, -40, o.t);
   }
   function drawCrab(o){
     const R = o.v === 1 ? '#FF922B' : '#FF6B6B', RD = o.v === 1 ? '#D9701A' : '#D94848';
@@ -836,8 +831,8 @@
     // front feet (one waves)
     ctx.fillStyle = G; ctx.strokeStyle = O; ctx.lineWidth = 2.5;
     ell(ctx, -12, -3, 7, 4); ctx.fill(); ctx.stroke();
-    if(o.wave){ ctx.restore(); wavePaw(G, 26, -18 - hop, o.t); return; }
-    ell(ctx, 12, -3, 7, 4); ctx.fill(); ctx.stroke();
+    const fw = o.wave ? 8 + Math.abs(Math.sin(o.t*9))*6 : 0;
+    ell(ctx, 12 + fw*0.4, -3 - fw, 7, 4, o.wave ? -0.5 : 0); ctx.fill(); ctx.stroke();
     ctx.restore();
   }
 
