@@ -469,9 +469,28 @@
     }
   }
   const lift = (o, i) => {
-    if(o.wave && !o.walk && i === 3) return 10 + Math.abs(Math.sin(o.t*9))*8;   // waving: the front foot lifts up and shakes
     return o.walk ? Math.max(0, Math.sin(o.walk + (i === 0 || i === 3 ? 0 : Math.PI)))*7 : 0;
   };
+  // waving: the front leg swings right up in front, hoof/paw in the air, and waves to and fro (drawn in front of the body)
+  const waving = o => o.wave && !o.walk;
+  const waveAng = (o, reach) => -(reach || 1.7) + Math.sin(o.t*10)*0.28;
+  // the front leg held out in front, under the chin (so it never covers a face), waving up and down
+  function waveLeg(o, x, hy, legF, lw, reach){
+    if(!waving(o)) return;
+    ctx.save(); ctx.translate(x + 8, hy); ctx.rotate(waveAng(o, reach)); ctx.scale(1.15, 1.15); ctx.translate(-x, -hy);
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = lw || 3;
+    legF(x, 3, 0);
+    ctx.restore();
+  }
+  // little "wave" lines beside the raised foot (drawn last, on top)
+  function waveLines(o, x, hy, reach){
+    if(!waving(o)) return;
+    const a = waveAng(o, reach), L = -hy*1.15, tx = x + 8 - Math.sin(a)*L, ty = hy + Math.cos(a)*L;
+    ctx.save(); ctx.translate(tx, ty); ctx.rotate(a);
+    ctx.strokeStyle = 'rgba(47,35,80,0.6)'; ctx.lineWidth = 2.4; ctx.lineCap = 'round';
+    [-1, 1].forEach(sd => { ctx.beginPath(); ctx.arc(0, 0, 13, sd > 0 ? -0.55 : Math.PI - 0.55, sd > 0 ? 0.55 : Math.PI + 0.55); ctx.stroke(); });
+    ctx.restore();
+  }
   function cheek(x, y, r){ ctx.fillStyle = 'rgba(255,120,170,0.45)'; ell(ctx, x, y, r, r*0.65); ctx.fill(); }
   // a little waving paw (or hoof) beside the head
   function wavePaw(col, x, y, t){
@@ -486,7 +505,8 @@
 
   function drawCow(o){
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-30, -18, 18, 30].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = '#fff'; rr(ctx, x - 5, -26 - l, 10, 26, 3); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#3B3355'; ctx.fillRect(x - 4, -6 - l, 8, 5); });
+    const LEGS = [-30, -18, 18, 30], legF = (x, i, l) => { ctx.fillStyle = '#fff'; rr(ctx, x - 5, -26 - l, 10, 26, 3); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#3B3355'; ctx.fillRect(x - 4, -6 - l, 8, 5); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     const sw = Math.sin(o.t*3)*4;
     ctx.strokeStyle = O; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-40, -52); ctx.quadraticCurveTo(-52 + sw, -40, -48 + sw, -22); ctx.stroke();
     ctx.fillStyle = '#3B3355'; ell(ctx, -48 + sw, -20, 4, 6); ctx.fill();
@@ -504,11 +524,14 @@
     if(o.talk > 0.05){ ctx.fillStyle = '#7A2E45'; ell(ctx, 50, -42, 6, 2 + 3*o.talk); ctx.fill(); }
     eye(40, -64, 0.9, o.happy); eye(52, -65, 0.9, o.happy);
     ctx.fillStyle = '#FFD43B'; ctx.strokeStyle = O; ctx.lineWidth = 2; ell(ctx, 38, -38, 6, 6); ctx.fill(); ctx.stroke();
+    waveLeg(o, LEGS[3], -26, legF, 3, 1.7);
+    waveLines(o, LEGS[3], -26, 1.7);
   }
   function drawSheep(o){
     ctx.lineJoin = 'round'; ctx.lineCap = 'round';
     ctx.strokeStyle = '#2F2350'; ctx.lineWidth = 4;
-    [-18, -8, 10, 20].forEach((x, i) => { const l = lift(o, i); line(ctx, x, -24 - l, x, -l); });
+    const LEGS = [-18, -8, 10, 20], legF = (x, i, l) => { line(ctx, x, -24 - l, x, -l); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     const fluff = o.v === 1 ? '#FFF0F6' : '#F8F4EC';
     ctx.fillStyle = fluff; ctx.strokeStyle = O; ctx.lineWidth = 2.5;
     const P = [[-24, -38], [-10, -48], [8, -48], [22, -38], [-16, -28], [2, -26], [18, -28], [0, -38]];
@@ -520,11 +543,14 @@
     eye(37, -46, 0.75, o.happy); eye(44, -45, 0.6, o.happy);
     if(o.talk > 0.05){ ctx.fillStyle = '#FF8FB1'; ell(ctx, 42, -35, 3.5, 2 + 2.5*o.talk); ctx.fill(); }
     else { ctx.fillStyle = '#FFB3C7'; ell(ctx, 42, -36, 3, 2); ctx.fill(); }
+    waveLeg(o, LEGS[3], -24, legF, 4, 1.7);
+    waveLines(o, LEGS[3], -24, 1.7);
   }
   function drawPig(o){
     const P = '#FFB3C7', PD = '#FF8FB1';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-24, -12, 14, 26].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = P; rr(ctx, x - 5.5, -22 - l, 11, 22, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#C2587A'; ctx.fillRect(x - 4.5, -5 - l, 9, 4); });
+    const LEGS = [-24, -12, 14, 26], legF = (x, i, l) => { ctx.fillStyle = P; rr(ctx, x - 5.5, -22 - l, 11, 22, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#C2587A'; ctx.fillRect(x - 4.5, -5 - l, 9, 4); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     // curly tail
     ctx.strokeStyle = O; ctx.lineWidth = 3;
     ctx.beginPath(); ctx.moveTo(-36, -40); ctx.bezierCurveTo(-50, -44, -48, -58, -42, -54); ctx.bezierCurveTo(-36, -50, -46, -46, -50, -50); ctx.stroke();
@@ -540,6 +566,8 @@
     eye(34, -53, 0.85, o.happy); eye(44, -54, 0.75, o.happy);
     mouth(44, -34, 9, o);
     cheek(30, -42, 4.5);
+    waveLeg(o, LEGS[3], -22, legF, 3, 1.7);
+    waveLines(o, LEGS[3], -22, 1.7);
   }
   function drawDuck(o){
     const Y = o.v === 1 ? '#FFFFFF' : '#FFE066', YD = o.v === 1 ? '#E6E1F0' : '#FFC94D';
@@ -568,7 +596,8 @@
   function drawDog(o){
     const B = o.v === 1 ? '#F4E6D4' : '#D9A066', BD = o.v === 1 ? '#3B3355' : '#8B5A2B', SN = '#F6DDBA';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-28, -16, 16, 28].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = B; rr(ctx, x - 5, -26 - l, 10, 26, 4); ctx.fill(); ctx.stroke(); });
+    const LEGS = [-28, -16, 16, 28], legF = (x, i, l) => { ctx.fillStyle = B; rr(ctx, x - 5, -26 - l, 10, 26, 4); ctx.fill(); ctx.stroke(); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     // waggy tail
     const wag = Math.sin(o.t*(o.happy || o.wave ? 18 : 6))*0.35;
     ctx.save(); ctx.translate(-32, -44); ctx.rotate(-0.9 + wag);
@@ -589,11 +618,14 @@
     ctx.fillStyle = BD; ctx.strokeStyle = O; ctx.lineWidth = 2.5;
     const ef = Math.sin(o.t*5)*0.08;
     ell(ctx, 27, -58, 7, 14, 0.35 + ef); ctx.fill(); ctx.stroke();
+    waveLeg(o, LEGS[3], -26, legF, 3, 1.7);
+    waveLines(o, LEGS[3], -26, 1.7);
   }
   function drawCat(o){
     const C = o.v === 1 ? '#B8B8C8' : '#FFA94D', CD = o.v === 1 ? '#8E8EA4' : '#E8790F';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-24, -14, 14, 24].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = C; rr(ctx, x - 4.5, -24 - l, 9, 24, 4); ctx.fill(); ctx.stroke(); });
+    const LEGS = [-24, -14, 14, 24], legF = (x, i, l) => { ctx.fillStyle = C; rr(ctx, x - 4.5, -24 - l, 9, 24, 4); ctx.fill(); ctx.stroke(); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     // tail curling up
     const sw = Math.sin(o.t*2.5)*5;
     ctx.strokeStyle = O; ctx.lineWidth = 10; ctx.beginPath(); ctx.moveTo(-26, -36); ctx.quadraticCurveTo(-48, -44, -42 + sw, -70); ctx.stroke();
@@ -611,11 +643,14 @@
     mouth(46, -42, 6, o);
     ctx.strokeStyle = O; ctx.lineWidth = 1.3; line(ctx, 48, -46, 60, -49); line(ctx, 48, -44, 60, -43);
     cheek(36, -46, 3.5);
+    waveLeg(o, LEGS[3], -24, legF, 3, 1.7);
+    waveLines(o, LEGS[3], -24, 1.7);
   }
   function drawGiraffe(o){
     const Y = '#FFC94D', SP = '#D9822B';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-28, -16, 16, 28].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = Y; rr(ctx, x - 5, -74 - l, 10, 74, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#6B4F2A'; ctx.fillRect(x - 4, -6 - l, 8, 5); });
+    const LEGS = [-28, -16, 16, 28], legF = (x, i, l) => { ctx.fillStyle = Y; rr(ctx, x - 5, -74 - l, 10, 74, 4); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#6B4F2A'; ctx.fillRect(x - 4, -6 - l, 8, 5); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     const sw = Math.sin(o.t*3)*4;
     ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-38, -88); ctx.quadraticCurveTo(-46 + sw, -76, -46 + sw, -60); ctx.stroke();
     ctx.fillStyle = '#6B4F2A'; ell(ctx, -46 + sw, -58, 3.5, 6); ctx.fill();
@@ -642,11 +677,14 @@
     mouth(68, -153, 6, o);
     cheek(56, -158, 3.5);
     ctx.restore();
+    waveLeg(o, LEGS[3], -74, legF, 3, 1.95);
+    waveLines(o, LEGS[3], -74, 1.95);
   }
   function drawElephant(o){
     const G = '#A9B8CC', GD = '#8C9CB4';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-36, -16, 14, 32].forEach((x, i) => { const l = lift(o, i)*0.7; ctx.fillStyle = i === 1 || i === 2 ? GD : G; rr(ctx, x - 9, -40 - l, 18, 40, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; [-4, 1, 6].forEach(d => { ell(ctx, x + d - 1, -3 - l, 2, 1.6); ctx.fill(); }); });
+    const LEGS = [-36, -16, 14, 32], legF = (x, i, l) => { ctx.fillStyle = i === 1 || i === 2 ? GD : G; rr(ctx, x - 9, -40 - l, 18, 40, 6); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; [-4, 1, 6].forEach(d => { ell(ctx, x + d - 1, -3 - l, 2, 1.6); ctx.fill(); }); };
+    LEGS.forEach((x, i) => legF(x, i, lift(o, i)*0.7));
     ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-50, -62); ctx.quadraticCurveTo(-58, -50, -56, -40); ctx.stroke();
     ctx.fillStyle = G; ell(ctx, -2, -62, 50, 34); ctx.fill(); ctx.stroke();
     // head
@@ -674,7 +712,8 @@
   function drawLion(o){
     const L = '#FFC24D', M = '#E8790F', F = '#FFD27A';
     ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.strokeStyle = O; ctx.lineWidth = 3;
-    [-28, -16, 16, 28].forEach((x, i) => { const l = lift(o, i); ctx.fillStyle = L; rr(ctx, x - 5.5, -26 - l, 11, 26, 4); ctx.fill(); ctx.stroke(); });
+    const LEGS = [-28, -16, 16, 28], legF = (x, i, l) => { ctx.fillStyle = L; rr(ctx, x - 5.5, -26 - l, 11, 26, 4); ctx.fill(); ctx.stroke(); };
+    LEGS.forEach((x, i) => { if(!(waving(o) && i === 3)) legF(x, i, lift(o, i)); });
     const sw = Math.sin(o.t*3)*5;
     ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-34, -44); ctx.quadraticCurveTo(-52, -40, -56 + sw, -62); ctx.stroke();
     ctx.fillStyle = M; ell(ctx, -56 + sw, -64, 6, 6); ctx.fill(); ctx.stroke();
@@ -694,6 +733,8 @@
     eye(33, -60, 0.85, o.happy); eye(44, -60, 0.85, o.happy);
     mouth(41, -44, 7, o);
     cheek(30, -50, 3.5);
+    waveLeg(o, LEGS[3], -26, legF, 3, 1.7);
+    waveLines(o, LEGS[3], -26, 1.7);
   }
   function drawCrab(o){
     const R = o.v === 1 ? '#FF922B' : '#FF6B6B', RD = o.v === 1 ? '#D9701A' : '#D94848';
@@ -831,7 +872,7 @@
     // front feet (one waves)
     ctx.fillStyle = G; ctx.strokeStyle = O; ctx.lineWidth = 2.5;
     ell(ctx, -12, -3, 7, 4); ctx.fill(); ctx.stroke();
-    const fw = o.wave ? 8 + Math.abs(Math.sin(o.t*9))*6 : 0;
+    const fw = o.wave ? 16 + Math.sin(o.t*10)*5 : 0;
     ell(ctx, 12 + fw*0.4, -3 - fw, 7, 4, o.wave ? -0.5 : 0); ctx.fill(); ctx.stroke();
     ctx.restore();
   }
