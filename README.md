@@ -32,6 +32,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Blossom's Pumpkin Faces | Halloween, Unicorns, Animals | 2+ | `games/blossoms-pumpkin-faces/` |
 | Lenny's Bubble Pop | Animals, Action | 2+ | `games/lenny-bubble-pop/` |
 | Chomper's Animal Train | Trains, Dinosaurs, Animals | 2+ | `games/chompers-animal-train/` |
+| Blossom's Shape Sorter | Puzzles, Unicorns, Animals | 2+ | `games/blossoms-shape-sorter/` |
 
 ## Age groups
 

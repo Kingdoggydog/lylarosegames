@@ -329,9 +329,21 @@ const games = [
     emoji: "🚂",
     colour: "#D6EEFF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A train game for toddlers! Tap the animals to help them hop aboard Chomper's steam train, toot the whistle and chug through tunnels and over bridges to the farm, the zoo, the beach and the snow.",
     categories: ["trains", "dinosaurs", "animals"],
     controls: "Tap (or Space / Enter)"
+  },
+  {
+    title: "Blossom's Shape Sorter",
+    folder: "blossoms-shape-sorter",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "⭐",
+    colour: "#FFF1C9",
+    thumb: "thumb.jpg",
+    blurb: "A shape sorter game for toddlers! Drag the chunky circles, squares, triangles and stars into the matching holes of Blossom the Bunnycorn's wooden box - plop! Learn shapes and colours with cheers, confetti and no way to lose.",
+    categories: ["puzzles", "unicorns", "animals"],
+    controls: "Drag or tap (or Space / Enter)"
   },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];

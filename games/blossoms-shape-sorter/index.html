@@ -1,0 +1,1538 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Blossom's Shape Sorter - Free Shape Game for Toddlers | Lyla Rose Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chewy&family=Nunito:wght@600;800&display=swap">
+<style>
+  :root{
+    color-scheme: light;
+    --pink:#F2559B;
+    --pink-d:#B02C68;
+    --purple:#7D5CC0;
+    --purple-d:#4B2C8A;
+    --gold:#FFC23D;
+    --ink:#3A2B4F;
+    --card:#FFFFFFE0;
+  }
+  [hidden]{display:none!important}
+  html,body{height:100%}
+  body{
+    margin:0;
+    /* a soft, sunny playroom */
+    background:linear-gradient(180deg,#FFD9E8 0%,#FFE9D2 60%,#FDF1C8 100%);
+    background-color:#FFD9E8;
+    color:var(--ink);
+    font-family:"Nunito",system-ui,sans-serif;
+    /* fill the screen exactly, keeping clear of notches and rounded corners */
+    height:100vh;height:100dvh;
+    padding:max(10px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left));
+    box-sizing:border-box;
+    overflow:hidden;
+  }
+  .wrap{max-width:1200px;height:100%;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px 12px}
+  .snd{display:flex;gap:8px}
+  h1{flex:1 1 auto;text-align:center;font-family:"Chewy","Comic Sans MS",cursive;font-weight:400;font-size:clamp(26px,4.4vw,40px);margin:0;line-height:1;color:var(--pink);text-shadow:2px 2px 0 #fff;text-wrap:balance}
+  .back{font-weight:800;color:var(--purple-d);text-decoration:none;background:var(--card);padding:0 14px;border-radius:999px;font-size:15px;min-height:48px;display:inline-flex;align-items:center;box-sizing:border-box;white-space:nowrap}
+  .back:hover{text-decoration:underline}
+  button{font:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;padding:12px 18px;background:var(--pink);color:#fff;font-size:17px;min-height:48px;min-width:48px;-webkit-tap-highlight-color:transparent}
+  button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+  button.ghost{background:var(--card);color:var(--ink);padding:8px 12px;font-size:16px}
+  /* the play area fills whatever space is left over (any shape from tall to wide) */
+  .stage{flex:1;min-height:0;container-type:size;display:grid;place-items:center}
+  .board{position:relative;width:100cqw;height:100cqh;border-radius:18px;overflow:hidden;background:#FFE3EE;box-shadow:0 10px 30px #3A2B4F33;touch-action:none;user-select:none;-webkit-user-select:none}
+  canvas#c{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+  canvas#c.dragging{cursor:grabbing}
+  /* the share button pops up at the bottom during the celebration */
+  #shareBox{position:absolute;z-index:4;left:50%;bottom:12px;transform:translateX(-50%);white-space:nowrap}
+  /* start panel: just the title, a picture and one huge Play button */
+  .overlay{position:absolute;inset:0;z-index:6;display:flex;align-items:center;justify-content:center;background:#5B3F7A80;padding:14px;cursor:pointer}
+  .panel{background:#fff;border-radius:24px;padding:16px 22px 20px;text-align:center;max-width:380px;max-height:100%;box-sizing:border-box;overflow:auto;touch-action:pan-y;display:flex;flex-direction:column;gap:10px;align-items:center;box-shadow:0 12px 30px #3A2B4F44}
+  .panel h2{font-family:"Chewy",cursive;font-weight:400;font-size:32px;margin:0;color:var(--pink);line-height:1.05}
+  .panel canvas{width:240px;height:160px;display:block}
+  #playBtn{width:104px;height:104px;min-width:104px;border-radius:50%;padding:0;display:grid;place-items:center;
+    background:radial-gradient(circle at 35% 28%,#FFA3CB,#F2559B 58%,#D63C82);box-shadow:0 6px 0 var(--pink-d),0 10px 22px #3A2B4F44;animation:breathe 1.8s ease-in-out infinite}
+  #playBtn svg{width:52%;height:52%;margin-left:8%;display:block;pointer-events:none}
+  #playBtn:active{transform:translateY(4px);box-shadow:0 2px 0 var(--pink-d),0 6px 12px #3A2B4F33;animation:none}
+  @keyframes breathe{50%{transform:scale(1.07)}}
+  @media (prefers-reduced-motion: reduce){ #playBtn{animation:none} }
+  @media (max-height:560px){
+    .panel{padding:10px 16px 14px;gap:6px}
+    .panel h2{font-size:26px}
+    .panel canvas{width:150px;height:100px}
+    #playBtn{width:88px;height:88px;min-width:88px}
+  }
+  /* PHONES ONLY: the game fills the whole screen; buttons float over it */
+  @media (max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape) {
+    body{padding:0;background:#FFE3EE}
+    .wrap{display:block;max-width:none;height:100%}
+    h1{display:none}
+    .stage{position:fixed;top:env(safe-area-inset-top,0px);right:env(safe-area-inset-right,0px);bottom:env(safe-area-inset-bottom,0px);left:env(safe-area-inset-left,0px);min-height:0;display:block}
+    .board{width:100%;height:100%;border-radius:0;box-shadow:none}
+    /* back, music and sound: small round buttons in the top corners */
+    .top{position:fixed;z-index:5;top:calc(4px + env(safe-area-inset-top,0px));left:calc(4px + env(safe-area-inset-left,0px));right:calc(4px + env(safe-area-inset-right,0px));align-items:flex-start;pointer-events:none}
+    .top > *{pointer-events:auto}
+    .snd{gap:4px;flex-direction:column}
+    .back,#music,#sound{width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border-radius:50%;justify-content:center;background:#FFFFFFB3;box-shadow:0 2px 6px #3A2B4F26;font-size:0;line-height:1;display:inline-flex;align-items:center;position:relative}
+    .back::before{content:"←";content:"←" / "";font-size:22px;font-weight:800}
+    #sound{font-size:20px}
+    #music::before{content:"🎵";content:"🎵" / "";font-size:20px}
+    #music[aria-label="Music off"]::before{opacity:.4}
+    #music[aria-label="Music off"]::after{content:"";position:absolute;left:10px;right:10px;top:50%;height:3px;border-radius:2px;background:#C92A2A;transform:rotate(-40deg)}
+    #shareBox{bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+    .overlay{padding:52px 10px 8px}
+    @media (orientation: landscape) {
+      .snd{flex-direction:row}
+      .overlay{padding:6px 60px}
+    }
+  }
+</style>
+<meta name="description" content="Blossom's Shape Sorter - a free shape sorter game for toddlers. Drag chunky circles, squares, triangles, stars and hearts into the matching holes of Blossom the Bunnycorn's wooden box. No reading and no losing - just shapes, colours and happy cheers.">
+<!-- ===== SEO for this game (Google + share previews) ===== -->
+<link rel="canonical" href="https://lylarosegames.com/games/blossoms-shape-sorter/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lyla Rose Games">
+<meta property="og:locale" content="en_AU">
+<meta property="og:title" content="Blossom's Shape Sorter - Free Shape Game for Toddlers | Lyla Rose Games">
+<meta property="og:description" content="Blossom's Shape Sorter - a free shape sorter game for toddlers. Drag chunky circles, squares, triangles, stars and hearts into the matching holes of Blossom the Bunnycorn's wooden box. No reading and no losing - just shapes, colours and happy cheers.">
+<meta property="og:url" content="https://lylarosegames.com/games/blossoms-shape-sorter/">
+<meta property="og:image" content="https://lylarosegames.com/games/blossoms-shape-sorter/share.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Blossom's Shape Sorter - free shape sorter game for toddlers">
+<meta name="twitter:card" content="summary_large_image">
+<!-- Game details for Google. Controls: drag or tap, or Space and Enter -->
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@graph": [
+  {
+   "@type": "VideoGame",
+   "name": "Blossom's Shape Sorter",
+   "url": "https://lylarosegames.com/games/blossoms-shape-sorter/",
+   "description": "Blossom's Shape Sorter - a free shape sorter game for toddlers. Drag chunky circles, squares, triangles, stars and hearts into the matching holes of Blossom the Bunnycorn's wooden box. No reading and no losing - just shapes, colours and happy cheers.",
+   "image": "https://lylarosegames.com/games/blossoms-shape-sorter/share.jpg",
+   "genre": [
+    "Puzzle",
+    "Unicorns",
+    "Animals"
+   ],
+   "gamePlatform": "Web browser",
+   "applicationCategory": "Game",
+   "operatingSystem": "Any",
+   "playMode": "SinglePlayer",
+   "isAccessibleForFree": true,
+   "inLanguage": "en-AU",
+   "audience": {
+    "@type": "PeopleAudience",
+    "audienceType": "Children"
+   },
+   "publisher": {
+    "@type": "Organization",
+    "name": "Lyla Rose Games",
+    "url": "https://lylarosegames.com/",
+    "logo": "https://lylarosegames.com/brand/icon-512.png"
+   }
+  },
+  {
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+    {
+     "@type": "ListItem",
+     "position": 1,
+     "name": "Lyla Rose Games",
+     "item": "https://lylarosegames.com/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 2,
+     "name": "Puzzle games",
+     "item": "https://lylarosegames.com/puzzle-games/"
+    },
+    {
+     "@type": "ListItem",
+     "position": 3,
+     "name": "Blossom's Shape Sorter",
+     "item": "https://lylarosegames.com/games/blossoms-shape-sorter/"
+    }
+   ]
+  }
+ ]
+}
+</script>
+<!-- ===== end SEO ===== -->
+<script src="../../site.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <a class="back" href="../../">← All games</a>
+    <h1>Blossom's Shape Sorter</h1>
+    <div class="snd">
+      <button class="ghost" id="music" aria-label="Music on">🎵 On</button>
+      <button class="ghost" id="sound" aria-label="Sound on">🔊</button>
+    </div>
+  </div>
+
+  <div class="stage">
+  <div class="board" id="board">
+    <canvas id="c" aria-label="Blossom's shape sorter box with shapes to post into it" role="img"></canvas>
+    <div id="shareBox"></div>
+    <div class="overlay" id="overlay">
+      <div class="panel">
+        <h2>Blossom's Shape Sorter</h2>
+        <canvas id="panelPic" width="480" height="320" aria-hidden="true"></canvas>
+        <button id="playBtn" aria-label="Play"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 6.5 34 20 10 33.5z" fill="#fff" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg></button>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ===== SETUP =====
+  const $ = id => document.getElementById(id);
+  const cvs = $('c');
+  let ctx = cvs.getContext('2d');           // everything is drawn with this (swapped briefly when making pictures)
+  const board = $('board'), overlay = $('overlay'), playBtn = $('playBtn'), shareBox = $('shareBox');
+  const soundBtn = $('sound'), musicBtn = $('music');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TEST = /[?&]test\b/.test(location.search);
+  const PHONE_MQ = '(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)';
+  const KEY = 'lrg-blossoms-shape-sorter-';
+  const TAU = Math.PI*2;
+
+  const rand = (a, b) => a + Math.random()*(b - a);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, u) => a + (b - a)*u;
+  const ease = u => 1 - Math.pow(1 - clamp(u, 0, 1), 3);
+  const easeInOut = u => { u = clamp(u, 0, 1); return u < 0.5 ? 4*u*u*u : 1 - Math.pow(-2*u + 2, 3)/2; };
+  const easeBack = u => { u = clamp(u, 0, 1); const k = 1.7; return 1 + (k + 1)*Math.pow(u - 1, 3) + k*Math.pow(u - 1, 2); };
+  function bounceOut(u){
+    u = clamp(u, 0, 1); const n = 7.5625, d = 2.75;
+    if(u < 1/d) return n*u*u;
+    if(u < 2/d) return n*(u -= 1.5/d)*u + 0.75;
+    if(u < 2.5/d) return n*(u -= 2.25/d)*u + 0.9375;
+    return n*(u -= 2.625/d)*u + 0.984375;
+  }
+  const pickOne = a => a[Math.floor(Math.random()*a.length)];
+  function shuffle(a){ for(let i = a.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function load(k, d){ try { const v = localStorage.getItem(KEY + k); return v === null ? d : JSON.parse(v); } catch(e){ return d; } }
+  function save(k, v){ try { localStorage.setItem(KEY + k, JSON.stringify(v)); } catch(e){} }
+  function ell(c, x, y, rx, ry, rot){ c.beginPath(); c.ellipse(x, y, Math.max(0.001, rx), Math.max(0.001, ry), rot || 0, 0, TAU); }
+  function circ(c, x, y, r){ c.beginPath(); c.arc(x, y, Math.max(0.001, r), 0, TAU); }
+  function rrect(c, x, y, w, h, r){
+    r = Math.max(0, Math.min(r, w/2, h/2));
+    c.beginPath(); c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+  }
+  function heartPath(c, x, y, r){
+    c.moveTo(x, y + r*0.9);
+    c.bezierCurveTo(x - r*1.5, y - r*0.15, x - r*0.65, y - r*1.25, x, y - r*0.42);
+    c.bezierCurveTo(x + r*0.65, y - r*1.25, x + r*1.5, y - r*0.15, x, y + r*0.9); c.closePath();
+  }
+  function twinkle(c, x, y, r, col){
+    c.fillStyle = col; c.beginPath();
+    c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill();
+  }
+  function glow(c, x, y, r, col, a){
+    if(r <= 0 || a <= 0) return;
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, col.replace('A', a.toFixed(3))); g.addColorStop(1, col.replace('A', '0'));
+    c.fillStyle = g; c.fillRect(x - r, y - r, r*2, r*2);
+  }
+  function hexRgb(h){ const n = parseInt(h.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  function mixCol(a, b, u){ const A = hexRgb(a), B = hexRgb(b); return 'rgb(' + A.map((v, i) => Math.round(lerp(v, B[i], clamp(u, 0, 1)))).join(',') + ')'; }
+  // a rounded polygon (pts = [[x, y], ...], rad = corner roundness, one number or one per corner)
+  function roundPoly(c, pts, rad){
+    const n = pts.length, m = (p, q) => [(p[0] + q[0])/2, (p[1] + q[1])/2];
+    const s = m(pts[n - 1], pts[0]);
+    c.moveTo(s[0], s[1]);
+    for(let i = 0; i < n; i++){ const p = pts[i], q = m(p, pts[(i + 1) % n]); c.arcTo(p[0], p[1], q[0], q[1], Array.isArray(rad) ? rad[i] : rad); }
+    c.closePath();
+  }
+
+  // ===== THE SHAPES =====
+  // col = the shape (and its hole's rim), dark = its outline and chunky side, light = its shine
+  const SHAPES = {
+    circle:   {col: '#FF5A64', dark: '#C9343F', light: '#FF9AA2', note: 523.25, name: 'Red circle'},
+    square:   {col: '#3E8EFF', dark: '#2263C9', light: '#8CBCFF', note: 587.33, name: 'Blue square'},
+    triangle: {col: '#3FC46B', dark: '#25904A', light: '#8BE3A6', note: 659.25, name: 'Green triangle'},
+    star:     {col: '#FFC633', dark: '#D3940C', light: '#FFE38F', note: 783.99, name: 'Yellow star'},
+    heart:    {col: '#FF6FB7', dark: '#D1408A', light: '#FFADD6', note: 880.00, name: 'Pink heart'},
+    moon:     {col: '#9C74FF', dark: '#6A45CF', light: '#C9B3FF', note: 1046.5, name: 'Purple moon'},
+    oval:     {col: '#FF9333', dark: '#CF6914', light: '#FFC48F', note: 1174.7, name: 'Orange oval'}
+  };
+  const ALL = ['circle', 'square', 'triangle', 'star', 'heart', 'moon', 'oval'];
+  // which shapes come out in each round: one new shape at a time, then a comfy mix of 4 or 5
+  function roundKinds(r){
+    if(r <= 4) return ALL.slice(0, r);
+    if(r === 5) return ALL.slice(0, 5);
+    if(r === 6) return ['square', 'triangle', 'star', 'heart', 'moon', 'oval'];
+    return shuffle(ALL.slice()).slice(0, Math.random() < 0.5 ? 4 : 5);
+  }
+  // the box gets a new coat of paint every round
+  const BOXCOLS = [
+    {col: '#FF8FBF', dark: '#D35C93'},
+    {col: '#5FB8FF', dark: '#2F86D1'},
+    {col: '#7FD48B', dark: '#45A35A'},
+    {col: '#B596FF', dark: '#7F5DD6'},
+    {col: '#FFB04F', dark: '#D47F1C'},
+    {col: '#4FD1C5', dark: '#249C91'}
+  ];
+  const FRIENDS = ['foalPink', 'duck', 'foalBlue', 'lamb', 'foalMint', 'koala', 'piglet', 'kitten'];
+
+  // the outline of each shape, centred on 0,0 and about r across from the middle
+  function moonBits(r){
+    const R = r*1.02, cx = r*0.5, cy = -r*0.32, R2 = r*0.84, ox = r*0.26, oy = r*0.12;
+    const d = Math.hypot(cx, cy), a = (R*R - R2*R2 + d*d)/(2*d), h = Math.sqrt(Math.max(0, R*R - a*a));
+    const px = a*cx/d, py = a*cy/d;
+    const P1 = [px + h*cy/d, py - h*cx/d], P2 = [px - h*cy/d, py + h*cx/d];
+    const th = Math.atan2(cy, cx);
+    // the middle of the fat part of the moon (where its face goes)
+    const fx = ox - Math.cos(th)*r*0.6, fy = oy - Math.sin(th)*r*0.6;
+    return {R, cx, cy, R2, ox, oy, P1, P2, th, fx, fy};
+  }
+  function arcFlag(a0, a1, through){
+    const span = ((a1 - a0) % TAU + TAU) % TAU, tt = ((through - a0) % TAU + TAU) % TAU;
+    return !(tt < span);   // false = clockwise contains "through"
+  }
+  function shapePath(c, kind, r){
+    c.beginPath();
+    if(kind === 'circle') c.arc(0, 0, r*0.93, 0, TAU);
+    else if(kind === 'square') rrect(c, -r*0.8, -r*0.8, r*1.6, r*1.6, r*0.24);
+    else if(kind === 'triangle') roundPoly(c, [[0, -r*0.98], [r*1.06, r*0.86], [-r*1.06, r*0.86]], r*0.2);
+    else if(kind === 'star'){
+      const pts = [];
+      for(let i = 0; i < 10; i++){ const a = -Math.PI/2 + i*Math.PI/5, rr = i % 2 ? r*0.52 : r*1.06; pts.push([Math.cos(a)*rr, Math.sin(a)*rr + r*0.09]); }
+      roundPoly(c, pts, pts.map((p, i) => i % 2 ? r*0.06 : r*0.16));
+    }
+    else if(kind === 'heart') heartPath(c, 0, r*0.04, r*0.98);
+    else if(kind === 'moon'){
+      const m = moonBits(r);
+      const a1 = Math.atan2(m.P1[1], m.P1[0]), a2 = Math.atan2(m.P2[1], m.P2[0]);
+      const b1 = Math.atan2(m.P1[1] - m.cy, m.P1[0] - m.cx), b2 = Math.atan2(m.P2[1] - m.cy, m.P2[0] - m.cx);
+      c.arc(m.ox, m.oy, m.R, a1, a2, arcFlag(a1, a2, m.th + Math.PI));
+      c.arc(m.ox + m.cx, m.oy + m.cy, m.R2, b2, b1, arcFlag(b2, b1, m.th + Math.PI));
+      c.closePath();
+    }
+    else if(kind === 'oval') c.ellipse(0, 0, r*1.04, r*0.64, 0, 0, TAU);
+  }
+  // where each shape's little face sits, and how big it is
+  function faceSpot(kind, r){
+    if(kind === 'triangle') return [0, r*0.3, 0.85];
+    if(kind === 'star') return [0, r*0.16, 0.78];
+    if(kind === 'heart') return [0, -r*0.08, 0.95];
+    if(kind === 'moon'){ const m = moonBits(r); return [m.fx, m.fy, 0.62]; }
+    if(kind === 'oval') return [0, r*0.02, 0.85];
+    return [0, r*0.04, 1];
+  }
+
+  // ===== SAVED THINGS =====
+  let muted = load('muted', false);
+  let musicOn = load('music', true);
+
+  // ===== SOUND AND MUSIC (all made in the browser, no sound files needed) =====
+  let actx = null, master, sfxBus, musicBus, noiseBuf;
+  function audio(){
+    if(actx) return actx;
+    try {
+      actx = new (window.AudioContext || window.webkitAudioContext)();
+      master = actx.createGain(); master.gain.value = muted ? 0 : 1; master.connect(actx.destination);
+      sfxBus = actx.createGain(); sfxBus.connect(master);
+      musicBus = actx.createGain(); musicBus.gain.value = musicOn ? 0.26 : 0; musicBus.connect(master);
+      noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+      const d = noiseBuf.getChannelData(0);
+      for(let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e){ actx = null; }
+    return actx;
+  }
+  function wake(){ if(audio() && actx.state === 'suspended') actx.resume(); }
+  const now = () => actx ? actx.currentTime : 0;
+  function tone(f, dur, type = 'sine', vol = 0.18, f2 = null, delay = 0, bus = null){
+    if(!audio()) return;
+    const t0 = actx.currentTime + Math.max(0, delay);
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if(f2) o.frequency.exponentialRampToValueAtTime(f2, t0 + dur);
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + 0.01); g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+    o.connect(g).connect(bus || sfxBus); o.start(t0); o.stop(t0 + dur + 0.03);
+  }
+  function noise(t0, dur, filterType, freq, q, vol, attack, bus, freq2){
+    if(!audio()) return;
+    const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const fl = actx.createBiquadFilter(); fl.type = filterType; fl.frequency.setValueAtTime(freq, t0); fl.Q.value = q;
+    if(freq2) fl.frequency.exponentialRampToValueAtTime(freq2, t0 + dur);
+    const g = actx.createGain();
+    g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(vol, t0 + attack); g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    src.connect(fl).connect(g).connect(bus || sfxBus);
+    src.start(t0, Math.random()*0.5); src.stop(t0 + dur + 0.05);
+  }
+  // a wobbly voice-like sound (giggles, boings, cheers)
+  function wobble(t, dur, f1, f2, f3, type, vol, rate, depth){
+    if(!audio()) return;
+    const o = actx.createOscillator(), g = actx.createGain(), lfo = actx.createOscillator(), lg = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur*0.45); o.frequency.exponentialRampToValueAtTime(f3, t + dur);
+    lfo.frequency.value = rate; lg.gain.value = depth; lfo.connect(lg).connect(o.frequency);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.03); g.gain.setValueAtTime(vol, t + dur*0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(sfxBus); o.start(t); lfo.start(t); o.stop(t + dur + 0.05); lfo.stop(t + dur + 0.05);
+  }
+  const PENTA = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.7, 1318.5];
+  const sfx = {
+    // picking a shape up: a soft "pop"
+    pickup(){ tone(620, 0.1, 'sine', 0.14, 1050); tone(1500, 0.05, 'triangle', 0.03, null, 0.03); },
+    // landing on the rug at the start of a round
+    land(i){ const f = 330*Math.pow(2, ((i || 0) % 6)*2/12); tone(f, 0.12, 'sine', 0.12, f*1.6); tone(140, 0.08, 'sine', 0.08, 90); },
+    // into the box: "plop!" with each shape's own note, then a little clunk inside the box
+    plop(kind){
+      const f = (SHAPES[kind] || SHAPES.circle).note;
+      tone(f*1.5, 0.2, 'sine', 0.2, f*0.55); tone(f, 0.12, 'triangle', 0.06);
+      tone(150, 0.16, 'sine', 0.16, 75, 0.14);
+      if(audio()) noise(now() + 0.14, 0.08, 'lowpass', 600, 1, 0.06, 0.004);
+      [f*2, f*2.5, f*3].forEach((g, i) => tone(g, 0.22, 'sine', 0.04, null, 0.22 + i*0.06));
+    },
+    // a gentle, friendly "boing" back to the rug (never a buzzer)
+    boing(){ if(!audio()) return; wobble(now(), 0.42, 190, 470, 300, 'sine', 0.12, 14, 26); },
+    giggle(pitch){ if(!audio()) return; const t = now(), b = (pitch || 1)*rand(760, 900);
+      for(let i = 0; i < 3; i++) wobble(t + i*0.1, 0.085, b + i*50, b*1.3 + i*60, b*1.15 + i*40, 'triangle', 0.06, 30, 25);
+      tone(1568, 0.12, 'sine', 0.03, 2093, 0.02); },
+    chime(){ const f = pickOne(PENTA); tone(f, 0.35, 'sine', 0.07); tone(f*2, 0.25, 'sine', 0.025, null, 0.05); },
+    knock(){ tone(240, 0.07, 'triangle', 0.14, 170); tone(260, 0.07, 'triangle', 0.12, 180, 0.14); },
+    hop(){ tone(420, 0.12, 'sine', 0.09, 760); },
+    sparkle(){ [1568, 2093, 2637, 3136].forEach((f, i) => tone(f, 0.25, 'sine', 0.04, null, i*0.05)); },
+    clap(){ if(!audio()) return; const t = now(); for(let i = 0; i < 3; i++) noise(t + i*0.16, 0.07, 'bandpass', 1600, 0.8, 0.14, 0.002); },
+    applause(){ if(!audio()) return; const t = now();
+      for(let i = 0; i < 34; i++) noise(t + rand(0, 1.7), 0.06, 'bandpass', rand(1200, 2600), 0.9, rand(0.05, 0.11), 0.002); },
+    yay(pitch){ if(!audio()) return; const k = pitch || 1; wobble(now() + 0.05, 0.55, 520*k, 880*k, 760*k, 'triangle', 0.1, 7, 14); },
+    fanfare(){ [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => tone(f, i === 6 ? 0.7 : 0.16, 'triangle', 0.11, null, i*0.13)); },
+    lid(){ tone(300, 0.18, 'sine', 0.12, 700); if(audio()) noise(now(), 0.15, 'bandpass', 900, 1, 0.05, 0.01); },
+    whee(){ tone(500, 0.5, 'triangle', 0.07, 1300); }
+  };
+  // the soft "shhh" while a shape slides along under your finger
+  let slideSnd = null;
+  function slideStart(){
+    if(!audio() || slideSnd) return;
+    try {
+      const src = actx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+      const f = actx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 650; f.Q.value = 0.8;
+      const g = actx.createGain(); g.gain.value = 0;
+      src.connect(f).connect(g).connect(sfxBus); src.start();
+      slideSnd = {src, g, f};
+    } catch(e){ slideSnd = null; }
+  }
+  function slideSet(v){ if(slideSnd) slideSnd.g.gain.setTargetAtTime(v, actx.currentTime, 0.06); }
+  function slideStop(){
+    if(!slideSnd) return;
+    const s = slideSnd; slideSnd = null;
+    try { s.g.gain.setTargetAtTime(0, actx.currentTime, 0.04); s.src.stop(actx.currentTime + 0.3); } catch(e){}
+  }
+
+  // ----- background music: a soft, bouncy music-box tune -----
+  const BPM = 100, STEP = 60/BPM/2;
+  const CHORDS = [48, 43, 45, 41, 48, 41, 43, 48];   // C, G, A minor, F, C, F, G, C
+  const MINOR = [45];
+  const MELODY = [
+    72,0,76,0,79,0,76,0,   74,0,79,0,83,0,79,0,
+    76,0,81,0,84,0,81,0,   77,0,76,0,74,0,0,0,
+    79,0,76,0,72,0,76,0,   77,0,81,0,77,0,72,0,
+    74,0,77,0,79,0,74,0,   72,0,76,0,72,0,0,0
+  ];
+  const hz = m => 440*Math.pow(2, (m - 69)/12);
+  let mNext = 0, mStep = 0, mTimer = null;
+  function playStep(i, t){
+    const bar = Math.floor(i/8), beat = i % 8, root = CHORDS[bar], d = t - actx.currentTime;
+    if(beat === 0 || beat === 4) tone(hz(root), STEP*1.6, 'sine', 0.2, null, d, musicBus);
+    if(beat === 2 || beat === 6) [12, 16, 19].forEach(n => { const nn = MINOR.includes(root) && n === 16 ? 15 : n; tone(hz(root + nn), 0.12, 'triangle', 0.025, null, d, musicBus); });
+    const m = MELODY[i];
+    if(m){ tone(hz(m + 12), 0.45, 'sine', 0.08, null, d, musicBus); tone(hz(m + 24), 0.12, 'sine', 0.02, null, d, musicBus); }
+  }
+  function scheduleMusic(){
+    if(!actx || actx.state !== 'running') return;
+    if(mNext < actx.currentTime - 0.1) mNext = actx.currentTime + 0.05;
+    while(mNext < actx.currentTime + 0.25){ playStep(mStep, mNext); mNext += STEP; mStep = (mStep + 1) % 64; }
+  }
+  function startMusic(){
+    if(!audio() || mTimer) return;
+    mNext = actx.currentTime + 0.1; mStep = 0;
+    mTimer = setInterval(scheduleMusic, 50);
+  }
+  function duckMusic(secs){
+    if(!actx || !musicOn) return;
+    const g = musicBus.gain, t = actx.currentTime;
+    g.cancelScheduledValues(t); g.setValueAtTime(g.value, t);
+    g.linearRampToValueAtTime(0.08, t + 0.1); g.setValueAtTime(0.08, t + secs); g.linearRampToValueAtTime(0.26, t + secs + 0.8);
+  }
+  document.addEventListener('visibilitychange', () => { if(!actx) return; if(document.hidden) actx.suspend(); else actx.resume(); });
+
+  function setSoundBtn(){
+    soundBtn.textContent = muted ? '🔇' : '🔊'; soundBtn.setAttribute('aria-label', muted ? 'Sound off' : 'Sound on');
+    musicBtn.textContent = musicOn ? '🎵 On' : '🎵 Off'; musicBtn.setAttribute('aria-label', musicOn ? 'Music on' : 'Music off');
+    if(actx){
+      master.gain.setValueAtTime(muted ? 0 : 1, actx.currentTime);
+      musicBus.gain.cancelScheduledValues(actx.currentTime);
+      musicBus.gain.setValueAtTime(musicOn ? 0.26 : 0, actx.currentTime);
+    }
+  }
+  soundBtn.addEventListener('click', () => { muted = !muted; save('muted', muted); wake(); startMusic(); setSoundBtn(); soundBtn.blur(); });
+  musicBtn.addEventListener('click', () => { musicOn = !musicOn; save('music', musicOn); wake(); startMusic(); setSoundBtn(); musicBtn.blur(); });
+  setSoundBtn();
+
+  // ===== DRAWING: ONE CHUNKY TOY SHAPE =====
+  let clock = 0;
+  // o = {lift 0..1, alpha, face: 'normal' | 'happy' | 'ooh' | 'none', ph}
+  function drawShape(c, kind, x, y, r, rot, o){
+    o = o || {};
+    const S = SHAPES[kind], lift = o.lift || 0, sc = 1 + 0.12*lift, depth = r*0.14;
+    c.save();
+    if(o.alpha != null) c.globalAlpha = o.alpha;
+    // its shadow on the rug (further away and softer when it's picked up)
+    if(!o.noShadow){
+      c.fillStyle = `rgba(90,40,70,${0.2 - 0.08*lift})`;
+      ell(c, x + r*0.12*lift, y + r*(0.86 + 0.5*lift), r*(0.9 + 0.1*lift), r*(0.2 + 0.05*lift)); c.fill();
+    }
+    c.translate(x, y - r*0.3*lift); c.rotate(rot || 0); c.scale(sc, sc);
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    const lw = Math.max(2.5, r*0.075);
+    // the chunky side
+    c.save(); c.translate(0, depth); shapePath(c, kind, r); c.fillStyle = S.dark; c.fill(); c.lineWidth = lw; c.strokeStyle = S.dark; c.stroke(); c.restore();
+    // the top
+    shapePath(c, kind, r);
+    const g = c.createLinearGradient(-r, -r, r*0.6, r);
+    g.addColorStop(0, S.light); g.addColorStop(0.45, S.col); g.addColorStop(1, S.col);
+    c.fillStyle = g; c.fill();
+    c.lineWidth = lw; c.strokeStyle = S.dark; c.stroke();
+    // a shiny highlight
+    c.save(); shapePath(c, kind, r); c.clip();
+    c.fillStyle = 'rgba(255,255,255,0.38)';
+    const [fx0, fy0] = faceSpot(kind, r);
+    ell(c, fx0 - r*0.42, fy0 - r*0.5, r*0.26, r*0.13, -0.6); c.fill();
+    c.restore();
+    // a little face
+    if(o.face !== 'none') drawFace(c, kind, r, o.face || 'normal', o.ph || 0);
+    c.restore();
+  }
+  function drawFace(c, kind, r, mood, ph){
+    const [fx, fy, k] = faceSpot(kind, r), s = r*k;
+    const blink = !reduced && mood === 'normal' && ((clock + ph) % 3.8) < 0.12;
+    c.save(); c.translate(fx, fy);
+    c.strokeStyle = '#3A2340'; c.fillStyle = '#3A2340'; c.lineCap = 'round'; c.lineWidth = Math.max(1.6, s*0.065);
+    const ex = s*0.26, ey = -s*0.1;
+    if(mood === 'happy'){
+      c.beginPath(); c.arc(-ex, ey + s*0.03, s*0.09, 1.1*Math.PI, 1.9*Math.PI); c.stroke();
+      c.beginPath(); c.arc(ex, ey + s*0.03, s*0.09, 1.1*Math.PI, 1.9*Math.PI); c.stroke();
+    } else if(blink){
+      c.beginPath(); c.moveTo(-ex - s*0.08, ey); c.lineTo(-ex + s*0.08, ey); c.moveTo(ex - s*0.08, ey); c.lineTo(ex + s*0.08, ey); c.stroke();
+    } else {
+      ell(c, -ex, ey, s*0.085, s*0.11); c.fill(); ell(c, ex, ey, s*0.085, s*0.11); c.fill();
+      c.fillStyle = '#fff'; circ(c, -ex - s*0.025, ey - s*0.04, s*0.035); c.fill(); circ(c, ex - s*0.025, ey - s*0.04, s*0.035); c.fill();
+    }
+    c.fillStyle = 'rgba(255,255,255,0.45)';
+    ell(c, -s*0.44, s*0.07, s*0.1, s*0.06); c.fill(); ell(c, s*0.44, s*0.07, s*0.1, s*0.06); c.fill();
+    if(mood === 'ooh'){
+      c.fillStyle = '#7A2648'; ell(c, 0, s*0.13, s*0.08, s*0.1); c.fill();
+    } else if(mood === 'happy'){
+      c.fillStyle = '#7A2648'; c.beginPath(); c.arc(0, s*0.06, s*0.15, 0.05*Math.PI, 0.95*Math.PI); c.closePath(); c.fill();
+    } else {
+      c.strokeStyle = '#3A2340'; c.beginPath(); c.arc(0, s*0.04, s*0.13, 0.15*Math.PI, 0.85*Math.PI); c.stroke();
+    }
+    c.restore();
+  }
+
+  // ===== DRAWING: BLOSSOM THE BUNNYCORN (the same Blossom as in Blossom's Easter Eggs) =====
+  // o = {x, y, s, hop, mood, clap, wave, tilt}
+  function drawBlossom(o){
+    const s = o.s, t = clock, x = o.x, y = o.y, hop = o.hop || 0;
+    ctx.save();
+    ctx.translate(x, y - hop); ctx.rotate(o.tilt || 0); ctx.scale(s, s);
+    const line = '#D8C8E8', pinkIn = '#FFC6DA';
+    ctx.lineWidth = 3; ctx.strokeStyle = line; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const tw = reduced ? 0 : Math.sin(t*3)*2;
+    [[31, -27, '#FF6B6B'], [37, -20, '#FFD43B'], [34, -12, '#69DB7C'], [27, -15, '#4DABF7'], [31, -20, '#9775FA']].forEach(([a, b, c]) => { ctx.fillStyle = c; circ(ctx, a + tw, b, 7); ctx.fill(); });
+    ctx.fillStyle = '#FFFFFF';
+    ell(ctx, -14, -6, 13, 8); ctx.fill(); ctx.stroke();
+    ell(ctx, 14, -6, 13, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = pinkIn; circ(ctx, -14, -5, 3); ctx.fill(); circ(ctx, 14, -5, 3); ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; ell(ctx, 0, -42, 28, 32); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#FFF0F6'; ell(ctx, 0, -38, 17, 20); ctx.fill();
+    const ew = reduced ? 0 : Math.sin(t*2.2)*0.05;
+    [[-15, -0.28 - ew], [15, 0.28 + ew]].forEach(([ex, a]) => {
+      ctx.save(); ctx.translate(ex, -126); ctx.rotate(a);
+      ctx.fillStyle = '#FFFFFF'; ell(ctx, 0, -28, 10, 30); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = pinkIn; ell(ctx, 0, -26, 5, 22); ctx.fill();
+      ctx.restore();
+    });
+    ctx.fillStyle = '#FFFFFF'; circ(ctx, 0, -106, 28); ctx.fill(); ctx.stroke();
+    [[-11, -128, '#FF8FB8'], [-3, -132, '#FFD43B'], [5, -131, '#6EC6FF'], [12, -127, '#B98CFF']].forEach(([a, b, c]) => { ctx.fillStyle = c; circ(ctx, a, b, 7); ctx.fill(); });
+    ctx.fillStyle = '#FFD84D'; ctx.strokeStyle = '#E8B21C'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(-6, -130); ctx.lineTo(0, -168); ctx.lineTo(6, -130); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    for(let i = 1; i < 4; i++){ const yy = -131 - i*9, w = 5.5 - i*1.3; ctx.moveTo(-w, yy + 2); ctx.lineTo(w, yy - 2); }
+    ctx.stroke();
+    if(!reduced){ ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.5*Math.sin(t*6)})`; circ(ctx, 0, -168, 3); ctx.fill(); }
+    ctx.fillStyle = 'rgba(255,143,184,0.5)'; ell(ctx, -17, -98, 6, 4); ctx.fill(); ell(ctx, 17, -98, 6, 4); ctx.fill();
+    const blink = !reduced && ((t + (o.ph || 0)) % 4.2) < 0.12;
+    const happy = o.mood === 'happy';
+    ctx.strokeStyle = '#2B2340'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    if(happy){
+      ctx.beginPath(); ctx.arc(-10, -108, 5.5, 1.1*Math.PI, 1.9*Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(10, -108, 5.5, 1.1*Math.PI, 1.9*Math.PI); ctx.stroke();
+    } else if(blink){
+      ctx.beginPath(); ctx.moveTo(-15, -110); ctx.lineTo(-5, -110); ctx.moveTo(5, -110); ctx.lineTo(15, -110); ctx.stroke();
+    } else {
+      // she watches the shape you're holding
+      const lx = o.lookX || 0, ly = o.lookY || 0;
+      ctx.fillStyle = '#2B2340'; ell(ctx, -10 + lx, -110 + ly, 6, 7.5); ctx.fill(); ell(ctx, 10 + lx, -110 + ly, 6, 7.5); ctx.fill();
+      ctx.fillStyle = '#fff'; circ(ctx, -12 + lx, -113 + ly, 2.4); ctx.fill(); circ(ctx, 8 + lx, -113 + ly, 2.4); ctx.fill();
+      circ(ctx, -8.5 + lx, -107 + ly, 1.1); ctx.fill(); circ(ctx, 11.5 + lx, -107 + ly, 1.1); ctx.fill();
+      ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.moveTo(-15, -115); ctx.lineTo(-18, -118); ctx.moveTo(15, -115); ctx.lineTo(18, -118); ctx.stroke();
+    }
+    ctx.fillStyle = '#FF8FB8'; ell(ctx, 0, -99, 4, 3); ctx.fill();
+    ctx.strokeStyle = '#C0668C'; ctx.lineWidth = 2;
+    if(happy){ ctx.fillStyle = '#E05A7A'; ctx.beginPath(); ctx.arc(0, -95, 6, 0.05*Math.PI, 0.95*Math.PI); ctx.closePath(); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(-3.5, -95, 3.5, 0.1*Math.PI, 0.9*Math.PI); ctx.moveTo(7, -95); ctx.arc(3.5, -95, 3.5, 0.1*Math.PI, 0.9*Math.PI); ctx.stroke(); }
+    ctx.strokeStyle = line; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-9, -98); ctx.lineTo(-27, -101); ctx.moveTo(-9, -96); ctx.lineTo(-27, -94);
+    ctx.moveTo(9, -98); ctx.lineTo(27, -101); ctx.moveTo(9, -96); ctx.lineTo(27, -94);
+    ctx.stroke();
+    // paws: resting, clapping or waving
+    ctx.fillStyle = '#FFFFFF'; ctx.strokeStyle = line; ctx.lineWidth = 3;
+    if(o.clap > 0){
+      const k = reduced ? 0.5 : Math.abs(Math.sin(o.clap*11));
+      ell(ctx, -5 - k*14, -66, 9, 8); ctx.fill(); ctx.stroke();
+      ell(ctx, 5 + k*14, -66, 9, 8); ctx.fill(); ctx.stroke();
+    } else if(o.wave > 0){
+      const a = reduced ? 0 : Math.sin(o.wave*12)*0.4;
+      ctx.save(); ctx.translate(-26, -64); ctx.rotate(0.9 - a); ell(ctx, 0, -22, 9, 8); ctx.fill(); ctx.stroke(); ctx.restore();
+      ctx.save(); ctx.translate(26, -64); ctx.rotate(-0.9 + a); ell(ctx, 0, -22, 9, 8); ctx.fill(); ctx.stroke(); ctx.restore();
+    }
+    ctx.restore();
+  }
+
+  // ===== DRAWING: THE ANIMAL FRIENDS (the same friends as in Blossom's Easter Eggs) =====
+  const FOALS = {
+    foalPink: {body: '#FFE4EF', line: '#F2B8CF', mane: ['#FF8FB8', '#B98CFF', '#FFD43B'], hoof: '#E8A6C4', muzzle: '#FFD3E4'},
+    foalBlue: {body: '#E3F0FF', line: '#B5CCEE', mane: ['#6EC6FF', '#9D8CFF', '#FF9EC4'], hoof: '#9DB8E8', muzzle: '#D2E4FB'},
+    foalMint: {body: '#E2F8EC', line: '#A8DDBF', mane: ['#69DB7C', '#FFD43B', '#FF9EC4'], hoof: '#8FD1AB', muzzle: '#CDEFDC'}
+  };
+  const PAW = {duck: '#FFD43B', lamb: '#FFFFFF', koala: '#A9ACB8', piglet: '#FFC7D6', kitten: '#FFC078', foalPink: '#FFE4EF', foalBlue: '#E3F0FF', foalMint: '#E2F8EC'};
+  function fEyes(f, y, gap){
+    const happy = f.happy || f.joy > 0;
+    ctx.strokeStyle = '#2B2340'; ctx.fillStyle = '#2B2340'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+    if(happy){
+      ctx.beginPath(); ctx.arc(-gap, y + 1, 5, 1.1*Math.PI, 1.9*Math.PI); ctx.stroke();
+      ctx.beginPath(); ctx.arc(gap, y + 1, 5, 1.1*Math.PI, 1.9*Math.PI); ctx.stroke();
+    } else {
+      ell(ctx, -gap, y, 5, 6); ctx.fill(); ell(ctx, gap, y, 5, 6); ctx.fill();
+      ctx.fillStyle = '#fff'; circ(ctx, -gap - 1.5, y - 2.5, 2); ctx.fill(); circ(ctx, gap - 1.5, y - 2.5, 2); ctx.fill();
+    }
+  }
+  function fMouth(f, y){
+    const happy = f.happy || f.joy > 0;
+    ctx.strokeStyle = '#8A4B63'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    if(happy){ ctx.fillStyle = '#E05A7A'; ctx.beginPath(); ctx.arc(0, y - 2, 6, 0.05*Math.PI, 0.95*Math.PI); ctx.closePath(); ctx.fill(); }
+    else { ctx.beginPath(); ctx.arc(0, y - 3, 4.5, 0.2*Math.PI, 0.8*Math.PI); ctx.stroke(); }
+  }
+  function fCheeks(y, gap){ ctx.fillStyle = 'rgba(255,143,184,0.45)'; ell(ctx, -gap, y, 5, 3.5); ctx.fill(); ell(ctx, gap, y, 5, 3.5); ctx.fill(); }
+  function fluffy(pts, fill, line){
+    ctx.fillStyle = line; pts.forEach(([x, y, r]) => { circ(ctx, x, y, r + 2.5); ctx.fill(); });
+    ctx.fillStyle = fill; pts.forEach(([x, y, r]) => { circ(ctx, x, y, r); ctx.fill(); });
+  }
+  function drawFriendBody(f){
+    const k = f.kind;
+    ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    if(FOALS[k]){
+      const P = FOALS[k];
+      P.mane.forEach((c, i) => { ctx.fillStyle = c; circ(ctx, 25 + i*3, -16 + i*6, 7); ctx.fill(); });
+      ctx.fillStyle = P.body; ctx.strokeStyle = P.line;
+      ell(ctx, 0, -30, 25, 26); ctx.fill(); ctx.stroke();
+      ell(ctx, -10, -13, 7, 13); ctx.fill(); ctx.stroke();
+      ell(ctx, 10, -13, 7, 13); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = P.hoof; ell(ctx, -10, -2, 8, 4); ctx.fill(); ell(ctx, 10, -2, 8, 4); ctx.fill();
+      ctx.fillStyle = P.body;
+      ctx.beginPath(); ctx.moveTo(-21, -84); ctx.lineTo(-17, -106); ctx.lineTo(-7, -91); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(21, -84); ctx.lineTo(17, -106); ctx.lineTo(7, -91); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFC6DA';
+      ctx.beginPath(); ctx.moveTo(-17, -88); ctx.lineTo(-16, -100); ctx.lineTo(-10, -91); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(17, -88); ctx.lineTo(16, -100); ctx.lineTo(10, -91); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = P.body; ell(ctx, 0, -74, 24, 22); ctx.fill(); ctx.stroke();
+      [[21, -82], [24, -72], [23, -62]].forEach(([a, b], i) => { ctx.fillStyle = P.mane[i]; circ(ctx, a, b, 6); ctx.fill(); });
+      ctx.fillStyle = P.muzzle; ell(ctx, 0, -62, 15, 10); ctx.fill();
+      ctx.fillStyle = '#D48AA6'; circ(ctx, -4, -63, 1.6); ctx.fill(); circ(ctx, 4, -63, 1.6); ctx.fill();
+      fEyes(f, -78, 10); fCheeks(-67, 16); fMouth(f, -56);
+      [[-9, -93], [0, -96], [9, -93]].forEach(([a, b], i) => { ctx.fillStyle = P.mane[i]; circ(ctx, a, b, 7); ctx.fill(); });
+      ctx.fillStyle = '#FFD84D'; ctx.strokeStyle = '#E8B21C'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(-5, -96); ctx.lineTo(0, -124); ctx.lineTo(5, -96); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-4, -103); ctx.lineTo(4, -106); ctx.moveTo(-3, -111); ctx.lineTo(3, -113); ctx.stroke();
+      if(!reduced){ ctx.fillStyle = `rgba(255,255,255,${0.5 + 0.5*Math.sin(clock*6 + f.ph)})`; circ(ctx, 0, -124, 2.5); ctx.fill(); }
+    } else if(k === 'lamb'){
+      ctx.fillStyle = '#6B5A5A'; rrect(ctx, -14, -16, 7, 16, 3); ctx.fill(); rrect(ctx, 7, -16, 7, 16, 3); ctx.fill();
+      const body = [];
+      for(let i = 0; i < 8; i++){ const a = i/8*Math.PI*2; body.push([Math.cos(a)*18, -32 + Math.sin(a)*16, 12]); }
+      body.push([0, -32, 18]);
+      fluffy(body, '#FFFFFF', '#E3DDE8');
+      ctx.fillStyle = '#F2CDB8'; ell(ctx, -23, -76, 12, 6, -0.4); ctx.fill(); ell(ctx, 23, -76, 12, 6, 0.4); ctx.fill();
+      ctx.fillStyle = '#FBE8D8'; ctx.strokeStyle = '#E8C8B0'; ell(ctx, 0, -72, 19, 22); ctx.fill(); ctx.stroke();
+      fluffy([[-9, -92, 8], [0, -96, 9], [9, -92, 8]], '#FFFFFF', '#E3DDE8');
+      fEyes(f, -74, 8); fCheeks(-64, 12);
+      ctx.fillStyle = '#C98A8A'; ell(ctx, 0, -63, 4, 3); ctx.fill();
+      fMouth(f, -56);
+    } else if(k === 'duck'){
+      ctx.fillStyle = '#FF9F43'; ell(ctx, -10, -3, 9, 4); ctx.fill(); ell(ctx, 10, -3, 9, 4); ctx.fill();
+      ctx.fillStyle = '#FFE066'; ctx.strokeStyle = '#EDC23A';
+      ell(ctx, 0, -30, 26, 26); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFD43B'; ell(ctx, -24, -32, 8, 13, 0.4); ctx.fill(); ell(ctx, 24, -32, 8, 13, -0.4); ctx.fill();
+      ctx.fillStyle = '#FFE066'; circ(ctx, 0, -72, 23); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#EDC23A'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, -94); ctx.quadraticCurveTo(-2, -104, -8, -106); ctx.moveTo(0, -94); ctx.quadraticCurveTo(4, -106, 9, -104); ctx.stroke();
+      fEyes(f, -76, 9); fCheeks(-66, 15);
+      const open = (f.happy || f.joy > 0) ? 3 : 0;
+      ctx.fillStyle = '#FF9F43'; ctx.strokeStyle = '#E8802A'; ctx.lineWidth = 2;
+      ell(ctx, 0, -65 - open/2, 11, 4.5); ctx.fill(); ctx.stroke();
+      ell(ctx, 0, -60 + open/2, 9, 3.5); ctx.fill(); ctx.stroke();
+    } else if(k === 'koala'){
+      ctx.fillStyle = '#8C8FA0'; ell(ctx, -12, -4, 9, 5); ctx.fill(); ell(ctx, 12, -4, 9, 5); ctx.fill();
+      ctx.fillStyle = '#A9ACB8'; ctx.strokeStyle = '#8C8FA0';
+      ell(ctx, 0, -30, 26, 26); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#E9E9F0'; ell(ctx, 0, -26, 15, 17); ctx.fill();
+      [[-25, -90], [25, -90]].forEach(([a, b]) => {
+        ctx.fillStyle = '#A9ACB8'; circ(ctx, a, b, 15); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#F3F3F8'; circ(ctx, a, b + 1, 9); ctx.fill();
+      });
+      ctx.fillStyle = '#A9ACB8'; ell(ctx, 0, -72, 26, 22); ctx.fill(); ctx.stroke();
+      fEyes(f, -77, 12); fCheeks(-64, 17);
+      ctx.fillStyle = '#3A3A48'; ell(ctx, 0, -67, 7, 9); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)'; ell(ctx, -2, -71, 2, 3); ctx.fill();
+      fMouth(f, -54);
+    } else if(k === 'piglet'){
+      ctx.strokeStyle = '#EE9BB3'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(22, -22); ctx.bezierCurveTo(34, -24, 34, -12, 28, -12); ctx.bezierCurveTo(24, -12, 26, -18, 30, -18); ctx.stroke();
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = '#FFC7D6'; ctx.strokeStyle = '#EE9BB3';
+      ell(ctx, 0, -30, 26, 25); ctx.fill(); ctx.stroke();
+      ell(ctx, -10, -9, 7, 9); ctx.fill(); ctx.stroke(); ell(ctx, 10, -9, 7, 9); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#E48AA6'; ell(ctx, -10, -2, 7, 3); ctx.fill(); ell(ctx, 10, -2, 7, 3); ctx.fill();
+      ctx.fillStyle = '#FFC7D6';
+      ctx.beginPath(); ctx.moveTo(-20, -84); ctx.lineTo(-24, -104); ctx.lineTo(-6, -93); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(20, -84); ctx.lineTo(24, -104); ctx.lineTo(6, -93); ctx.closePath(); ctx.fill(); ctx.stroke();
+      circ(ctx, 0, -72, 24); ctx.fill(); ctx.stroke();
+      fEyes(f, -78, 10); fCheeks(-68, 16);
+      ctx.fillStyle = '#FFAFC5'; ell(ctx, 0, -64, 11, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#D9738F'; ell(ctx, -4, -64, 2, 3); ctx.fill(); ell(ctx, 4, -64, 2, 3); ctx.fill();
+      fMouth(f, -52);
+    } else if(k === 'kitten'){
+      ctx.strokeStyle = '#E59A4E'; ctx.lineWidth = 7;
+      const tw = reduced ? 0 : Math.sin(clock*2 + f.ph)*4;
+      ctx.beginPath(); ctx.moveTo(18, -14); ctx.quadraticCurveTo(40, -20, 34 + tw, -48); ctx.stroke();
+      ctx.strokeStyle = '#FFC078'; ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(18, -14); ctx.quadraticCurveTo(40, -20, 34 + tw, -48); ctx.stroke();
+      ctx.lineWidth = 2.5;
+      ctx.fillStyle = '#FFC078'; ctx.strokeStyle = '#E59A4E';
+      ell(ctx, 0, -30, 24, 25); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFE8CC'; ell(ctx, 0, -26, 13, 16); ctx.fill();
+      ell(ctx, -10, -4, 8, 5); ctx.fill(); ell(ctx, 10, -4, 8, 5); ctx.fill();
+      ctx.fillStyle = '#FFC078';
+      ctx.beginPath(); ctx.moveTo(-23, -80); ctx.lineTo(-19, -105); ctx.lineTo(-4, -91); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(23, -80); ctx.lineTo(19, -105); ctx.lineTo(4, -91); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFB3C8';
+      ctx.beginPath(); ctx.moveTo(-19, -84); ctx.lineTo(-18, -98); ctx.lineTo(-9, -90); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(19, -84); ctx.lineTo(18, -98); ctx.lineTo(9, -90); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#FFC078'; ell(ctx, 0, -72, 25, 22); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle = '#E59A4E'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(-6, -93); ctx.lineTo(-5, -86); ctx.moveTo(0, -94); ctx.lineTo(0, -86); ctx.moveTo(6, -93); ctx.lineTo(5, -86); ctx.stroke();
+      fEyes(f, -75, 10); fCheeks(-64, 16);
+      ctx.fillStyle = '#FF8FB8'; ctx.beginPath(); ctx.moveTo(-3.5, -67); ctx.lineTo(3.5, -67); ctx.lineTo(0, -63); ctx.closePath(); ctx.fill();
+      fMouth(f, -56);
+      ctx.strokeStyle = '#C9A27E'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(-8, -64); ctx.lineTo(-26, -67); ctx.moveTo(-8, -62); ctx.lineTo(-26, -59); ctx.moveTo(8, -64); ctx.lineTo(26, -67); ctx.moveTo(8, -62); ctx.lineTo(26, -59); ctx.stroke();
+    }
+  }
+  // a friend at f.x, f.y (feet), cheering with both paws up when f.wave > 0
+  function drawFriend(f){
+    const s = f.s;
+    ctx.save(); ctx.translate(f.x, f.y); ctx.scale(s*(f.dir < 0 ? -1 : 1), s); ctx.rotate(f.tilt || 0);
+    drawFriendBody(f);
+    if(f.wave > 0){
+      const a = reduced ? 0 : Math.sin(f.wave*12)*0.45;
+      ctx.fillStyle = PAW[f.kind] || '#fff'; ctx.strokeStyle = 'rgba(80,60,100,0.35)'; ctx.lineWidth = 2;
+      [[-22, 0.9 + a], [22, -0.9 - a]].forEach(([px, ang]) => {
+        ctx.save(); ctx.translate(px, -52); ctx.rotate(ang); ell(ctx, 0, -18, 8, 8); ctx.fill(); ctx.stroke(); ctx.restore();
+      });
+    }
+    ctx.restore();
+  }
+
+  // ===== DRAWING: THE POINTING HAND (shows what to do, no words needed) =====
+  function drawHand(c, x, y, s, press, alpha){
+    c.save(); c.globalAlpha = alpha; c.translate(x, y); c.scale(s*(1 - 0.1*press), s*(1 - 0.1*press)); c.rotate(-0.42);
+    const parts = () => {
+      rrect(c, -8, 0, 16, 40, 8); c.fill(); c.stroke();
+      [[8, 24], [16, 28], [23, 33]].forEach(([a, b]) => { ell(c, a + 4, b + 4, 7.5, 8.5); c.fill(); c.stroke(); });
+      rrect(c, -14, 26, 44, 36, 15); c.fill(); c.stroke();
+      ell(c, -15, 40, 7, 11, -0.5); c.fill(); c.stroke();
+    };
+    c.lineJoin = 'round'; c.lineWidth = 7; c.strokeStyle = '#6E5A8A'; c.fillStyle = '#6E5A8A'; parts();
+    c.lineWidth = 0; c.strokeStyle = 'transparent'; c.fillStyle = '#FFFFFF'; parts();
+    c.fillStyle = '#FFD6E6'; rrect(c, -5, 3, 10, 9, 4); c.fill();
+    c.restore();
+  }
+
+  // ===== THE LAYOUT (works out where everything goes for any screen shape) =====
+  let W = 300, H = 300, dpr = 1, phone = false;
+  // sizes in "S" (the size of one shape)
+  const CELL = 1.3, LIDPAD = 0.36, LIDMIN = 2.5, FRONT = 0.55, HEAD = 1.1, RUGW = 1.34, RUGH = 1.3;
+  let L = null;
+  function holeGrids(n){
+    const out = [];
+    for(let hc = 1; hc <= n; hc++){ const hr = Math.ceil(n/hc); if(hc*hr - n >= hc || hr > 3) continue; out.push([hc, hr]); }
+    return out;
+  }
+  function zoneCols(k, zw, zh, S){
+    if(k === 0) return 1;
+    for(let c = 1; c <= k; c++){ const r = Math.ceil(k/c); if(c*RUGW*S <= zw && r*RUGH*S <= zh) return c; }
+    return 0;
+  }
+  function plan(n, w, h, isPhone){
+    const PAD = 10, TOP = isPhone ? 54 : 12;
+    // keep the shapes clear of the corner buttons (back and "i" on the left, music and sound on the right)
+    const TOPL = isPhone ? 102 : 54, TOPR = isPhone ? 54 : 12;
+    const SMAX = Math.min(170, Math.min(w, h)*0.34);
+    const fitBelow = (hc, hr, rc, S) => {
+      const rr = Math.ceil(n/rc), bw = Math.max(hc*CELL + LIDPAD, LIDMIN)*S;
+      if(bw > w - 2*PAD || rc*RUGW*S > w - 2*PAD) return false;
+      return (HEAD + hr*CELL + LIDPAD + FRONT + 0.2 + rr*RUGH)*S <= h - TOP - PAD;
+    };
+    const fitSides = (hc, hr, S) => {
+      const bw = Math.max(hc*CELL + LIDPAD, LIDMIN)*S;
+      if((HEAD + hr*CELL + LIDPAD + FRONT)*S > h - 2*PAD) return false;
+      const zw = (w - bw)/2 - PAD - 0.12*S;
+      const k1 = Math.floor(n/2);
+      return zoneCols(k1, zw, h - TOPL - PAD, S) > 0 && zoneCols(n - k1, zw, h - TOPR - PAD, S) > 0;
+    };
+    const biggest = test => { let lo = 16, hi = SMAX; if(!test(lo)) return 0; for(let i = 0; i < 18; i++){ const m = (lo + hi)/2; if(test(m)) lo = m; else hi = m; } return lo; };
+    let best = null;
+    holeGrids(n).forEach(([hc, hr]) => {
+      for(let rc = 1; rc <= n; rc++){
+        const S = biggest(S => fitBelow(hc, hr, rc, S));
+        // prefer fewer rows of holes and a rug that fills the width nicely
+        const score = S*(1 - 0.01*hr) + (h >= w ? 2 : 0);
+        if(S && (!best || score > best.score)) best = {score, S, cfg: 'below', hc, hr, rc};
+      }
+      const S = biggest(S => fitSides(hc, hr, S));
+      const score = S*(1 - 0.01*hr) + (w > h ? 2 : 0);
+      if(S && (!best || score > best.score)) best = {score, S, cfg: 'sides', hc, hr};
+    });
+    if(!best) best = {S: 30, cfg: 'below', hc: n, hr: 1, rc: n};
+    const S = Math.floor(best.S), lidW = Math.max(best.hc*CELL + LIDPAD, LIDMIN)*S, lidH = (best.hr*CELL + LIDPAD)*S, frontH = FRONT*S;
+    const P = {S, r: S/2, cfg: best.cfg, hc: best.hc, hr: best.hr, PAD, TOP, w, h};
+    let head = HEAD*S, slots = [], rugs = [];
+    if(best.cfg === 'below'){
+      const rc = best.rc, rr = Math.ceil(n/rc);
+      let gap = 0.2*S, rugH = rr*RUGH*S;
+      let extra = (h - TOP - PAD) - (head + lidH + frontH + gap + rugH);
+      const addHead = Math.min(extra*0.45, 1.0*S); head += addHead; extra -= addHead;
+      const addRug = Math.min(extra*0.5, rr*0.4*S); rugH += addRug; extra -= addRug;
+      const addGap = Math.min(extra*0.5, 0.6*S); gap += addGap; extra -= addGap;
+      const y0 = TOP + extra/2;
+      P.box = {x: (w - lidW)/2, y: y0 + head, w: lidW, lidH, frontH};
+      const cw = Math.min((w - 2*PAD)/rc, 1.9*S), ch = rugH/rr, ry = P.box.y + lidH + frontH + gap;
+      for(let i = 0; i < n; i++){
+        const row = Math.floor(i/rc), col = i % rc, cnt = Math.min(rc, n - row*rc);
+        slots.push([w/2 + (col - (cnt - 1)/2)*cw, ry + (row + 0.5)*ch]);
+      }
+      rugs.push({x: w/2 - Math.min(w - 2*PAD, rc*cw + 0.3*S)/2, y: ry - 0.12*S, w: Math.min(w - 2*PAD, rc*cw + 0.3*S), h: rugH + 0.16*S});
+    } else {
+      let extra = (h - 2*PAD) - (head + lidH + frontH);
+      const addHead = Math.min(extra*0.6, 1.1*S); head += addHead; extra -= addHead;
+      P.box = {x: (w - lidW)/2, y: PAD + extra*0.55 + head, w: lidW, lidH, frontH};
+      const k1 = Math.floor(n/2), zs = [[PAD, P.box.x - 0.12*S, k1, TOPL], [P.box.x + lidW + 0.12*S, w - PAD, n - k1, TOPR]];
+      const zy1 = h - PAD;
+      zs.forEach(([x0, x1, k, zy0]) => {
+        if(!k) return;
+        const c = zoneCols(k, x1 - x0, zy1 - zy0, S) || 1, rws = Math.ceil(k/c);
+        const cw = Math.min((x1 - x0)/c, 1.9*S), ch = Math.min((zy1 - zy0)/rws, 1.8*S);
+        const gx = (x0 + x1)/2, gy = Math.max(zy0 + rws*ch/2, Math.min(zy1 - rws*ch/2, P.box.y + (lidH + frontH)/2 + 0.1*S));
+        for(let i = 0; i < k; i++){
+          const row = Math.floor(i/c), col = i % c, cnt = Math.min(c, k - row*c);
+          slots.push([gx + (col - (cnt - 1)/2)*cw, gy + (row + 0.5 - rws/2)*ch]);
+        }
+        const rw = Math.min(x1 - x0 + 0.1*S, c*cw + 0.3*S), rh = rws*ch + 0.2*S;
+        rugs.push({x: gx - rw/2, y: gy - rh/2, w: rw, h: rh});
+      });
+    }
+    // holes in the lid, in rows, centred
+    const B = P.box, holes = [];
+    const hx0 = B.x + B.w/2, hy0 = B.y + LIDPAD/2*S;
+    for(let i = 0; i < n; i++){
+      const row = Math.floor(i/best.hc), col = i % best.hc, cnt = Math.min(best.hc, n - row*best.hc);
+      holes.push([hx0 + (col - (cnt - 1)/2)*CELL*S, hy0 + (row + 0.5)*CELL*S]);
+    }
+    P.slots = slots; P.holeSpots = holes; P.rugs = rugs;
+    P.floorY = B.y + B.lidH*0.42;
+    // Blossom peeks over the back of the box on the left, a friend pops up on the right
+    const hs = clamp(head/122, 0.3, 1.5);
+    P.blos = {x: B.x + Math.max(B.w*0.2, 34*hs), y: B.y + 66*hs, s: hs};
+    P.friend = {x: B.x + B.w - Math.max(B.w*0.2, 30*hs), y: B.y + 4*hs, s: hs*0.95};
+    return P;
+  }
+
+  // ===== GAME STATE =====
+  let phase = 'start';            // start, play, party
+  let round = 0, boxCol = BOXCOLS[0], kinds = ['circle'], holeOrder = ['circle'], rugOrder = ['circle'];
+  let shapes = [], holes = [], parts = [], timers = [];
+  let drag = null, hint = null, idleT = 0, party = null, speed = 1;
+  const lid = {k: 0, target: 0, v: 0};
+  const blos = {hop: 0, clap: 0, wave: 0, mood: 'normal', moodT: 0, tilt: 0, dance: 0, giggle: 0, lookX: 0, lookY: 0};
+  const friend = {kind: 'foalPink', up: 0, target: 0, wave: 0, joy: 0, happy: true, ph: 1.3, tilt: 0, dir: -1};
+  let friendNo = 0;
+  const bg = document.createElement('canvas');
+
+  function after(s, fn){ timers.push({t: s, fn}); }
+
+  function applyLayout(){
+    L = plan(kinds.length, W, H, phone);
+    holes = holeOrder.map((k, i) => {
+      const old = holes.find(h => h.kind === k);
+      return {kind: k, x: L.holeSpots[i][0], y: L.holeSpots[i][1], glow: old ? old.glow : 0, wig: old ? old.wig : 0, filled: old ? old.filled : false};
+    });
+    shapes.forEach(sh => {
+      const i = rugOrder.indexOf(sh.kind), sp = L.slots[i];
+      sh.hx = sp[0] + sh.jx*L.S; sh.hy = sp[1] + sh.jy*L.S;
+      if(sh.state === 'rest'){ sh.x = sh.hx; sh.y = sh.hy; }
+      if(sh.state === 'held'){ sh.x = clamp(sh.x, L.r, W - L.r); sh.y = clamp(sh.y, L.r, H - L.r); }
+    });
+    paintBg();
+  }
+  const holeOf = kind => holes.find(h => h.kind === kind);
+
+  function newRound(first){
+    round++;
+    kinds = roundKinds(round);
+    holeOrder = shuffle(kinds.slice());
+    rugOrder = shuffle(kinds.slice());
+    boxCol = BOXCOLS[(round - 1) % BOXCOLS.length];
+    holes = [];
+    shapes = kinds.map((k, i) => ({kind: k, x: 0, y: 0, hx: 0, hy: 0, rot: rand(-0.16, 0.16), hrot: 0, jx: rand(-0.07, 0.07), jy: rand(-0.05, 0.05),
+      state: 'enter', t: -0.15 - rugOrder.indexOf(k)*0.14 - (first ? 0.2 : 0), lift: 0, wig: 0, tapT: -99, ph: rand(0, 4), from: null, posted: false}));
+    shapes.forEach(sh => sh.hrot = sh.rot);
+    applyLayout();
+    shapes.forEach(sh => { sh.x = sh.hx; sh.y = -L.S; });
+    phase = 'play'; party = null; idleT = 0; hint = null;
+    lid.target = 0;
+    friend.target = 0;
+  }
+
+  function start(){
+    if(phase !== 'start') return;
+    overlay.hidden = true;
+    wake(); startMusic();
+    round = 0;
+    newRound(true);
+  }
+
+  // ----- what happens when you drop a shape -----
+  function dropShape(sh, x, y){
+    const h = holeOf(sh.kind);
+    if(Math.hypot(x - h.x, y - h.y) < L.S*0.95){ postShape(sh, 0.16, 0); return true; }
+    goHome(sh);
+    // gently show where it does go
+    h.glow = Math.max(h.glow, 1.6);
+    return false;
+  }
+  function goHome(sh){
+    sh.state = 'return'; sh.t = 0; sh.from = {x: sh.x, y: sh.y, rot: sh.rot};
+    sfx.boing();
+    blos.giggle = 0.6;
+  }
+  // slide into the hole (dur = how long it takes, arc = how high it hops on the way)
+  function postShape(sh, dur, arc){
+    sh.state = 'slide'; sh.t = 0; sh.dur = dur; sh.arc = arc; sh.from = {x: sh.x, y: sh.y, rot: sh.rot};
+    if(arc) sfx.whee();
+  }
+  function tapShape(sh){
+    const h = holeOf(sh.kind);
+    // a second tap while its hole is still glowing sends it into the box by itself
+    if(clock - sh.tapT < 5 && h.glow > 0){
+      sh.tapT = -99; postShape(sh, 0.75, L.S*1.1); return;
+    }
+    sh.tapT = clock; sh.wig = 1; h.glow = 3; h.wig = 0.6;
+    sfx.giggle(0.8 + ALL.indexOf(sh.kind)*0.08);
+  }
+  function posted(sh){
+    sh.state = 'drop'; sh.t = 0;
+    const h = holeOf(sh.kind);
+    h.glow = 0;
+    sfx.plop(sh.kind);
+    burst(h.x, h.y, [SHAPES[sh.kind].col, '#FFFFFF', '#FFE38F'], 14, 'spark');
+    blos.clap = 1.1; blos.mood = 'happy'; blos.moodT = 1.3; blos.hop = 0.01; blos.hopV = 1;
+    sfx.clap();
+  }
+  function sunk(sh){
+    sh.state = 'posted'; sh.posted = true;
+    holeOf(sh.kind).filled = true;
+    if(shapes.every(s => s.posted)) after(0.45, startParty);
+  }
+
+  // ----- the big celebration at the end of each round -----
+  function startParty(){
+    if(phase !== 'play') return;
+    phase = 'party'; party = {t: 0};
+    hint = null;
+    lid.target = 1;
+    sfx.lid(); duckMusic(3.5);
+    after(0.3, () => {
+      sfx.fanfare(); sfx.applause();
+      const B = L.box;
+      shapes.forEach((sh, i) => parts.push({kind: 'shape', shape: sh.kind, x: B.x + B.w/2 + rand(-0.3, 0.3)*B.w, y: B.y + B.lidH*0.5, vx: rand(-1, 1)*L.S*2.6, vy: -rand(5.5, 7.5)*L.S, rot: 0, vr: rand(-4, 4), life: 3.2, max: 3.2, r: L.r*0.9, bounced: 0}));
+      confetti(reduced ? 30 : 90);
+      blos.dance = 3.8; blos.mood = 'happy'; blos.moodT = 4;
+      friend.kind = FRIENDS[friendNo++ % FRIENDS.length]; friend.target = 1; friend.wave = 3.5; friend.joy = 3.5;
+      after(0.5, () => sfx.yay(1.15));
+      after(0.9, () => sfx.yay(0.95));
+    });
+    after(0.9, showShare);
+    after(5.6, nextRound);
+  }
+  function showShare(){
+    shareBox.textContent = '';
+    if(window.LR && LR.shareButton){
+      const n = shapes.length;
+      shareBox.appendChild(LR.shareButton(`I posted all ${n === 1 ? 'the shape' : n + ' shapes'} into Blossom's Shape Sorter! ⭐`, 'Share my shapes'));
+    }
+  }
+  function hideShare(){ shareBox.textContent = ''; }
+  function nextRound(){
+    if(phase !== 'party') return;
+    timers = [];
+    hideShare();
+    friend.target = 0; friend.wave = 0;
+    blos.dance = 0;
+    newRound(false);
+  }
+
+  // ----- little bursts of joy -----
+  function burst(x, y, cols, n, kind){
+    for(let i = 0; i < n; i++){
+      const a = rand(0, TAU), v = rand(0.8, 2.2)*L.S;
+      parts.push({kind: kind || 'spark', x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - L.S*0.6, life: rand(0.5, 0.9), max: 0.9, r: rand(0.06, 0.12)*L.S, col: pickOne(cols), rot: rand(0, TAU), vr: rand(-6, 6)});
+    }
+  }
+  function confetti(n){
+    const cols = ['#FF5A64', '#3E8EFF', '#3FC46B', '#FFC633', '#FF6FB7', '#9C74FF', '#FF9333'];
+    for(let i = 0; i < n; i++) parts.push({kind: 'confetti', x: rand(0, W), y: rand(-H*0.5, -10), vx: rand(-30, 30), vy: rand(60, 160), life: 4, max: 4, r: rand(5, 9), col: pickOne(cols), rot: rand(0, TAU), vr: rand(-5, 5), sway: rand(0, TAU)});
+    const B = L.box;
+    for(let i = 0; i < n/3; i++){ const a = rand(-Math.PI*0.9, -Math.PI*0.1), v = rand(3, 6)*L.S; parts.push({kind: 'confetti', x: B.x + B.w/2, y: B.y + B.lidH*0.5, vx: Math.cos(a)*v, vy: Math.sin(a)*v, life: 3.5, max: 3.5, r: rand(5, 9), col: pickOne(cols), rot: rand(0, TAU), vr: rand(-6, 6), sway: rand(0, TAU), grav: 1}); }
+  }
+
+  // ===== TOUCH, MOUSE AND KEYBOARD =====
+  function toWorld(e){ const r = board.getBoundingClientRect(); return {x: e.clientX - r.left, y: e.clientY - r.top}; }
+  function grabbable(sh){ return !sh.posted && (sh.state === 'rest' || sh.state === 'return'); }
+  function hitShape(x, y){
+    let best = null, bd = Math.max(44, L.S*0.66);
+    shapes.forEach(sh => { if(!grabbable(sh)) return; const d = Math.hypot(sh.x - x, sh.y - y); if(d < bd){ bd = d; best = sh; } });
+    return best;
+  }
+  function onBlossom(x, y){ const b = L.blos; return Math.abs(x - b.x) < 36*b.s && y < L.box.y && y > b.y - 190*b.s; }
+  function onBox(x, y){ const B = L.box; return x > B.x && x < B.x + B.w && y > B.y && y < B.y + B.lidH + B.frontH; }
+  // nothing a toddler taps is ever "nothing" - everywhere else gets a sparkle and a chime
+  function happyTap(x, y){
+    const hh = holes.find(h => !h.filled && Math.hypot(x - h.x, y - h.y) < L.S*0.62);
+    if(phase === 'play' && hh){
+      hh.glow = 2.2; hh.wig = 0.6;
+      const sh = shapes.find(s => s.kind === hh.kind);
+      if(sh && sh.state === 'rest') sh.wig = 1;
+      sfx.chime(); return;
+    }
+    if(onBlossom(x, y)){ blos.giggle = 0.8; blos.mood = 'happy'; blos.moodT = 0.9; blos.hop = 0.01; blos.hopV = 1; sfx.giggle(1); return; }
+    if(phase === 'play' && onBox(x, y)){ lid.v -= 3; sfx.knock(); burst(x, y, ['#FFFFFF', boxCol.col], 6, 'spark'); return; }
+    burst(x, y, ['#FFE38F', '#FFFFFF', '#FFADD6', '#8CBCFF'], 8, 'star');
+    sfx.chime();
+  }
+  cvs.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    wake(); startMusic();
+    const p = toWorld(e);
+    idleT = 0; hint = null;
+    if(phase === 'start'){ happyTap(p.x, p.y); return; }
+    if(phase === 'party'){
+      if(party && party.t > 1.1) nextRound(); else happyTap(p.x, p.y);
+      return;
+    }
+    if(drag){ happyTap(p.x, p.y); return; }   // a second finger: just sparkles
+    const sh = hitShape(p.x, p.y);
+    if(!sh){ happyTap(p.x, p.y); return; }
+    drag = {sh, id: e.pointerId, ox: sh.x - p.x, oy: sh.y - p.y, sx: p.x, sy: p.y, t0: performance.now(), moved: false, lx: p.x, ly: p.y, v: 0};
+    sh.state = 'held'; sh.wig = 0;
+    cvs.classList.add('dragging');
+    try { cvs.setPointerCapture(e.pointerId); } catch(err){}
+    sfx.pickup(); slideStart();
+  });
+  function moveDrag(e){
+    if(!drag || e.pointerId !== drag.id) return;
+    const p = toWorld(e), sh = drag.sh;
+    if(Math.hypot(p.x - drag.sx, p.y - drag.sy) > 12) drag.moved = true;
+    const r = L.r;
+    sh.x = clamp(p.x + drag.ox, r*0.6, W - r*0.6);
+    sh.y = clamp(p.y + drag.oy, r*0.6, H - r*0.6);
+    drag.v += Math.hypot(p.x - drag.lx, p.y - drag.ly); drag.lx = p.x; drag.ly = p.y;
+  }
+  function endDrag(e, cancelled){
+    if(!drag || e.pointerId !== drag.id) return;
+    const d = drag, sh = d.sh; drag = null;
+    cvs.classList.remove('dragging');
+    slideStop();
+    idleT = 0;
+    if(cancelled){ goHome(sh); return; }
+    if(!d.moved){
+      // a tap: back on the rug, wiggle, and show its hole
+      sh.state = 'return'; sh.t = 0.3; sh.from = {x: sh.x, y: sh.y, rot: sh.rot};
+      tapShape(sh);
+      return;
+    }
+    dropShape(sh, sh.x, sh.y);
+  }
+  addEventListener('pointermove', moveDrag);
+  addEventListener('pointerup', e => endDrag(e, false));
+  addEventListener('pointercancel', e => endDrag(e, true));
+  cvs.addEventListener('lostpointercapture', e => { if(drag && e.pointerId === drag.id) endDrag(e, false); });
+
+  overlay.addEventListener('click', e => { e.preventDefault(); start(); });
+  playBtn.addEventListener('click', e => { e.preventDefault(); e.stopPropagation(); start(); });
+
+  // keyboard: Space or Enter posts the next shape (and skips the party)
+  addEventListener('keydown', e => {
+    if(e.key !== ' ' && e.key !== 'Enter') return;
+    if(e.target && (e.target.tagName === 'BUTTON' || e.target.tagName === 'A' || e.target.tagName === 'SUMMARY')) return;
+    e.preventDefault();
+    wake(); startMusic();
+    idleT = 0; hint = null;
+    if(phase === 'start'){ start(); return; }
+    if(phase === 'party'){ if(party && party.t > 1.1) nextRound(); return; }
+    const sh = rugOrder.map(k => shapes.find(s => s.kind === k)).find(s => s && grabbable(s));
+    if(sh) postShape(sh, 0.75, L.S*1.1);
+  });
+
+  // ===== UPDATE =====
+  function update(dt){
+    clock += dt;
+    for(let i = timers.length - 1; i >= 0; i--){ const tm = timers[i]; tm.t -= dt; if(tm.t <= 0){ timers.splice(i, 1); tm.fn(); } }
+    if(party) party.t += dt;
+
+    // the shapes
+    shapes.forEach(sh => {
+      sh.wig = Math.max(0, sh.wig - dt*1.4);
+      if(sh.state === 'enter'){
+        sh.t += dt;
+        const u = clamp(sh.t/0.7, 0, 1);
+        sh.x = sh.hx; sh.y = lerp(-L.S, sh.hy, bounceOut(u)); sh.rot = sh.hrot;
+        if(sh.t >= 0 && !sh.landed && u > 0.36){ sh.landed = true; sfx.land(rugOrder.indexOf(sh.kind)); }
+        if(u >= 1){ sh.state = 'rest'; sh.landed = false; }
+      } else if(sh.state === 'rest'){
+        sh.x = lerp(sh.x, sh.hx, Math.min(1, dt*10)); sh.y = lerp(sh.y, sh.hy, Math.min(1, dt*10));
+        sh.rot = lerp(sh.rot, sh.hrot, Math.min(1, dt*6));
+        sh.lift = Math.max(0, sh.lift - dt*5);
+      } else if(sh.state === 'held'){
+        sh.lift = Math.min(1, sh.lift + dt*8);
+        sh.rot = lerp(sh.rot, 0, Math.min(1, dt*10));
+      } else if(sh.state === 'return'){
+        sh.t += dt;
+        const u = clamp(sh.t/0.5, 0, 1), k = easeBack(u);
+        sh.x = lerp(sh.from.x, sh.hx, k); sh.y = lerp(sh.from.y, sh.hy, k); sh.rot = lerp(sh.from.rot, sh.hrot, ease(u));
+        sh.lift = Math.max(0, 1 - u*1.6);
+        if(u >= 1) sh.state = 'rest';
+      } else if(sh.state === 'slide'){
+        sh.t += dt;
+        const h = holeOf(sh.kind), u = clamp(sh.t/sh.dur, 0, 1), k = sh.arc ? easeInOut(u) : ease(u);
+        sh.x = lerp(sh.from.x, h.x, k); sh.y = lerp(sh.from.y, h.y, k) - (sh.arc || 0)*Math.sin(Math.PI*u);
+        sh.rot = lerp(sh.from.rot, 0, k);
+        sh.lift = sh.arc ? Math.sin(Math.PI*u) : Math.max(0, 1 - u);
+        if(u >= 1){ sh.x = h.x; sh.y = h.y; sh.rot = 0; sh.lift = 0; posted(sh); }
+      } else if(sh.state === 'drop'){
+        sh.t += dt;
+        if(sh.t >= 0.42) sunk(sh);
+      }
+    });
+
+    // the shhh of sliding
+    if(drag){ slideSet(clamp(drag.v/dt/2200, 0, 1)*0.07*(muted ? 0 : 1)); drag.v = 0; }
+
+    // holes
+    holes.forEach(h => { h.glow = Math.max(0, h.glow - dt); h.wig = Math.max(0, h.wig - dt); });
+
+    // the lid springs open and shut
+    lid.v += ((lid.target - lid.k)*90 - lid.v*11)*dt;
+    lid.k += lid.v*dt;
+
+    // Blossom
+    blos.clap = Math.max(0, blos.clap - dt);
+    blos.giggle = Math.max(0, blos.giggle - dt);
+    blos.moodT -= dt; if(blos.moodT <= 0) blos.mood = 'normal';
+    blos.dance = Math.max(0, blos.dance - dt);
+    if(blos.hop > 0){ blos.hop += blos.hopV*dt*14; blos.hopV -= dt*5.5; if(blos.hop <= 0){ blos.hop = 0; } }
+    // she watches the shape you are holding
+    let lx = 0, ly = 0;
+    const watch = drag ? drag.sh : shapes.find(s => s.state === 'slide');
+    if(watch && L){ const dx = watch.x - L.blos.x, dy = watch.y - (L.blos.y - 110*L.blos.s), d = Math.hypot(dx, dy) || 1; lx = dx/d*3; ly = dy/d*2.5; }
+    blos.lookX = lerp(blos.lookX, lx, Math.min(1, dt*8)); blos.lookY = lerp(blos.lookY, ly, Math.min(1, dt*8));
+
+    // the friend who pops up to cheer
+    friend.up = lerp(friend.up, friend.target, Math.min(1, dt*(friend.target ? 5 : 7)));
+    friend.wave = Math.max(0, friend.wave - dt); friend.joy = Math.max(0, friend.joy - dt);
+
+    // particles
+    for(let i = parts.length - 1; i >= 0; i--){
+      const p = parts[i];
+      p.life -= dt;
+      if(p.life <= 0){ parts.splice(i, 1); continue; }
+      if(p.kind === 'confetti'){
+        if(p.grav){ p.vy += L.S*7*dt; p.vx *= 1 - dt*1.2; if(p.vy > 160){ p.vy = 160; p.grav = 0; } }
+        p.x += (p.vx + Math.sin(clock*3 + p.sway)*30)*dt; p.y += p.vy*dt; p.rot += p.vr*dt;
+      } else if(p.kind === 'shape'){
+        p.vy += L.S*12*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt;
+        const fl = H - p.r;
+        if(p.y > fl && p.vy > 0 && p.bounced < 2){ p.y = fl; p.vy *= -0.45; p.vx *= 0.7; p.bounced++; if(p.bounced === 1) sfx.land(ALL.indexOf(p.shape)); }
+      } else {
+        p.vy += L.S*3*dt; p.x += p.vx*dt; p.y += p.vy*dt; p.rot += p.vr*dt; p.vx *= 1 - dt*2;
+      }
+    }
+
+    // the "here's what to do" hand, after a few quiet seconds
+    if(phase === 'play' && !drag && shapes.every(s => s.state === 'rest' || s.posted)){
+      idleT += dt;
+      if(!hint && idleT > 4){
+        const sh = rugOrder.map(k => shapes.find(s => s.kind === k)).find(s => s && !s.posted);
+        if(sh){ hint = {t: 0, sh}; sh.wig = 0.5; }
+      }
+    } else if(phase !== 'play'){ idleT = 0; hint = null; }
+    if(hint){
+      hint.t += dt;
+      if(hint.sh.state !== 'rest'){ hint = null; }
+      else if(hint.t > 2.7){ hint = null; idleT = 4 - 2.4; }
+    }
+  }
+
+  // ===== DRAW =====
+  function paintBg(){
+    bg.width = Math.max(1, Math.round(W*dpr)); bg.height = Math.max(1, Math.round(H*dpr));
+    const c = bg.getContext('2d'); c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    renderRoom(c, W, H, L);
+  }
+  // the playroom: a soft wall, a wooden floor and fluffy rugs for the shapes
+  function renderRoom(c, w, h, P){
+    const fy = P.floorY;
+    const g = c.createLinearGradient(0, 0, 0, fy);
+    g.addColorStop(0, '#FFE1EE'); g.addColorStop(1, '#FFEFE2');
+    c.fillStyle = g; c.fillRect(0, 0, w, fy + 2);
+    // polka dots on the wallpaper
+    c.fillStyle = 'rgba(255,255,255,0.55)';
+    const ds = Math.max(26, P.S*0.42);
+    for(let y = ds*0.5, row = 0; y < fy - 6; y += ds, row++) for(let x = (row % 2 ? ds*0.5 : 0) + 6; x < w; x += ds){ circ(c, x, y, ds*0.11); c.fill(); }
+    // bunting across the wall
+    const by = Math.max(14, Math.min(fy*0.18, 40)), cols = ['#FF8FBF', '#FFC633', '#5FB8FF', '#7FD48B', '#B596FF'];
+    c.strokeStyle = '#E7B9CF'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(0, by); c.quadraticCurveTo(w/2, by + 26, w, by); c.stroke();
+    const nf = Math.max(6, Math.round(w/52));
+    for(let i = 0; i < nf; i++){
+      const u = (i + 0.5)/nf, x = u*w, y = by + 26*2*u*(1 - u)*1.0, fs = Math.min(16, w/nf*0.38);
+      c.fillStyle = cols[i % cols.length];
+      c.beginPath(); c.moveTo(x - fs, y); c.lineTo(x + fs, y); c.lineTo(x, y + fs*1.6); c.closePath(); c.fill();
+    }
+    // skirting board and floor
+    c.fillStyle = '#FFFFFF'; c.fillRect(0, fy - 6, w, 8);
+    const fg = c.createLinearGradient(0, fy, 0, h);
+    fg.addColorStop(0, '#F3D2AE'); fg.addColorStop(1, '#EBC093');
+    c.fillStyle = fg; c.fillRect(0, fy + 2, w, h - fy);
+    c.strokeStyle = 'rgba(176,118,70,0.18)'; c.lineWidth = 2;
+    const pl = Math.max(22, P.S*0.36);
+    for(let y = fy + pl, i = 0; y < h; y += pl, i++){
+      c.beginPath(); c.moveTo(0, y); c.lineTo(w, y); c.stroke();
+      for(let x = (i % 2 ? 60 : 140); x < w; x += 200){ c.beginPath(); c.moveTo(x, y - pl); c.lineTo(x, y); c.stroke(); }
+    }
+    // the rugs
+    P.rugs.forEach(R => {
+      const rr = Math.min(R.h, R.w)*0.3;
+      c.fillStyle = 'rgba(120,70,60,0.12)'; rrect(c, R.x + 3, R.y + 6, R.w, R.h, rr); c.fill();
+      c.fillStyle = '#BDEBD9'; rrect(c, R.x, R.y, R.w, R.h, rr); c.fill();
+      c.strokeStyle = '#8FD6BC'; c.lineWidth = 5; c.stroke();
+      c.setLineDash([7, 7]); c.strokeStyle = '#FFFFFFAA'; c.lineWidth = 2.5; rrect(c, R.x + 9, R.y + 9, R.w - 18, R.h - 18, Math.max(4, rr - 9)); c.stroke(); c.setLineDash([]);
+    });
+  }
+
+  // the wooden shape sorter box
+  function drawBox(c, P, col, lidK, holeList){
+    const B = P.box, S = P.S, rr = S*0.2;
+    // its shadow
+    c.fillStyle = 'rgba(110,60,50,0.2)'; ell(c, B.x + B.w/2, B.y + B.lidH + B.frontH, B.w*0.56, S*0.16); c.fill();
+    // the front
+    const fx = B.x + S*0.05, fw = B.w - S*0.1, fy = B.y + B.lidH - rr, fh = B.frontH + rr;
+    const fg = c.createLinearGradient(0, fy, 0, fy + fh);
+    fg.addColorStop(0, col.col); fg.addColorStop(1, mixCol(col.col, col.dark, 0.55));
+    c.fillStyle = fg; rrect(c, fx, fy, fw, fh, rr); c.fill();
+    c.lineWidth = Math.max(2.5, S*0.05); c.strokeStyle = col.dark; c.stroke();
+    // wood grain showing through the paint
+    c.save(); rrect(c, fx, fy, fw, fh, rr); c.clip();
+    c.strokeStyle = 'rgba(255,255,255,0.16)'; c.lineWidth = 2;
+    for(let i = 0; i < 4; i++){ const y = fy + rr + (i + 0.6)*(fh - rr)/4.4; c.beginPath(); c.moveTo(fx, y); for(let x = fx; x <= fx + fw; x += 16) c.lineTo(x, y + Math.sin(x*0.05 + i*1.7)*2.2); c.stroke(); }
+    // painted dots along the front
+    const nd = Math.max(3, Math.round(fw/(S*0.55)));
+    for(let i = 0; i < nd; i++){ c.fillStyle = i % 2 ? '#FFFFFFCC' : 'rgba(255,255,255,0.5)'; circ(c, fx + (i + 0.5)*fw/nd, fy + rr + (fh - rr)*0.52, S*0.07); c.fill(); }
+    c.restore();
+    // when the lid pops open you can see inside
+    const dy = -lidK*S*0.42, tilt = -lidK*0.05;
+    if(lidK > 0.02){
+      c.fillStyle = '#5B3A35'; rrect(c, B.x + S*0.12, B.y + S*0.1, B.w - S*0.24, B.lidH - S*0.05, rr); c.fill();
+      c.fillStyle = '#3F2522'; rrect(c, B.x + S*0.12, B.y + S*0.1, B.w - S*0.24, B.lidH*0.35, rr); c.fill();
+    }
+    // the lid: natural wood with a painted trim
+    c.save();
+    c.translate(B.x + B.w/2, B.y + dy); c.rotate(tilt); c.translate(-(B.x + B.w/2), -B.y);
+    const lg = c.createLinearGradient(0, B.y, 0, B.y + B.lidH);
+    lg.addColorStop(0, '#F8E2BC'); lg.addColorStop(1, '#ECCB96');
+    rrect(c, B.x, B.y, B.w, B.lidH, rr);
+    c.fillStyle = lg; c.fill();
+    c.save(); rrect(c, B.x, B.y, B.w, B.lidH, rr); c.clip();
+    c.strokeStyle = 'rgba(190,130,70,0.22)'; c.lineWidth = 1.6;
+    for(let i = 0; i < 9; i++){ const y = B.y + (i + 0.5)*B.lidH/9; c.beginPath(); c.moveTo(B.x, y); for(let x = B.x; x <= B.x + B.w; x += 14) c.lineTo(x, y + Math.sin(x*0.03 + i*2.1)*2.6 + Math.sin(x*0.011 + i)*3); c.stroke(); }
+    c.restore();
+    rrect(c, B.x, B.y, B.w, B.lidH, rr);
+    c.lineWidth = Math.max(4, S*0.09); c.strokeStyle = col.col; c.stroke();
+    rrect(c, B.x - c.lineWidth/2, B.y - c.lineWidth/2, B.w + c.lineWidth, B.lidH + c.lineWidth, rr + c.lineWidth/2);
+    c.lineWidth = 2.5; c.strokeStyle = col.dark; c.stroke();
+    // the holes, each with a rim the colour of its shape
+    (holeList || []).forEach(h => drawHole(c, h, P.r, dy));
+    c.restore();
+  }
+  function drawHole(c, h, r, dy){
+    const S = SHAPES[h.kind];
+    const wob = h.wig > 0 && !reduced ? Math.sin(h.wig*30)*0.05*(h.wig/0.6) : 0;
+    c.save(); c.translate(h.x, h.y); c.rotate(wob);
+    const sc = 1.1;
+    // a soft pulsing glow when it's being pointed out
+    if(h.glow > 0){
+      const a = Math.min(1, h.glow)*(0.55 + 0.45*Math.sin(clock*7));
+      glow(c, 0, 0, r*2.1, hexToRgbaTpl(S.col), 0.7*a);
+    }
+    c.scale(sc, sc);
+    c.lineJoin = 'round';
+    shapePath(c, h.kind, r);
+    c.lineWidth = r*0.36; c.strokeStyle = S.dark; c.stroke();
+    c.lineWidth = r*0.26; c.strokeStyle = S.col; c.stroke();
+    const hg = c.createLinearGradient(0, -r, 0, r);
+    hg.addColorStop(0, '#2B1A26'); hg.addColorStop(1, '#5A3A44');
+    c.fillStyle = hg; c.fill();
+    // a posted shape waits at the bottom of the box
+    if(h.filled){
+      c.save(); shapePath(c, h.kind, r); c.clip();
+      c.globalAlpha = 0.45; c.translate(0, r*0.32); c.scale(0.72, 0.72);
+      shapePath(c, h.kind, r); c.fillStyle = S.col; c.fill();
+      c.restore();
+      if(!reduced){ const tw = Math.max(0, Math.sin(clock*2.4 + h.x*0.05)); if(tw > 0.6) twinkle(c, r*0.55, -r*0.55, r*0.22*(tw - 0.6)/0.4, '#FFFFFF'); }
+    }
+    c.restore();
+  }
+  function hexToRgbaTpl(hex){ const [r, g, b] = hexRgb(hex); return `rgba(${r},${g},${b},A)`; }
+
+  function shapeFace(sh){
+    if(sh.state === 'held' || sh.state === 'slide') return 'ooh';
+    if(sh.wig > 0 || phase === 'party') return 'happy';
+    return 'normal';
+  }
+  function drawParts(){
+    parts.forEach(p => {
+      const a = clamp(p.life/Math.min(p.max, 0.6), 0, 1);
+      if(p.kind === 'shape'){
+        drawShape(ctx, p.shape, p.x, p.y, p.r, p.rot, {alpha: a, face: 'happy', noShadow: true});
+      } else if(p.kind === 'confetti'){
+        ctx.save(); ctx.globalAlpha = a; ctx.translate(p.x, p.y); ctx.rotate(p.rot); ctx.fillStyle = p.col; ctx.fillRect(-p.r/2, -p.r*0.3, p.r, p.r*0.6); ctx.restore();
+      } else if(p.kind === 'star'){
+        ctx.save(); ctx.globalAlpha = a; twinkle(ctx, p.x, p.y, p.r*1.6, p.col); ctx.restore();
+      } else {
+        ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = p.col; circ(ctx, p.x, p.y, p.r); ctx.fill(); ctx.restore();
+      }
+    });
+  }
+  function draw(){
+    if(!L) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.drawImage(bg, 0, 0, W, H);
+    const B = L.box, S = L.S;
+    // the friend and Blossom stand behind the box
+    if(friend.up > 0.01){
+      const f = L.friend, k = friend.up;
+      const bob = friend.joy > 0 && !reduced ? Math.abs(Math.sin(friend.joy*9))*14*f.s : 0;
+      drawFriend(Object.assign({}, friend, {x: f.x, y: f.y + (1 - k)*150*f.s - bob, s: f.s, tilt: reduced ? 0 : Math.sin(clock*6)*0.06}));
+    }
+    const b = L.blos;
+    let hop = blos.hop*b.s*30, tilt = 0;
+    if(blos.dance > 0 && !reduced){ hop = Math.abs(Math.sin(blos.dance*7))*42*b.s + 12*b.s; tilt = Math.sin(blos.dance*7)*0.12; }
+    if(blos.giggle > 0 && !reduced) tilt += Math.sin(blos.giggle*30)*0.05;
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, B.y + B.lidH*0.6); ctx.clip();
+    drawBlossom({x: b.x, y: b.y, s: b.s, hop, tilt, mood: blos.mood, clap: blos.clap > 0 || blos.dance > 0 ? (blos.clap || blos.dance) : 0, wave: 0, ph: 0.7, lookX: blos.lookX, lookY: blos.lookY});
+    ctx.restore();
+    // the box (the lid wobbles a bit when you knock on it)
+    drawBox(ctx, L, boxCol, clamp(lid.k, -0.12, 1.4), holes);
+    // Blossom's paws resting on the edge of the box
+    if(hop < 3*b.s && blos.clap <= 0){
+      ctx.save(); ctx.translate(b.x, B.y - lid.k*S*0.42); ctx.scale(b.s, b.s);
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#D8C8E8'; ctx.lineWidth = 3;
+      ell(ctx, -17, 0, 10, 8); ctx.fill(); ctx.stroke(); ell(ctx, 17, 0, 10, 8); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+    // shapes sinking into their holes
+    shapes.forEach(sh => {
+      if(sh.state !== 'drop') return;
+      const h = holeOf(sh.kind), u = clamp(sh.t/0.42, 0, 1);
+      ctx.save(); ctx.translate(h.x, h.y); ctx.scale(1.1, 1.1); shapePath(ctx, sh.kind, L.r); ctx.restore();
+      ctx.save(); ctx.clip();
+      drawShape(ctx, sh.kind, h.x, h.y + u*u*S*0.9, L.r*(1 - 0.15*u), 0, {face: 'happy', noShadow: true});
+      ctx.restore();
+    });
+    // shapes on the rug (the one in your hand, or flying, goes on top)
+    const order = shapes.filter(sh => !sh.posted && sh.state !== 'drop').sort((a, b2) => {
+      const ka = a.state === 'held' || a.state === 'slide' ? 1 : 0, kb = b2.state === 'held' || b2.state === 'slide' ? 1 : 0;
+      return ka - kb || a.y - b2.y;
+    });
+    order.forEach(sh => {
+      const wig = sh.wig > 0 && !reduced ? Math.sin(sh.wig*28)*0.22*sh.wig : 0;
+      drawShape(ctx, sh.kind, sh.x, sh.y, L.r, sh.rot + wig, {lift: sh.lift, face: shapeFace(sh), ph: sh.ph});
+    });
+    // the hint: a hand drags a see-through copy of the shape towards its hole
+    if(hint){
+      const t = hint.t, sh = hint.sh, h = holeOf(sh.kind);
+      const fadeIn = clamp(t/0.35, 0, 1), fadeOut = 1 - clamp((t - 2.0)/0.4, 0, 1), a = Math.min(fadeIn, fadeOut);
+      const u = easeInOut(clamp((t - 0.7)/1.1, 0, 1))*0.6;
+      const press = clamp((t - 0.4)/0.2, 0, 1);
+      const gx = lerp(sh.x, h.x, u), gy = lerp(sh.y, h.y, u);
+      if(t > 0.6) drawShape(ctx, sh.kind, gx, gy, L.r, 0, {alpha: 0.5*a, face: 'happy', lift: 0.6, noShadow: true});
+      drawHand(ctx, gx + L.r*0.12, gy + L.r*0.2, S/72, press, a);
+    }
+    drawParts();
+  }
+
+  // ===== SIZE AND LOOP =====
+  function resize(){
+    const r = board.getBoundingClientRect();
+    if(r.width < 2 || r.height < 2) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    W = r.width; H = r.height;
+    phone = matchMedia(PHONE_MQ).matches;
+    cvs.width = Math.round(W*dpr); cvs.height = Math.round(H*dpr);
+    applyLayout();
+  }
+  addEventListener('resize', resize);
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(board);
+
+  let last = performance.now();
+  function loop(t){
+    let dt = Math.min(0.05, Math.max(0, (t - last)/1000))*speed; last = t;
+    // big jumps (e.g. the test speed-up) are done in small steps so springs stay steady
+    while(dt > 0){ const st = Math.min(dt, 1/60); update(st); dt -= st; }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  // ===== PICTURES: the start panel, and the card/share pictures =====
+  // draws a finished-looking scene: the box with its holes, Blossom watching, and the star about to drop in
+  function scene(c, w, h, o){
+    const keep = {ctx, W, H, clock};
+    ctx = c; W = w; H = h; clock = o.clock || 1.1;
+    const ks = o.kinds || ['circle', 'square', 'triangle', 'star'];
+    const P = plan(ks.length, w, h, false);
+    if(o.tweak) o.tweak(P);
+    renderRoom(c, w, h, P);
+    const hl = (o.holeOrder || ks).map((k, i) => ({kind: k, x: P.holeSpots[i][0], y: P.holeSpots[i][1], glow: k === o.hero ? 1 : 0, wig: 0, filled: (o.filled || []).includes(k)}));
+    const b = P.blos;
+    if(!o.blossom){
+      c.save(); c.beginPath(); c.rect(0, 0, w, P.box.y + P.box.lidH*0.6); c.clip();
+      drawBlossom({x: b.x, y: b.y, s: b.s, hop: 20*b.s, mood: 'happy', clap: 0.13, ph: 1});
+      c.restore();
+    }
+    drawBox(c, P, o.col || BOXCOLS[0], 0, hl);
+    // (pictures only) Blossom standing beside the box, cheering
+    if(o.blossom){
+      c.fillStyle = 'rgba(110,60,50,0.18)'; ell(c, o.blossom.x, o.blossom.y + 2, 34*o.blossom.s, 7*o.blossom.s); c.fill();
+      drawBlossom(Object.assign({mood: 'happy', ph: 1, wave: 0.13}, o.blossom));
+    }
+    (o.rug || ks).forEach((k, i) => {
+      if(k === o.hero || (o.filled || []).includes(k)) return;
+      drawShape(c, k, P.slots[i][0], P.slots[i][1], P.r, [0.12, -0.1, 0.08, -0.14, 0.1][i % 5], {face: 'normal', ph: i});
+    });
+    if(o.hero){
+      const hh = hl.find(x => x.kind === o.hero);
+      const hx = hh.x + (o.heroDx || 0)*P.S, hy = hh.y - (o.heroUp == null ? 0.75 : o.heroUp)*P.S;
+      // little "whoosh" lines
+      c.strokeStyle = 'rgba(255,255,255,0.9)'; c.lineWidth = Math.max(3, P.S*0.05); c.lineCap = 'round';
+      [-0.5, 0, 0.5].forEach(k => { c.beginPath(); c.moveTo(hx + k*P.r, hy - P.r*1.25); c.lineTo(hx + k*P.r*1.1, hy - P.r*1.7); c.stroke(); });
+      drawShape(c, o.hero, hx, hy, P.r*1.02, 0.08, {lift: 0.8, face: 'happy', noShadow: true});
+      [[-1.35, -0.3, 0.2], [1.3, -0.6, 0.16], [1.1, 0.5, 0.12], [-1.2, 0.7, 0.13]].forEach(([dx, dy, rr]) => twinkle(c, hx + dx*P.S*0.8, hy + dy*P.S*0.8, rr*P.S, '#FFFFFF'));
+    }
+    ctx = keep.ctx; W = keep.W; H = keep.H; clock = keep.clock;
+    return P;
+  }
+  // a hand-made layout for the pictures: three holes in a row on the right, Blossom standing on the left
+  function cardLayout(w, h, by, sk){
+    return P => {
+      const k = h/600, sx = w/800, S2 = (sk || 128)*k, lidW = (3*1.3 + 0.36)*S2, lidH = (1.3 + 0.36)*S2;
+      P.S = S2; P.r = S2/2;
+      P.box = {x: w - 30*sx - lidW, y: (by || 140)*k, w: lidW, lidH, frontH: 0.55*S2};
+      P.holeSpots = [0, 1, 2].map(i => [P.box.x + lidW/2 + (i - 1)*1.3*S2, P.box.y + 0.18*S2 + 0.65*S2]);
+      P.floorY = P.box.y + lidH*0.42;
+      const ry = P.box.y + lidH + P.box.frontH + 0.12*S2;
+      P.rugs = [{x: P.box.x + 20*sx, y: ry - 8*k, w: lidW - 40*sx, h: h - ry + 40}];
+      P.slots = [[P.box.x + lidW*0.3, ry + 0.56*S2], [0, 0], [P.box.x + lidW*0.72, ry + 0.56*S2]];
+    };
+  }
+  function panelPicture(){
+    const pc = $('panelPic'), c = pc.getContext('2d');
+    c.clearRect(0, 0, pc.width, pc.height);
+    c.save(); rrect(c, 0, 0, pc.width, pc.height, 30); c.clip();
+    scene(c, pc.width, pc.height, {kinds: ['circle', 'star', 'heart'], holeOrder: ['circle', 'star', 'heart'], rug: ['square', 'star', 'triangle'], hero: 'star', heroUp: 1.05, col: BOXCOLS[0],
+      tweak: cardLayout(pc.width, pc.height, 150, 128), blossom: {x: 0.16*pc.width, y: pc.height*0.96, s: pc.height/272}});
+    c.restore();
+  }
+
+  // ===== GO! =====
+  // before Play: an empty box waiting (the shapes arrive when you press Play)
+  kinds = ['circle']; holeOrder = ['circle']; rugOrder = ['circle'];
+  resize();
+  panelPicture();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { resize(); });
+  requestAnimationFrame(loop);
+
+  // ===== HELPER FOR AUTOMATIC TESTING (only switched on by adding ?test to the address) =====
+  // shape ids: circle, square, triangle, star, heart, moon, oval
+  if(TEST) window.__bss = {
+    get state(){ return {phase, round, overlay: !overlay.hidden, kinds: kinds.slice(), S: L.S, cfg: L.cfg, size: [W, H], phone,
+      posted: shapes.filter(s => s.posted).length, n: shapes.length, hint: !!hint, share: !!shareBox.firstChild, dragging: !!drag,
+      shapes: shapes.map(s => ({kind: s.kind, state: s.state, posted: s.posted, x: Math.round(s.x), y: Math.round(s.y), hx: Math.round(s.hx), hy: Math.round(s.hy)})),
+      holes: holes.map(h => ({kind: h.kind, x: Math.round(h.x), y: Math.round(h.y), glow: +h.glow.toFixed(2), filled: h.filled})),
+      box: {x: Math.round(L.box.x), y: Math.round(L.box.y), w: Math.round(L.box.w), h: Math.round(L.box.lidH + L.box.frontH)},
+      blossom: {x: Math.round(L.blos.x), y: Math.round(L.blos.y), s: +L.blos.s.toFixed(2)}}; },
+    start(){ start(); },
+    // as if dragged and let go right next to its own hole
+    drop(kind){ const sh = shapes.find(s => s.kind === kind); if(!sh || !grabbable(sh)) return false; const h = holeOf(kind); sh.x = h.x + L.S*0.3; sh.y = h.y + L.S*0.25; return dropShape(sh, sh.x, sh.y); },
+    // as if dragged onto the wrong hole (or somewhere else) - it boings back
+    dropWrong(kind){ const sh = shapes.find(s => s.kind === kind); if(!sh || !grabbable(sh)) return false; const o = holes.find(h => h.kind !== kind);
+      const x = o ? o.x : clamp(holeOf(kind).x + L.S*2, L.r, W - L.r), y = o ? o.y : holeOf(kind).y + L.S*2; sh.x = x; sh.y = y; return dropShape(sh, x, y); },
+    tap(kind){ const sh = shapes.find(s => s.kind === kind); if(!sh || !grabbable(sh)) return false; tapShape(sh); return true; },
+    skipRound(){ if(phase === 'play'){ shapes.forEach(s => { s.state = 'posted'; s.posted = true; }); holes.forEach(h => h.filled = true); startParty(); } else if(phase === 'party') nextRound(); },
+    speed(k){ speed = k || 1; },
+    poster(w, h, o){ const cv = document.createElement('canvas'); cv.width = w; cv.height = h; scene(cv.getContext('2d'), w, h, o || {}); return cv.toDataURL('image/png'); }
+  };
+})();
+</script>
+<!-- ===== For grown-ups note (site.js turns this into the little "i" button) ===== -->
+<details class="lr-about"><summary>For grown-ups</summary><div class="lr-about-body">
+  <h2>About Blossom's Shape Sorter</h2>
+  <p>Blossom's Shape Sorter is a free shape sorter game for toddlers aged about 2 and up. Like the classic wooden toy, children drag chunky circles, squares, triangles, stars, hearts and moons into the matching holes of a box while Blossom the Bunnycorn claps along.</p>
+  <p>Each shape and its hole share a colour, so little ones can match by colour or by shape. There's no reading, no timer and no losing - a shape in the wrong spot just boings back, and a tap makes the right hole glow.</p>
+  <p>Free, no ads and no sign-up. More like this: <a href="../../puzzle-games/">puzzle games</a> and <a href="../../unicorn-games/">unicorn games</a>.</p>
+</div></details>
+</body>
+</html>

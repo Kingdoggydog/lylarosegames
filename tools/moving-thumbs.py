@@ -274,3 +274,14 @@ for i,(x,y,r,d,dx) in enumerate([(318,372,14,3.2,-20),(330,360,10,2.6,25),(305,3
     p.add(f'<g class="bub" style="--l:{i*0.8}s;--d:{d}s;--x:{dx}px"><circle cx="{x}" cy="{y}" r="{r}" fill="rgba(255,255,255,.25)" stroke="#9FD8FF" stroke-width="2"/><circle cx="{x-r*0.35}" cy="{y-r*0.35}" r="{max(2,r*0.25)}" fill="#fff"/></g>')
 p.star(448,72,10,.3); p.star(760,250,9,1.3); p.star(320,268,9,2.1); p.star(150,60,8,.9); p.star(600,300,8,1.8)
 print('bubble pop', p.save())
+
+p=Pic('chompers-animal-train','steam puffing from the funnel, the sun glowing, the bird and clouds bobbing, a fish jumping in the river and sparkles')
+# moving bits first, so the steam puffs drift over the top of them
+p.bob(658,138,52,40,dy=-5,dur=1.4)
+p.bob(2,40,106,56,dy=-3,dur=4)
+p.bob(592,24,88,44,dy=-3,dur=4.6,delay=1)
+p.region('b', p.ell(150,502,28,16), '--y:-6px;--d:1.3s;--l:0s')
+p.halo(518,82,56)
+for i in range(3): p.add(f'<circle class="puff" style="--l:{i*1.2}s" cx="730" cy="252" r="12"/>')
+p.star(560,40,10,.3); p.star(250,60,9,1.4); p.star(40,190,8,2.1); p.star(770,230,9,.8)
+print('animal train', p.save())

@@ -41,7 +41,7 @@
   </url>
   <url>
     <loc>https://lylarosegames.com/animal-games/</loc>
-    <lastmod>2026-10-11</lastmod>
+    <lastmod>2026-10-13</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/lenny-banana-catch/share.jpg</image:loc></image:image>
   </url>
   <url>
@@ -51,7 +51,7 @@
   </url>
   <url>
     <loc>https://lylarosegames.com/dinosaur-games/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-13</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/chompers-car-crunch/share.jpg</image:loc></image:image>
   </url>
   <url>
@@ -61,7 +61,7 @@
   </url>
   <url>
     <loc>https://lylarosegames.com/train-games/</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-13</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/chompers-choo-choo/share.jpg</image:loc></image:image>
   </url>
   <url>
@@ -215,5 +215,11 @@
     <lastmod>2026-10-13</lastmod>
     <image:image><image:loc>https://lylarosegames.com/games/chompers-animal-train/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/chompers-animal-train/thumb.jpg</image:loc></image:image>
+  </url>
+  <url>
+    <loc>https://lylarosegames.com/games/blossoms-shape-sorter/</loc>
+    <lastmod>2026-10-13</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-shape-sorter/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-shape-sorter/thumb.jpg</image:loc></image:image>
   </url>
 </urlset>
