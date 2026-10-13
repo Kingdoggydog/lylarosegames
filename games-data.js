@@ -341,6 +341,7 @@ const games = [
     emoji: "⭐",
     colour: "#FFF1C9",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A shape sorter game for toddlers! Drag the chunky circles, squares, triangles and stars into the matching holes of Blossom the Bunnycorn's wooden box - plop! Learn shapes and colours with cheers, confetti and no way to lose.",
     categories: ["puzzles", "unicorns", "animals"],
     controls: "Drag or tap (or Space / Enter)"
