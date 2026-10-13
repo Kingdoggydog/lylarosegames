@@ -322,6 +322,17 @@ const games = [
     categories: ["animals", "action"],
     controls: "Tap (or Space / Enter)"
   },
+  {
+    title: "Chomper's Animal Train",
+    folder: "chompers-animal-train",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🚂",
+    colour: "#D6EEFF",
+    thumb: "thumb.jpg",
+    blurb: "A train game for toddlers! Tap the animals to help them hop aboard Chomper's steam train, toot the whistle and chug through tunnels and over bridges to the farm, the zoo, the beach and the snow.",
+    categories: ["trains", "dinosaurs", "animals"],
+    controls: "Tap (or Space / Enter)"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

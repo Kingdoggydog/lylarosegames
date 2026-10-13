@@ -210,4 +210,10 @@
     <image:image><image:loc>https://lylarosegames.com/games/lenny-bubble-pop/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/lenny-bubble-pop/thumb.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://lylarosegames.com/games/chompers-animal-train/</loc>
+    <lastmod>2026-10-13</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/chompers-animal-train/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/chompers-animal-train/thumb.jpg</image:loc></image:image>
+  </url>
 </urlset>

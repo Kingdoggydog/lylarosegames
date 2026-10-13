@@ -31,6 +31,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Trick-or-Treat Maze | Halloween, Mazes, Puzzles | 3+ | `games/trick-or-treat-maze/` |
 | Blossom's Pumpkin Faces | Halloween, Unicorns, Animals | 2+ | `games/blossoms-pumpkin-faces/` |
 | Lenny's Bubble Pop | Animals, Action | 2+ | `games/lenny-bubble-pop/` |
+| Chomper's Animal Train | Trains, Dinosaurs, Animals | 2+ | `games/chompers-animal-train/` |
 
 ## Age groups
 
