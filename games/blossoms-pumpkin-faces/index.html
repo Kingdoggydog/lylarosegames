@@ -1557,7 +1557,7 @@
     lightBtn.classList.toggle('ready', !!cur && cur.pieces.some(p => PIECE[p.id].slot === 'eyes') && cur.pieces.some(p => PIECE[p.id].slot === 'mouth'));
   }
   // how big each piece looks on its tray button
-  const ICONFIT = {eyes: [0.95, 0], nose: [2.0, 0], mouth: [1.05, -0.1], top: [0.62, 0.3], bow: [1.25, 0], brows: [0.95, 0.06], glasses: [0.82, 0], tache: [1.05, 0], cheeks: [0.72, 0]};
+  const ICONFIT = {eyes: [0.66, 0], nose: [1.7, 0], mouth: [0.78, -0.08], top: [0.62, 0.3], bow: [1.1, 0], brows: [0.62, 0.05], glasses: [0.48, 0], tache: [0.82, 0], cheeks: [0.5, 0]};
   function drawIcon(cv, id, size, onDark){
     const k = Math.round(size*dpr);
     if(cv.width !== k){ cv.width = k; cv.height = k; }
