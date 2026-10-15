@@ -358,6 +358,17 @@ const games = [
     categories: ["animals"],
     controls: "Tap or rub (or Space / Enter)"
   },
+  {
+    title: "Biscuit's Fetch",
+    folder: "biscuits-fetch",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🎾",
+    colour: "#DDF5D2",
+    thumb: "thumb.jpg",
+    blurb: "A puppy game for toddlers! Tap the park to throw the ball and Biscuit the cavoodle bounds off to fetch it - but will he bring back the ball, a shoe, a rubber duck or a stick far too big for him? A giggly dog game with no reading and no losing.",
+    categories: ["animals", "action"],
+    controls: "Tap (or Space / Enter)"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

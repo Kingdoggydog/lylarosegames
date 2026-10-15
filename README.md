@@ -34,6 +34,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Chomper's Animal Train | Trains, Dinosaurs, Animals | 2+ | `games/chompers-animal-train/` |
 | Blossom's Shape Sorter | Puzzles, Unicorns, Animals | 2+ | `games/blossoms-shape-sorter/` |
 | Biscuit's Puppy Care | Animals | 2+ | `games/biscuits-puppy-care/` |
+| Biscuit's Fetch | Animals, Action | 2+ | `games/biscuits-fetch/` |
 
 ## Age groups
 
