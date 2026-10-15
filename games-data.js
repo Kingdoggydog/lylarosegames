@@ -346,6 +346,17 @@ const games = [
     categories: ["puzzles", "unicorns", "animals"],
     controls: "Drag or tap (or Space / Enter)"
   },
+  {
+    title: "Biscuit's Puppy Care",
+    folder: "biscuits-puppy-care",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🐶",
+    colour: "#FFE8C7",
+    thumb: "thumb.jpg",
+    blurb: "A puppy game for toddlers! Look after Biscuit the cavoodle - feed him, give him a bubbly bath, brush his curly fur, dress him up and tuck him into bed. A cosy dog game with big buttons and no way to lose.",
+    categories: ["animals"],
+    controls: "Tap or rub (or Space / Enter)"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 
