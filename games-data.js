@@ -365,6 +365,7 @@ const games = [
     emoji: "🎾",
     colour: "#DDF5D2",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A puppy game for toddlers! Tap the park to throw the ball and Biscuit the cavoodle bounds off to fetch it - but will he bring back the ball, a shoe, a rubber duck or a stick far too big for him? A giggly dog game with no reading and no losing.",
     categories: ["animals", "action"],
     controls: "Tap (or Space / Enter)"

@@ -299,3 +299,11 @@ for i,(x,y,r,d,dx) in enumerate([(150,470,16,4.2,-15),(470,330,12,3.6,20),(110,3
 p.hearts(440,190,(0,1.1,2.2))
 p.star(400,40,10,.4); p.star(500,130,9,1.3); p.star(160,165,9,2.0); p.star(730,330,9,.9)
 print('puppy care', p.save())
+
+p=Pic('biscuits-fetch','the ball spinning through the air, the butterfly fluttering, a cloud drifting, hearts and sparkles')
+p.spin_circle(607.5,119.5,37,dur=2.4)
+p.bob(664,234,80,64,dy=-6,dur=1.1)
+p.bob(368,6,136,80,dy=-3,dur=4.4)
+p.hearts(290,100,(0,1.3))
+p.star(736,72,10,.3); p.star(240,180,9,1.4); p.star(520,60,9,2.1); p.star(760,200,8,.8)
+print('fetch', p.save())
