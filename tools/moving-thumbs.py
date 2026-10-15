@@ -292,3 +292,10 @@ p.bob(540,450,150,140,dy=-6,dur=1.6,delay=.8)
 p.halo(497,245,72)
 p.star(360,80,12,.2); p.star(632,48,11,1.2); p.star(608,162,9,2.0); p.star(374,182,9,.8); p.star(720,420,9,1.6)
 print('shape sorter', p.save())
+
+p=Pic('biscuits-puppy-care','bath bubbles floating up around Biscuit, little hearts rising and sparkles')
+for i,(x,y,r,d,dx) in enumerate([(150,470,16,4.2,-15),(470,330,12,3.6,20),(110,380,10,3.9,10),(520,250,14,4.6,-25),(200,300,9,3.3,15),(430,420,11,4.0,-10)]):
+    p.add(f'<g class="bub" style="--l:{i*0.7}s;--d:{d}s;--x:{dx}px"><circle cx="{x}" cy="{y}" r="{r}" fill="rgba(255,255,255,.35)" stroke="#C9D8F2" stroke-width="2"/><circle cx="{x-r*0.35}" cy="{y-r*0.35}" r="{max(2,r*0.25)}" fill="#fff"/></g>')
+p.hearts(440,190,(0,1.1,2.2))
+p.star(400,40,10,.4); p.star(500,130,9,1.3); p.star(160,165,9,2.0); p.star(730,330,9,.9)
+print('puppy care', p.save())

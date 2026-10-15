@@ -353,6 +353,7 @@ const games = [
     emoji: "🐶",
     colour: "#FFE8C7",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A puppy game for toddlers! Look after Biscuit the cavoodle - feed him, give him a bubbly bath, brush his curly fur, dress him up and tuck him into bed. A cosy dog game with big buttons and no way to lose.",
     categories: ["animals"],
     controls: "Tap or rub (or Space / Enter)"
