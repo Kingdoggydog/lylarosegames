@@ -76,7 +76,7 @@ games/<folder>/     one folder per game, fully self-contained
 - **End screens get a share button** (added to every game 4 Oct). When a round or level ends, add one with `if (window.LR && LR.shareButton) panel.appendChild(LR.shareButton("I got 3 stars in <Game name>! 🦄"));`
   - The message uses that round's real result (score, level, stars). No names or personal details in it.
   - Remove any old `.lr-share` button before adding a new one, so there's only ever one.
-  - The main pink button stays the biggest. Make sure clicking share doesn't start a new round (watch Space/Enter key handlers).
+  - The main play-again button stays the biggest. Make sure clicking share doesn't start a new round (watch Space/Enter key handlers).
   - An optional second word (e.g. `LR.shareButton(msg, "Share my town")`) changes the label. The button itself, its look and what it shares live in `site.js` - don't copy that code into games.
 - Top-score lists that ask for a name must ask for a **nickname** only, saved on the device (never sent anywhere).
 

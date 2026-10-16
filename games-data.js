@@ -14,17 +14,17 @@
 //   heading     big heading on its page
 //   about       one line shown under the heading
 const categories = [
-  { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
-  { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
-  { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles",         heading: "Puzzle games",        emoji: "🧩", colour: "#FFF1C9", about: "Think it through - jigsaws, matching, mazes and more." },
-  { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger, helicopter, jungle and Halloween mazes." },
-  { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
-  { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Cheeky monkeys, bananas and jungle fun." },
-  { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
-  { id: "dinosaurs", slug: "dinosaur-games", title: "Dinosaurs",     heading: "Dinosaur games",      emoji: "🦖", colour: "#DDF3E4", about: "Stomp, roar and chomp with friendly dinosaurs." },
-  { id: "cars",     slug: "car-games",     title: "Cars",            heading: "Car games",           emoji: "🚗", colour: "#FFD9B8", about: "Zoom, beep and crunch - games with cars and trucks." },
+  { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Puppies, lemurs, dinosaurs and jungle friends to play with." },
   { id: "trains",   slug: "train-games",   title: "Trains",          heading: "Train games",         emoji: "🚂", colour: "#D6EEFF", about: "All aboard! Toot, chug and choo-choo." },
   { id: "diggers",  slug: "digger-games",  title: "Diggers",         heading: "Digger games",        emoji: "🚜", colour: "#FFE8A3", about: "Dig, scoop, tip and build with big friendly diggers and trucks." },
+  { id: "dinosaurs", slug: "dinosaur-games", title: "Dinosaurs",     heading: "Dinosaur games",      emoji: "🦖", colour: "#DDF3E4", about: "Stomp, roar and chomp with friendly dinosaurs." },
+  { id: "cars",     slug: "car-games",     title: "Cars",            heading: "Car games",           emoji: "🚗", colour: "#FFD9B8", about: "Zoom, beep and crunch - games with cars and trucks." },
+  { id: "flying",   slug: "flying-games",  title: "Flying",          heading: "Flying games",        emoji: "☁️", colour: "#DDE3FF", about: "Up, up and away into the sky." },
+  { id: "mazes",    slug: "maze-games",    title: "Mazes",           heading: "Maze games",          emoji: "🌀", colour: "#DDF5D2", about: "Find the way through - unicorn, digger, helicopter, jungle and Halloween mazes." },
+  { id: "puzzles",  slug: "puzzle-games",  title: "Puzzles",         heading: "Puzzle games",        emoji: "🧩", colour: "#FFF1C9", about: "Think it through - jigsaws, matching, mazes and more." },
+  { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
+  { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
+  { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
   { id: "halloween", slug: "halloween-games", title: "Halloween",     heading: "Halloween games",     emoji: "🎃", colour: "#FFE0C2", about: "Cosy, not-scary Halloween fun - pumpkins, trick-or-treating and friendly bats." },
 ];
 
