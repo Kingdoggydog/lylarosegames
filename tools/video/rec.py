@@ -29,9 +29,17 @@ HOOK = r'''
   css.textContent = `.__tap{position:fixed;width:70px;height:70px;margin:-35px 0 0 -35px;border-radius:50%;pointer-events:none;z-index:99999;
     background:radial-gradient(circle,rgba(255,255,255,.85) 0 30%,rgba(255,255,255,.35) 31% 60%,rgba(255,255,255,0) 61%);animation:__tp .5s ease-out forwards}
     @keyframes __tp{from{transform:scale(.4);opacity:1}to{transform:scale(1.3);opacity:0}}
-    .back,#music,#sound,.lr-about,.lr-share,[class*="share"]{opacity:0!important;pointer-events:none!important}`;
+    .__fing{position:fixed;width:54px;height:54px;margin:-27px 0 0 -27px;border-radius:50%;pointer-events:none;z-index:99999;background:rgba(255,255,255,.55);border:4px solid rgba(255,255,255,.9);box-shadow:0 2px 10px rgba(0,0,0,.2);transition:opacity .25s}
+    .back,#music,#sound,#musicBtn,#sfxBtn,#lvlBtn,.lr-about,.lr-share,[class*="share"]{opacity:0!important;pointer-events:none!important}`;
   document.addEventListener('DOMContentLoaded', () => document.head.appendChild(css));
-  window.addEventListener('pointerdown', e => { const d = document.createElement('div'); d.className='__tap'; d.style.left=e.clientX+'px'; d.style.top=e.clientY+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),600); }, true);
+  window.__ripple = (x, y) => { const d = document.createElement('div'); d.className='__tap'; d.style.left=x+'px'; d.style.top=y+'px'; document.body.appendChild(d); setTimeout(()=>d.remove(),600); };
+  // a soft dot that follows the finger while it drags
+  let fing = null;
+  window.addEventListener('pointerdown', e => { __ripple(e.clientX, e.clientY);
+    fing = document.createElement('div'); fing.className='__fing'; fing.style.left=e.clientX+'px'; fing.style.top=e.clientY+'px'; document.body.appendChild(fing); }, true);
+  window.addEventListener('pointermove', e => { if (fing) { fing.style.left=e.clientX+'px'; fing.style.top=e.clientY+'px'; } }, true);
+  const lift = () => { if (fing) { const f = fing; fing = null; f.style.opacity = 0; setTimeout(() => f.remove(), 250); } };
+  window.addEventListener('pointerup', lift, true); window.addEventListener('pointercancel', lift, true);
 })();
 '''
 W, H = 540, 960
@@ -54,9 +62,9 @@ with sync_playwright() as p:
     cdp.send('Page.startScreencast', {'format': 'jpeg', 'quality': 92, 'maxWidth': 1080, 'maxHeight': 1920, 'everyNthFrame': 1})
     import players
     game, secs = sys.argv[2], float(sys.argv[3]) if len(sys.argv) > 3 else 28
-    folder, play = players.GAMES[game]
+    folder, play, *rest = players.GAMES[game]; start = rest[0] if rest else '#playBtn'
     pg.goto(f'http://localhost:8765/games/{folder}/?test'); pg.wait_for_timeout(1500)
-    bb = pg.locator('#playBtn').bounding_box(); t_tap = time.time(); pg.touchscreen.tap(bb['x']+bb['width']/2, bb['y']+bb['height']/2)
+    bb = pg.locator(start).bounding_box(); t_tap = time.time(); pg.touchscreen.tap(bb['x']+bb['width']/2, bb['y']+bb['height']/2)
     play(pg, pg.touchscreen.tap, time.time() + secs, W, H)
     nav0 = pg.evaluate('performance.timeOrigin')
     started = pg.evaluate('window.__rec && window.__rec.started')
