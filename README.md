@@ -13,10 +13,10 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Unicorn Penalty Shoot-out | Unicorns, Sport | 4+ | `games/unicorn-soccer/` |
 | Lenny's Banana Catch | Animals, Action | 4+ | `games/lenny-banana-catch/` |
 | Glitter Getaway | Unicorns, Action, Animals | 4+ | `games/glitter-getaway/` |
-| Chomper's Car Crunch | Dinosaurs, Cars, Action, Animals | 2+ | `games/chompers-car-crunch/` |
+| Chomper's Car Crunch | Dinosaurs, Cars, Action, Animals, Toddlers | 2+ | `games/chompers-car-crunch/` |
 | Whirlybird Rescue | Flying, Action, Animals | 3+ | `games/whirlybird-rescue/` |
 | Blossom's Easter Eggs | Unicorns, Animals, Action | 3+ | `games/blossoms-easter-eggs/` |
-| Chomper's Choo-Choo Express | Dinosaurs, Trains, Action | 2+ | `games/chompers-choo-choo/` |
+| Chomper's Choo-Choo Express | Dinosaurs, Trains, Action, Toddlers | 2+ | `games/chompers-choo-choo/` |
 | Lenny's Memory Match | Puzzles, Animals | 3+ | `games/lenny-memory-match/` |
 | Starlight's Unicorn Race | Unicorns, Sport, Action | 3+ | `games/starlight-unicorn-race/` |
 | Chomper's Car Wash | Cars, Dinosaurs | 3+ | `games/chompers-car-wash/` |
@@ -29,12 +29,12 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Whirly's Cloud Maze | Mazes, Puzzles, Flying, Animals | 4+ | `games/whirly-cloud-maze/` |
 | Lenny's Jungle Maze | Mazes, Puzzles, Animals | 3+ | `games/lenny-jungle-maze/` |
 | Trick-or-Treat Maze | Halloween, Mazes, Puzzles | 3+ | `games/trick-or-treat-maze/` |
-| Blossom's Pumpkin Faces | Halloween, Unicorns, Animals | 2+ | `games/blossoms-pumpkin-faces/` |
-| Lenny's Bubble Pop | Animals, Action | 2+ | `games/lenny-bubble-pop/` |
-| Chomper's Animal Train | Trains, Dinosaurs, Animals | 2+ | `games/chompers-animal-train/` |
-| Blossom's Shape Sorter | Puzzles, Unicorns, Animals | 2+ | `games/blossoms-shape-sorter/` |
-| Biscuit's Puppy Care | Animals | 2+ | `games/biscuits-puppy-care/` |
-| Biscuit's Fetch | Animals, Action | 2+ | `games/biscuits-fetch/` |
+| Blossom's Pumpkin Faces | Halloween, Unicorns, Animals, Toddlers | 2+ | `games/blossoms-pumpkin-faces/` |
+| Lenny's Bubble Pop | Animals, Action, Toddlers | 2+ | `games/lenny-bubble-pop/` |
+| Chomper's Animal Train | Trains, Dinosaurs, Animals, Toddlers | 2+ | `games/chompers-animal-train/` |
+| Blossom's Shape Sorter | Puzzles, Unicorns, Animals, Toddlers | 2+ | `games/blossoms-shape-sorter/` |
+| Biscuit's Puppy Care | Animals, Toddlers | 2+ | `games/biscuits-puppy-care/` |
+| Biscuit's Fetch | Animals, Action, Toddlers | 2+ | `games/biscuits-fetch/` |
 
 ## Age groups
 
@@ -44,6 +44,7 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 
 | Category | Page |
 | --- | --- |
+| Toddlers (every 2+ game) | `toddler-games/` |
 | Unicorns | `unicorn-games/` |
 | Sport | `sport-games/` |
 | Puzzles | `puzzle-games/` |

@@ -14,6 +14,7 @@
 //   heading     big heading on its page
 //   about       one line shown under the heading
 const categories = [
+  { id: "toddlers", slug: "toddler-games", title: "Toddlers",       heading: "Toddler games",       emoji: "👶", colour: "#C9F2D9", about: "Easy games for 2 and 3 year olds - big taps, no reading, nothing to lose." },
   { id: "animals",  slug: "animal-games",  title: "Animals",         heading: "Animal games",        emoji: "🐒", colour: "#FFE8C7", about: "Puppies, lemurs, dinosaurs and jungle friends to play with." },
   { id: "trains",   slug: "train-games",   title: "Trains",          heading: "Train games",         emoji: "🚂", colour: "#D6EEFF", about: "All aboard! Toot, chug and choo-choo." },
   { id: "diggers",  slug: "digger-games",  title: "Diggers",         heading: "Digger games",        emoji: "🚜", colour: "#FFE8A3", about: "Dig, scoop, tip and build with big friendly diggers and trucks." },
@@ -115,7 +116,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Stomp around as Chomper the friendly purple dinosaur, crunch cars and trucks into bouncing bits, and fill up your giant ROAR!",
-    categories: ["dinosaurs", "cars", "action", "animals"],
+    categories: ["dinosaurs", "cars", "action", "animals", "toddlers"],
     controls: "Drag, arrow keys or WASD"
   },
   {
@@ -151,7 +152,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "Drive Chomper's colourful steam train, stop right at the platform to pick up dinosaur friends, and toot the cows off the track!",
-    categories: ["dinosaurs", "trains", "action"],
+    categories: ["dinosaurs", "trains", "action", "toddlers"],
     controls: "Hold, Space or →, T to toot"
   },
   {
@@ -307,7 +308,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A Halloween pumpkin game for little ones! Pick a pumpkin from Blossom the Bunnycorn's patch, tap on silly eyes, noses, hats and moustaches, then light it up and watch it giggle, dance and sing on the porch.",
-    categories: ["halloween", "unicorns", "animals"],
+    categories: ["halloween", "unicorns", "animals", "toddlers"],
     controls: "Tap (drag if you like), or Tab and Enter"
   },
   {
@@ -319,7 +320,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A bubble pop game for toddlers! Lenny the Lemur blows big shiny bubbles - tap to pop them and find fish, butterflies, bananas and baby lemurs hiding inside.",
-    categories: ["animals", "action"],
+    categories: ["animals", "action", "toddlers"],
     controls: "Tap (or Space / Enter)"
   },
   {
@@ -331,7 +332,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A train game for toddlers! Tap the animals to help them hop aboard Chomper's steam train, toot the whistle and chug through tunnels and over bridges to the farm, the zoo, the beach and the snow.",
-    categories: ["trains", "dinosaurs", "animals"],
+    categories: ["trains", "dinosaurs", "animals", "toddlers"],
     controls: "Tap (or Space / Enter)"
   },
   {
@@ -343,7 +344,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A shape sorter game for toddlers! Drag the chunky circles, squares, triangles and stars into the matching holes of Blossom the Bunnycorn's wooden box - plop! Learn shapes and colours with cheers, confetti and no way to lose.",
-    categories: ["puzzles", "unicorns", "animals"],
+    categories: ["puzzles", "unicorns", "animals", "toddlers"],
     controls: "Drag or tap (or Space / Enter)"
   },
   {
@@ -355,7 +356,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A puppy game for toddlers! Look after Biscuit the cavoodle - feed him, give him a bubbly bath, brush his curly fur, dress him up and tuck him into bed. A cosy dog game with big buttons and no way to lose.",
-    categories: ["animals"],
+    categories: ["animals", "toddlers"],
     controls: "Tap or rub (or Space / Enter)"
   },
   {
@@ -367,7 +368,7 @@ const games = [
     thumb: "thumb.jpg",
     thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A puppy game for toddlers! Tap the park to throw the ball and Biscuit the cavoodle bounds off to fetch it - but will he bring back the ball, a shoe, a rubber duck or a stick far too big for him? A giggly dog game with no reading and no losing.",
-    categories: ["animals", "action"],
+    categories: ["animals", "action", "toddlers"],
     controls: "Tap (or Space / Enter)"
   },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
