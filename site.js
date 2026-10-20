@@ -212,6 +212,24 @@ window.LR = window.LR || {};
   // coming back to the game (from another app, or the Back button): try straight away too
   document.addEventListener("visibilitychange", () => { if (!document.hidden) wakeSound(); });
   addEventListener("pageshow", wakeSound);
+  // Stop every sound cleanly when the page is hidden (phone locked, app switched, tab changed) or the
+  // player leaves the game - otherwise a note can get cut off mid-way and "parp".
+  window.LR = window.LR || {};
+  window.LR._sleepSound = function () {
+    sounds.forEach(ac => { if (ac.state === "running") { try { const p = ac.suspend(); if (p && p.catch) p.catch(() => {}); } catch (e) {} } });
+    document.querySelectorAll("audio,video").forEach(m => { if (!m.paused) { m.dataset.lrWas = "1"; m.pause(); } });
+  };
+  window.LR._wakeSound = function () {
+    wakeSound();
+    document.querySelectorAll("audio,video").forEach(m => { if (m.dataset.lrWas) { delete m.dataset.lrWas; const p = m.play(); if (p && p.catch) p.catch(() => {}); } });
+  };
+  document.addEventListener("visibilitychange", () => { if (document.hidden) window.LR._sleepSound(); });
+  addEventListener("pagehide", () => window.LR._sleepSound());
+  // leaving the game with its back button: hush first
+  document.addEventListener("click", e => {
+    const a = e.target.closest && e.target.closest("a.back, a.back-link");
+    if (a) window.LR._sleepSound();
+  }, true);
 
   // 5. "Turn your device sideways" message - only on phones (tablets are big enough either way), only if the game asks
   const isPhone = isTouch && Math.min(screen.width, screen.height) < 600;
