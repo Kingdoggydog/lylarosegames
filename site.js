@@ -189,15 +189,31 @@ window.LR = window.LR || {};
   try {
     const Orig = window.AudioContext || window.webkitAudioContext;
     if (Orig) {
-      const Tracked = class extends Orig { constructor(...a) { super(...a); sounds.add(this); } };
+      // every game's sound goes through one volume knob (lrMaster), so we can fade it out smoothly
+      const Tracked = class extends Orig { constructor(...a) { super(...a); sounds.add(this); try { const g = Orig.prototype.createGain.call(this); g.connect(this.destination); this.__lrMaster = g; } catch (e) {} } };
       window.AudioContext = Tracked;
       if (window.webkitAudioContext) window.webkitAudioContext = Tracked;
+      const AN = window.AudioNode && AudioNode.prototype;
+      if (AN && AN.connect) {
+        const oc = AN.connect, od = AN.disconnect;
+        const via = (node, t) => { const c = node.context, m = c && c.__lrMaster; return (m && t && t === c.destination && node !== m) ? m : t; };
+        AN.connect = function (t, ...r) { const res = oc.call(this, via(this, t), ...r); return (res === this.context.__lrMaster) ? t : res; };
+        AN.disconnect = function (t, ...r) { return arguments.length ? od.call(this, via(this, t), ...r) : od.call(this); };
+      }
     }
   } catch (e) {}
+  let leaving = false;
+  function setVolume(ac, v, secs) {
+    const g = ac.__lrMaster; if (!g) return;
+    try { const t = ac.currentTime; g.gain.cancelScheduledValues(t); g.gain.setValueAtTime(g.gain.value, t);
+      if (secs) g.gain.linearRampToValueAtTime(v, t + secs); else g.gain.setValueAtTime(v, t); } catch (e) {}
+  }
   function wakeSound() {
     // treat game sound like music/video on iPhone: plays even when the silent switch is on
     try { if (navigator.audioSession && navigator.audioSession.type !== "playback") navigator.audioSession.type = "playback"; } catch (e) {}
+    if (leaving) return;
     sounds.forEach(ac => {
+      if (ac.state !== "closed") setVolume(ac, 1);
       if (ac.state === "running" || ac.state === "closed") return;
       try {
         const p = ac.resume(); if (p && p.catch) p.catch(() => {});
@@ -211,7 +227,7 @@ window.LR = window.LR || {};
   ["pointerup", "touchend", "click", "keydown"].forEach(t => addEventListener(t, wakeSound, { capture: true, passive: true }));
   // coming back to the game (from another app, or the Back button): try straight away too
   document.addEventListener("visibilitychange", () => { if (!document.hidden) wakeSound(); });
-  addEventListener("pageshow", wakeSound);
+  addEventListener("pageshow", () => { leaving = false; wakeSound(); });
   // Stop every sound cleanly when the page is hidden (phone locked, app switched, tab changed) or the
   // player leaves the game - otherwise a note can get cut off mid-way and "parp".
   window.LR = window.LR || {};
@@ -225,10 +241,18 @@ window.LR = window.LR || {};
   };
   document.addEventListener("visibilitychange", () => { if (document.hidden) window.LR._sleepSound(); });
   addEventListener("pagehide", () => window.LR._sleepSound());
-  // leaving the game with its back button: hush first
+  // Leaving the game with its back (or home) button: fade the sound out over a split second, then go.
+  // Cutting sound off dead mid-note is what made the "parp".
+  window.LR._leave = function (href) {
+    if (leaving) return; leaving = true;
+    sounds.forEach(ac => { if (ac.state === "running") setVolume(ac, 0, 0.08); });
+    setTimeout(() => { window.LR._sleepSound(); setTimeout(() => { location.href = href; }, 30); }, 110);
+  };
   document.addEventListener("click", e => {
-    const a = e.target.closest && e.target.closest("a.back, a.back-link");
-    if (a) window.LR._sleepSound();
+    const a = e.target.closest && e.target.closest("a.back, a.back-link, a[href='../../']");
+    if (!a || e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || a.target === "_blank") return;
+    e.preventDefault();
+    window.LR._leave(window.LR._homeHref || a.href);
   }, true);
 
   // 5. "Turn your device sideways" message - only on phones (tablets are big enough either way), only if the game asks
