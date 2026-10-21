@@ -48,15 +48,14 @@
   /* Bits only this page uses - everything else comes from styles.css */
   .sp-hero{margin:0;border-radius:22px;overflow:hidden;box-shadow:0 8px 24px #2E6E6122;background:#8F7BEA;aspect-ratio:16/9}
   .sp-hero img{display:block;width:100%;height:100%;object-fit:cover}
-  .sp-cta{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-  .sp-store{
-    display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:56px;
-    padding:12px 26px;border-radius:16px;background:#1D1D1F;color:#fff;text-decoration:none;
-    font-weight:800;font-size:18px;box-shadow:0 6px 16px #0003;
-  }
-  .sp-store:hover{background:#000}
-  .sp-store:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
-  .sp-store small{display:block;font-size:13px;font-weight:700;opacity:.8}
+  .sp-cta{display:flex;flex-direction:column;align-items:center;gap:0;text-align:center}
+  /* Apple's official badge: unchanged artwork, at least 40px tall, clear space of a quarter of its height all round */
+  .sp-badge{display:inline-block;padding:14px;line-height:0;border-radius:12px}
+  .sp-badge img{display:block;height:54px;width:auto}
+  .sp-badge:focus-visible{outline:4px solid var(--gold);outline-offset:0}
+  .sp-textlink{margin:0;text-align:center;font-weight:800;font-size:17px}
+  .sp-textlink a{color:var(--ink);text-decoration:underline;text-decoration-color:#6C5CE766;text-underline-offset:3px}
+  .sp-legal{margin:6px 0 0;font-size:12px;color:var(--muted);text-align:center}
   .sp-note{margin:0;font-size:14px;color:var(--muted);font-weight:700}
   .info-card .sp-promises{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:0;list-style:none}
   .sp-promises li{background:#F6F4FF;border-radius:16px;padding:14px 16px}
@@ -82,7 +81,6 @@
     .info-card .sp-promises{grid-template-columns:minmax(0,1fr)}
     .sp-ipad{grid-template-columns:minmax(0,1fr)}
     .sp-ipad img{max-width:240px;margin:0 auto}
-    .sp-store{width:100%}
   }
 </style>
 <script src="../site.js"></script>
@@ -104,10 +102,8 @@
     <figure class="sp-hero"><img src="header.jpg" width="1600" height="900" alt="Sunny Pals - 27 gentle games for little kids. No ads, no wifi needed, made by a dad for his kids."></figure>
 
     <div class="sp-cta">
-      <a class="sp-store" href="https://apps.apple.com/app/id6824486551" rel="noopener">
-        <span>See Sunny Pals on the App Store<small>For iPhone and iPad - free to try</small></span>
-      </a>
-      <p class="sp-note">Search "Sunny Pals" on the App Store.</p>
+      <a class="sp-badge" href="https://apps.apple.com/app/id6824486551" rel="noopener"><img src="app-store-badge.svg" width="162" height="54" alt="Download on the App Store"></a>
+      <p class="sp-note">For iPhone and iPad - 4 games free to try. Or search "Sunny Pals" on the App Store.</p>
     </div>
 
     <section class="info-card">
@@ -177,16 +173,15 @@
       <p>Questions, problems or a game idea from your child? Email <span id="mail">hello [at] lylarosegames.com</span> - several of our games started as a kid's idea. There's more about the website on the <a href="../for-parents/">For parents</a> page.</p>
     </section>
 
-    <div class="sp-cta">
-      <a class="sp-store" href="https://apps.apple.com/app/id6824486551" rel="noopener">
-        <span>See Sunny Pals on the App Store<small>4 games free, one-off unlock for the rest</small></span>
-      </a>
-    </div>
+    <p class="sp-textlink"><a href="https://apps.apple.com/app/id6824486551" rel="noopener">See Sunny Pals on the App Store</a></p>
 
     <p class="back-games"><a class="play" href="../">Back to the games</a></p>
   </main>
 
-  <footer><p class="foot-line">Made with love. More games on the way.</p></footer>
+  <footer>
+    <p class="foot-line">Made with love. More games on the way.</p>
+    <p class="sp-legal">Apple and the Apple logo are trademarks of Apple Inc., registered in the U.S. and other countries. App Store is a service mark of Apple Inc.</p>
+  </footer>
 </div>
 <script>
   // The email address is put together here (not written in the page) so spam robots that read pages can't grab it.
