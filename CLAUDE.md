@@ -24,6 +24,9 @@ puzzle-games/         dinosaur-games, car-games, train-games, digger-games, maze
 maze-games/           Google title + description. The games on it come from games-data.js.
 flying-games/         Any new maze game goes in "mazes" (and "puzzles") with its breadcrumb pointing at maze-games/.
                       Every "2+" game also goes in "toddlers" (the toddler-games/ page) - add it last, so its breadcrumb stays its main category.
+games-for-4-year-olds/        age pages (hub only) - games picked automatically by their "ages" line (agePage in games-data.js).
+games-for-5-and-6-year-olds/  No button along the top. Never put "age4"/"age5" in a game's categories.
+tools/prerender.py  writes the game cards + Google data into the home, category and age pages - run it after ANY games-data.js change
 animal-games/
 action-games/
 dinosaur-games/
@@ -73,7 +76,7 @@ games/<folder>/     one folder per game, fully self-contained
   ```
   80-120 words, fresh wording (never copied from another game), links only to the site's own category pages.
 - Kid-safe: no external links out of the site, no ads, no sign-ups, no collecting personal details.
-- If the game's name, blurb, categories or age change, update its entry in `games-data.js` and the README table.
+- If the game's name, blurb, categories or age change, update its entry in `games-data.js` and the README table, then run `python3 tools/prerender.py`.
 - **End screens get a share button** (added to every game 4 Oct). When a round or level ends, add one with `if (window.LR && LR.shareButton) panel.appendChild(LR.shareButton("I got 3 stars in <Game name>! 🦄"));`
   - The message uses that round's real result (score, level, stars). No names or personal details in it.
   - Remove any old `.lr-share` button before adding a new one, so there's only ever one.
@@ -103,6 +106,7 @@ games/<folder>/     one folder per game, fully self-contained
 3. Add it to the `games` list in `games-data.js`, with every category it fits in `categories` (e.g. `["unicorns", "sport"]`) and its starting age in `ages` - one of `"2+"`, `"3+"` or `"4+"` (the `ageGroups` list at the top of games-data.js says what each means; ask Andy if unsure). It appears on the home page and every matching category page automatically, with an age badge on its card.
 4. Add a row to the table in `README.md` (including its age).
 5. Add a `<url>` block for it in `sitemap.xml` (copy another game's block): its address, `<lastmod>` = today's date (YYYY-MM-DD), and `<image:image>` lines for its `share.jpg` and `thumb.jpg`.
+6. Run `python3 tools/prerender.py` - it writes the new game's card and Google data into the home page and every category/age page it belongs to. Then set `<lastmod>` to today for those pages in `sitemap.xml`.
 
 ## Adding a NEW category - checklist
 
@@ -111,10 +115,11 @@ games/<folder>/     one folder per game, fully self-contained
 3. In the copy's `index.html`, change: `<title>`, `<meta name="description">`, `canonical` and `og:url` addresses, the `og:title`/`og:description`, `data-category="..."` on `<body>`, and the badge emoji/colour, heading and line under it. Write a fresh Google description - never copy another page's.
 4. Add a `<url>` block for it in `sitemap.xml` (copy another category's block) with today's date as `<lastmod>` and its share picture.
 5. Write its "about" text: a `<section class="about-text" data-for="<id>">` under the grid with a heading and 2-3 short paragraphs for grown-ups (what the games are, which ones, ages, free/no ads) with links to its games. Fresh wording - never copied from another page.
+6. Add a "Questions parents ask" section under it (copy the shape from another category page), then run `python3 tools/prerender.py`.
 
 ## About text on the home and category pages (hub only)
 
-The home page and every category page have a hand-written `about-text` section under the game list (for parents and for Google - Google needs real words to rank a page). When a new game joins a category, the hub adds a mention and link to it in that category's about text. Game chats don't need to touch these.
+The home page, every category page and the age pages have a hand-written `about-text` section and a "Questions parents ask" section (`about-text faq`, h3 question + p answer - tools/prerender.py copies it into Google's FAQ data, so keep that shape) under the game list (for parents and for Google - Google needs real words to rank a page). When a new game joins a category, the hub adds a mention and link to it in that category's about text. Game chats don't need to touch these.
 
 ## Site-wide things (hub only)
 

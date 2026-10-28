@@ -58,6 +58,19 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 | Diggers | `digger-games/` |
 | Halloween | `halloween-games/` |
 
+### Age pages (for Google)
+
+| Page | Which games (picked automatically from each game's age) |
+| --- | --- |
+| Games for 4 year olds | `games-for-4-year-olds/` - every 3+ and 4+ game |
+| Games for 5 and 6 year olds | `games-for-5-and-6-year-olds/` - every 4+ game, plus 3+ mazes and puzzles |
+
+They have no button along the top. Their settings are in `games-data.js` (the `agePage` lines).
+
+## After changing games-data.js
+
+Run `python3 tools/prerender.py`. It writes the game cards and Google's data straight into the home page, category pages and age pages, so search engines can see every game link. Visitors see no difference.
+
 ## For parents page
 
 `for-parents/` - plain information for grown-ups: no ads, no purchases, no sign-ups, no chat, what the age badges mean, what Google Analytics counts, and the contact email. Linked from the footer of the home and category pages.

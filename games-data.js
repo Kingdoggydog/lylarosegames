@@ -27,6 +27,12 @@ const categories = [
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
   { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games",       emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
   { id: "halloween", slug: "halloween-games", title: "Halloween",     heading: "Halloween games",     emoji: "🎃", colour: "#FFE0C2", about: "Cosy, not-scary Halloween fun - pumpkins, trick-or-treating and friendly bats." },
+  // ----- Age pages (hub only). These have their own page for Google but NO button along the top (hidden: true).
+  // Games are picked automatically by their "ages" line - never add these ids to a game's categories.
+  //   agePage.ages      games with these ages always show
+  //   agePage.alsoAges  ...plus games with these ages, but only if they're in one of the agePage.alsoIn categories
+  { id: "age4", slug: "games-for-4-year-olds", title: "4 year olds", heading: "Games for 4 year olds", emoji: "🎈", colour: "#CFE6FF", about: "A bit more to do - steering, matching, simple mazes and finishing jobs.", hidden: true, agePage: { ages: ["3+", "4+"] } },
+  { id: "age5", slug: "games-for-5-and-6-year-olds", title: "5 and 6 year olds", heading: "Games for 5 and 6 year olds", emoji: "🚀", colour: "#E6DBFF", about: "Scores to beat, trickier mazes and games for quick fingers.", hidden: true, agePage: { ages: ["4+"], alsoAges: ["3+"], alsoIn: ["mazes", "puzzles"] } },
 ];
 
 // ===== AGE GROUPS =====

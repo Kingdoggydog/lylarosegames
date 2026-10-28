@@ -19,7 +19,9 @@
   games.forEach(g => (g.categories || []).forEach(id => { if (!catById[id]) console.warn('Game "' + g.title + '" uses unknown category "' + id + '"'); }));
   // Newest games first: the list in games-data.js is oldest-to-newest, so show it backwards
   const newestFirst = games.slice().reverse();
-  const inCat = (g, id) => id === 'all' || (id === 'favourites' ? favs.includes(g.folder) : (g.categories || []).includes(id));
+  // Age pages (agePage in games-data.js) pick their games by age instead of by category
+  const onAgePage = (g, p) => p.ages.includes(g.ages) || ((p.alsoAges || []).includes(g.ages) && (g.categories || []).some(id => (p.alsoIn || []).includes(id)));
+  const inCat = (g, id) => id === 'all' || (id === 'favourites' ? favs.includes(g.folder) : (catById[id] && catById[id].agePage) ? onAgePage(g, catById[id].agePage) : (g.categories || []).includes(id));
   // ----- Age groups (from games-data.js). "all" = every age. Not saved anywhere - it resets when the page reloads.
   const AGES = typeof ageGroups !== 'undefined' ? ageGroups : [];
   const ageById = Object.fromEntries(AGES.map(a => [a.id, a]));
@@ -27,7 +29,7 @@
   let age = 'all';
   const inAge = g => age === 'all' || g.ages === age;
   const ageYears = g => parseInt(g.ages, 10);   // "3+" -> 3
-  const used = categories.filter(c => games.some(g => inCat(g, c.id)));
+  const used = categories.filter(c => !c.hidden && games.some(g => inCat(g, c.id)));   // hidden = age pages, no button
   const pageCat = document.body.dataset.category || 'all';   // which page we're on
   const headingTag = pageCat === 'all' ? 'h2' : 'h1';
   const canIntercept = location.protocol !== 'file:' && !!history.pushState;
@@ -266,7 +268,7 @@
 
   // ----- Age buttons: a small row under the category buttons ("All ages / 2+ / 3+ / 4+")
   const ageBtns = {};
-  if (AGES.length && filtersEl) {
+  if (AGES.length && filtersEl && !(catById[pageCat] && catById[pageCat].agePage)) {   // age pages are already one age
     const row = el('div', 'ages');
     row.setAttribute('role', 'group');
     row.setAttribute('aria-label', 'Show games by age');
@@ -376,9 +378,12 @@
        { '@type': 'BreadcrumbList', itemListElement: [
          { '@type': 'ListItem', position: 1, name: SITE, item: ROOT },
          { '@type': 'ListItem', position: 2, name: pc.heading || pc.title, item: catUrl(pc) } ] }];
-  const ld = el('script'); ld.type = 'application/ld+json';
-  ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
-  document.head.append(ld);
+  // Pages normally have this written in already by tools/prerender.py - only add it if it's missing
+  if (!document.querySelector('script[type="application/ld+json"]')) {
+    const ld = el('script'); ld.type = 'application/ld+json';
+    ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
+    document.head.append(ld);
+  }
 
   // ----- Footer: add-to-home-screen link, privacy line + For parents link, grown-ups contact, maker link
   // The email address is put together here (not written in the page) so spam robots that read pages can't grab it.
