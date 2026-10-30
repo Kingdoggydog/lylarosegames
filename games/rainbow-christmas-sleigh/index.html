@@ -169,7 +169,7 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rainbow's Christmas Sleigh - free unicorn Christmas game for kids">
 <meta name="twitter:card" content="summary_large_image">
-<!-- Game details for Google. Controls: touch and drag to fly, Drop button or Space -->
+<!-- Game details for Google. Controls: touch and drag to fly with the Drop button; mouse to fly and click to drop; or arrow keys and any key -->
 <script type="application/ld+json">
 {
  "@context": "https://schema.org",
@@ -242,7 +242,7 @@
 <div class="overlay" id="startScreen">
   <div class="card">
     <h1>Rainbow's Christmas Sleigh</h1>
-    <p class="sub">Fly Santa's sleigh and drop presents down the glowing chimneys!</p>
+    <p class="sub">Fly Santa's sleigh and drop presents down the glowing chimneys!<span id="mouseHint" hidden> Move the mouse to fly, click (or press any key) to drop.</span></p>
     <div class="nights" id="nightBtns"></div>
     <button class="btn" id="playBtn" type="button">Fly! ▶</button>
   </div>
@@ -1107,7 +1107,8 @@
 
   // ---------- input ----------
   function setTarget(e) { target = clamp(e.clientY * dpr / scale, minY(), maxY()); }
-  cv.addEventListener('pointerdown', e => { wake(); pointerDown = true; setTarget(e); });
+  // touch: tap or drag to fly. Mouse: move to fly, click anywhere to drop (so you never have to steer to the button)
+  cv.addEventListener('pointerdown', e => { wake(); pointerDown = true; setTarget(e); if (e.pointerType === 'mouse' && e.button === 0) drop(); });
   cv.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' || pointerDown) setTarget(e); });
   addEventListener('pointerup', () => { pointerDown = false; });
   addEventListener('pointercancel', () => { pointerDown = false; });
@@ -1117,7 +1118,10 @@
   addEventListener('keydown', e => {
     if (['ArrowUp', 'w', 'W'].includes(e.key)) { keys.up = true; e.preventDefault(); }
     if (['ArrowDown', 's', 'S'].includes(e.key)) { keys.down = true; e.preventDefault(); }
-    if ((e.key === ' ' || e.code === 'Space') && state === 'play') { e.preventDefault(); wake(); if (!e.repeat) drop(); }
+    // almost any key drops a present (up/down and W/S fly)
+    const flyKey = ['ArrowUp', 'ArrowDown', 'w', 'W', 's', 'S'].includes(e.key);
+    const skip = flyKey || e.ctrlKey || e.metaKey || e.altKey || ['Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key) || (e.target && e.target.closest && e.target.closest('a, summary, details, button:not(#dropBtn)'));
+    if (state === 'play' && !skip) { e.preventDefault(); wake(); if (!e.repeat) drop(); }
   });
   addEventListener('keyup', e => {
     if (['ArrowUp', 'w', 'W'].includes(e.key)) keys.up = false;
@@ -1833,6 +1837,8 @@
   $('playBtn').addEventListener('click', () => startNight(unlocked - 1));
   $('nextBtn').addEventListener('click', () => startNight(night === NIGHTS.length - 1 ? 0 : night + 1));
   $('nightsBtn').addEventListener('click', showStart);
+
+  if (matchMedia('(hover: hover) and (pointer: fine)').matches) $('mouseHint').hidden = false;
 
   // ---------- loop ----------
   let last = performance.now();
