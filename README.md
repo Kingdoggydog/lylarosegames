@@ -58,7 +58,7 @@ Each game has a starting age (2+, 3+ or 4+), set in `games-data.js`. It shows as
 | Cars | `car-games/` |
 | Trains | `train-games/` |
 | Diggers | `digger-games/` |
-| Christmas (games arriving late Nov 2026) | `christmas-games/` |
+| Christmas | `christmas-games/` |
 | Halloween | `halloween-games/` |
 
 ### Age pages (for Google)

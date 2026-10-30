@@ -398,6 +398,7 @@ const games = [
     emoji: "🛷",
     colour: "#DDE3FF",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A unicorn Christmas game! Fly Santa's sleigh with Rainbow the unicorn over snowy villages, drop presents down the glowing chimneys and light up every house. Five cosy nights, from Blossom's farm to the North Pole party.",
     categories: ["christmas", "unicorns", "flying"],
     controls: "Drag or mouse to fly, tap Drop, click or press a key"

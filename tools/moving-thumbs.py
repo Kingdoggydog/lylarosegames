@@ -320,3 +320,18 @@ p.sway_ell(680,282,16,16,deg=18,dur=1.2)
 p.hearts(175,385,(0,1.4))
 p.star(470,240,10,.2); p.star(395,330,9,1.0); p.star(560,215,9,1.7); p.star(520,440,9,.6); p.star(360,450,9,2.2); p.star(600,330,8,1.3)
 print('christmas tree', p.save())
+
+p=Pic('rainbow-christmas-sleigh','Rainbow and the sleigh bobbing through the sky, the owl flapping, snowflakes twinkling, presents drifting down, the wreaths and windows glowing, the moon shining and snow falling')
+p.region('b', p.ell(382,184,180,102), '--y:-4px;--d:2.4s;--l:0s')
+p.region('b', p.ell(70,140,50,34), '--y:-5px;--d:1.1s;--l:.3s')
+for i,(x,y) in enumerate([(50,222),(112,215),(175,225),(580,156),(642,143),(705,155),(767,183)]):
+    p.region('pl', p.ell(x,y,19,19), f'--k:1.15;--d:{1.8+0.3*(i%3)}s;--l:{i*0.35}s', pivot=(x,y))
+p.region('b', p.ell(320,343,20,18), '--y:6px;--d:1.6s;--l:0s')
+p.region('b', p.ell(383,408,20,18), '--y:6px;--d:1.8s;--l:.6s')
+p.halo(640,80,64)
+p.halo(172,398,30); p.halo(422,404,30)
+p.halo(53,478,24); p.halo(183,478,24)
+for i,(x,y,d) in enumerate([(30,20,6.0),(160,40,5.4),(300,10,6.6),(470,30,5.8),(560,250,6.2),(700,230,5.6),(110,300,6.4),(760,300,5.2)]):
+    p.add(f'<circle class="drop" style="--l:{i*0.6}s;--d:{d}s;--x:{(-10 if i%2 else 10)}px" cx="{x}" cy="{y}" r="3" fill="#fff"/>')
+p.star(560,110,9,.4); p.star(120,90,8,1.4); p.star(760,60,8,2.0)
+print('christmas sleigh', p.save())
