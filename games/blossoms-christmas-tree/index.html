@@ -62,9 +62,11 @@
   .act.green.ready{animation:glowyg 2.6s ease-in-out infinite}
   @keyframes glowyg{50%{box-shadow:0 5px 0 #1E6A34,0 0 0 8px #FFE27A66,0 0 28px 10px #FFD166AA}}
   /* the grown-ups "clear the decorations" button: small, and needs a long press */
-  #clearBtn{position:absolute;z-index:3;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border-radius:50%;background:#FFFFFF8C;box-shadow:0 2px 6px #3A244033;display:grid;place-items:center;
-    --p:0;background-image:conic-gradient(#E2384FAA calc(var(--p)*1turn),transparent 0)}
-  #clearBtn svg{width:26px;height:26px;pointer-events:none}
+  #clearBtn{position:absolute;z-index:3;width:56px;height:56px;min-width:56px;min-height:56px;padding:0;border-radius:50%;background-color:#FFFFFF;border:3px solid #E2384F;box-sizing:border-box;box-shadow:0 3px 0 #B7223A55,0 4px 10px #3A244040;display:grid;place-items:center;
+    --p:0;background-image:conic-gradient(#E2384F99 calc(var(--p)*1turn),transparent 0)}
+  #clearBtn svg{width:34px;height:34px;pointer-events:none}
+  /* the little "hold to clear" note for grown-ups */
+  #clearHint{position:absolute;z-index:4;background:#FFFFFF;color:var(--ink);font-weight:800;font-size:15px;line-height:1.2;padding:8px 12px;border-radius:12px;box-shadow:0 3px 10px #3A244040;white-space:nowrap;pointer-events:none}
   #shareBox{position:absolute;z-index:3}
   /* the tray of decorations */
   .tray{position:absolute;z-index:3;background:#FFF8EEE8;border-radius:22px;box-shadow:0 6px 18px #3A244040;touch-action:none}
@@ -217,6 +219,7 @@
     <button class="act" id="newBtn" aria-label="Decorate a new tree" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 5 9 20h6L7 31h8L6 40h28l-9-9h8l-8-11h6z" fill="#fff"/><rect x="17" y="40" width="6" height="5" rx="1.5" fill="#fff"/><circle cx="37" cy="12" r="9" fill="#3FAE5A" stroke="#fff" stroke-width="2.5"/><path d="M37 7.5v9M32.5 12h9" stroke="#fff" stroke-width="3.2" stroke-linecap="round"/></svg></button>
     <button class="act small" id="editBtn" aria-label="Change the decorations" hidden><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 15h13a10 10 0 0 1 0 20H17" fill="none" stroke="#3FAE5A" stroke-width="5" stroke-linecap="round"/><path d="M22 7l-8 8 8 8" fill="none" stroke="#3FAE5A" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
     <button id="clearBtn" aria-label="Take off all the decorations (grown-ups: press and hold)" title="Grown-ups: press and hold to take off all the decorations" hidden><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M20 4l-6 12" stroke="#8A5A3C" stroke-width="3" stroke-linecap="round"/><path d="M9 15l10 4-3 9c-4 0-8-2-10-5z" fill="#F2C94C" stroke="#C99A35" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 22l2 4M13 21l1.5 5" stroke="#C99A35" stroke-width="1.3"/></svg></button>
+    <div id="clearHint" hidden></div>
     <div id="shareBox"></div>
     <div class="overlay" id="overlay">
       <div class="panel">
@@ -238,7 +241,7 @@
   let ctx = cvs.getContext('2d');           // everything is drawn with this (swapped briefly when making pictures)
   const board = $('board'), tray = $('tray'), hots = $('hots'), overlay = $('overlay');
   const switchBtn = $('switchBtn'), newBtn = $('newBtn'), editBtn = $('editBtn');
-  const clearBtn = $('clearBtn'), shareBox = $('shareBox'), playBtn = $('playBtn'), soundBtn = $('sound'), musicBtn = $('music');
+  const clearBtn = $('clearBtn'), clearHint = $('clearHint'), shareBox = $('shareBox'), playBtn = $('playBtn'), soundBtn = $('sound'), musicBtn = $('music');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const TEST = /[?&]test\b/.test(location.search);
   const PHONE_MQ = '(max-width: 600px) and (orientation: portrait), (max-height: 500px) and (orientation: landscape)';
@@ -1382,7 +1385,7 @@
     K.blosS = K.Hp*0.42/172;
     const pw0 = side ? Math.min(W*0.5, (K.floorY - top)*2.6) : W*0.78;
     L.pwin = {x: (W - pw0)/2, y: top + (phone ? 4 : 12), w: pw0, h: Math.max(50, K.floorY - top - (phone ? 4 : 12) - 34)};
-    L.clear = [phone ? 4 : 10, phone ? 50 : 10];
+    L.clear = [phone ? 4 : 10, phone ? 50 : 10];   // the grown-ups' clear button (56px)
   }
 
   // ===== GAME STATE =====
@@ -1781,6 +1784,7 @@
     const sx = side ? W - Lb - 26 - sw : clamp((W - sw)/2, 14 + small + 8, W - Lb - 22 - sw);
     place(shareBox, sx, H - 14 - Lb/2 - sh/2);
     place(clearBtn, L.clear[0], L.clear[1]);
+    place(clearHint, L.clear[0] + 64, L.clear[1] + 8);
     hotBtns.forEach((b, i) => { const a = L.pick.spots[i], T = TREES[i], hh = L.pick.Hp*T.size; place(b, a.x - hh*0.45, a.base - hh*1.12, hh*0.9, hh*1.12); });
   }
   function updateDom(){
@@ -1790,6 +1794,7 @@
     newBtn.hidden = !litReady; editBtn.hidden = !litReady;
     newBtn.classList.toggle('ready', litReady && presents.length > 0 && presents.every(p => p.open));
     clearBtn.hidden = !((s === 'deco' || litReady) && cur && cur.pieces.length > 0);
+    if(clearBtn.hidden) clearHint.hidden = true;
     hots.hidden = s !== 'pick';
     // one share button, only once the lights are on
     shareBox.querySelectorAll('.lr-share').forEach(b => b.remove());
@@ -1806,8 +1811,14 @@
   editBtn.addEventListener('click', backToDeco);
   playBtn.addEventListener('click', start);
   // take everything off: grown-ups press and hold
-  const holdStart = () => { if(!clearHold && cur && cur.pieces.length){ clearHold = {t: 0}; sfx.tick(); } };
-  const holdStop = () => { clearHold = null; clearBtn.style.setProperty('--p', 0); };
+  let hintTimer = 0;
+  function showHint(text, secs){ clearHint.textContent = text; clearHint.hidden = false; clearTimeout(hintTimer); if(secs) hintTimer = setTimeout(() => { clearHint.hidden = true; }, secs*1000); }
+  const holdStart = () => { if(!clearHold && cur && cur.pieces.length){ clearHold = {t: 0}; sfx.tick(); showHint('Keep holding to clear…'); } };
+  const holdStop = () => {
+    // let go too soon: tell grown-ups what the button does
+    if(clearHold && clearHold.t < 1.5) showHint('Grown-ups: hold to clear the tree', 2.5);
+    clearHold = null; clearBtn.style.setProperty('--p', 0);
+  };
   clearBtn.addEventListener('pointerdown', e => { e.preventDefault(); try { clearBtn.setPointerCapture(e.pointerId); } catch(err){} holdStart(); });
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => clearBtn.addEventListener(t, holdStop));
   clearBtn.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); holdStart(); } });
@@ -2017,7 +2028,7 @@
     if(clearHold){
       clearHold.t += dtReal;
       clearBtn.style.setProperty('--p', Math.min(1, clearHold.t/1.5).toFixed(3));
-      if(clearHold.t >= 1.5){ holdStop(); clearAll(); }
+      if(clearHold.t >= 1.5){ clearHold = null; clearBtn.style.setProperty('--p', 0); clearHint.hidden = true; clearAll(); }
     }
     parts.forEach(p => { p.x += p.vx*dt; p.y += p.vy*dt; p.vy += (p.g || 0)*dt; p.vx *= 0.99; p.life -= dt; p.rot += dt*3; });
     parts = parts.filter(p => p.life > 0);
