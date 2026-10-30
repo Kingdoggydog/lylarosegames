@@ -36,6 +36,7 @@ House rules for editing are in `CLAUDE.md` - any AI chat working on this folder 
 | Biscuit's Puppy Care | Animals, Toddlers | 2+ | `games/biscuits-puppy-care/` |
 | Biscuit's Fetch | Animals, Action, Toddlers | 2+ | `games/biscuits-fetch/` |
 | Blossom's Christmas Tree | Christmas, Unicorns, Animals, Toddlers | 2+ | `games/blossoms-christmas-tree/` |
+| Rainbow's Christmas Sleigh | Christmas, Unicorns, Flying | 3+ | `games/rainbow-christmas-sleigh/` |
 
 ## Age groups
 
