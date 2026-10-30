@@ -385,6 +385,7 @@ const games = [
     emoji: "🎄",
     colour: "#DDF3E4",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A Christmas tree decorating game for toddlers! Pick a tree with Blossom the Bunnycorn, decorate it with baubles, tinsel, fairy lights and candy canes, pop a star on top, then switch on the twinkly lights and open the presents underneath.",
     categories: ["christmas", "unicorns", "animals", "toddlers"],
     controls: "Tap (drag if you like), or Tab and Enter"

@@ -307,3 +307,16 @@ p.bob(368,6,136,80,dy=-3,dur=4.4)
 p.hearts(290,100,(0,1.3))
 p.star(736,72,10,.3); p.star(240,180,9,1.4); p.star(520,60,9,2.1); p.star(760,200,8,.8)
 print('fetch', p.save())
+
+p=Pic('blossoms-christmas-tree','the star on top glowing, the tree twinkling, snow falling outside the window, the moon glowing, the duck waving and little hearts from Blossom')
+# star: a round cut-out (not a box) so its edges don't show, glow drawn AFTER the pulse
+p.region('pl', p.ell(470,88,40,40), '--k:1.06;--d:2.2s;--l:0s', pivot=(470,88))
+p.halo(470,90,62)
+p.halo(643,83,40)
+# snow drifting down outside the window (left and right panes, clear of the tree)
+for i,(x,y,d) in enumerate([(110,40,5.0),(170,70,6.2),(240,30,5.6),(300,90,6.8),(620,140,5.4),(720,60,6.0),(760,130,5.2),(140,150,6.4)]):
+    p.add(f'<circle class="drop" style="--l:{i*0.7}s;--d:{d}s;--x:{(-8 if i%2 else 8)}px" cx="{x}" cy="{y}" r="3.2" fill="#fff"/>')
+p.sway_ell(680,282,16,16,deg=18,dur=1.2)
+p.hearts(175,385,(0,1.4))
+p.star(470,240,10,.2); p.star(395,330,9,1.0); p.star(560,215,9,1.7); p.star(520,440,9,.6); p.star(360,450,9,2.2); p.star(600,330,8,1.3)
+print('christmas tree', p.save())
