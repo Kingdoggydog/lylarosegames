@@ -343,7 +343,7 @@
     else if (!shown.length && age !== 'all') gridEl.append(emptyAgeCard(c));
     else if (c.id !== 'favourites' && showComingSoon && age === 'all') gridEl.append(soonCard());
 
-    if (current !== pageCat || document.title === '') document.title = c.id === 'all' ? SITE + ' - Free Games for Kids' : (c.heading || c.title) + ' for kids - ' + SITE;
+    if (current !== pageCat || document.title === '') document.title = c.id === 'all' ? SITE + ' - Free Games for Kids' : (c.heading || c.title).replace(/ for kids$/, '') + ' for kids - ' + SITE;
   }
 
   window.addEventListener('popstate', () => {
@@ -374,7 +374,7 @@
   };
   const graph = pageCat === 'all'
     ? [{ '@type': 'WebSite', name: SITE, url: ROOT, inLanguage: 'en-AU' }, { '@type': 'CollectionPage', name: SITE, url: ROOT, mainEntity: itemList }]
-    : [{ '@type': 'CollectionPage', name: (pc.heading || pc.title) + ' for kids', url: catUrl(pc), isPartOf: { '@type': 'WebSite', name: SITE, url: ROOT }, mainEntity: itemList },
+    : [{ '@type': 'CollectionPage', name: (pc.heading || pc.title).replace(/ for kids$/, '') + ' for kids', url: catUrl(pc), isPartOf: { '@type': 'WebSite', name: SITE, url: ROOT }, mainEntity: itemList },
        { '@type': 'BreadcrumbList', itemListElement: [
          { '@type': 'ListItem', position: 1, name: SITE, item: ROOT },
          { '@type': 'ListItem', position: 2, name: pc.heading || pc.title, item: catUrl(pc) } ] }];

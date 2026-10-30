@@ -46,7 +46,7 @@ def in_cat(g, cid):
 def card(g, r):
     url = f'{r}games/{g["folder"]}/'
     if g.get('thumb'):
-        art_inner = f'<img src="{url}{esc(g["thumb"])}" alt="" loading="lazy" width="400" height="300">'
+        art_inner = f'<img src="{url}{esc(g["thumb"])}" alt="{esc(g["title"])} - free game for kids" loading="lazy" width="400" height="300">'
     else:
         art_inner = esc(g.get('emoji', ''))
     a = age_by_id.get(g.get('ages'))
@@ -94,7 +94,7 @@ def google_data(cid, page_html):
                  {'@type': 'CollectionPage', 'name': NAME, 'url': ROOT, 'mainEntity': item_list}]
     else:
         heading = page.get('heading') or page['title']
-        graph = [{'@type': 'CollectionPage', 'name': heading + ('' if cid.startswith('age') else ' for kids'), 'url': url,
+        graph = [{'@type': 'CollectionPage', 'name': heading if (cid.startswith('age') or heading.endswith(' for kids')) else heading + ' for kids', 'url': url,
                   'isPartOf': {'@type': 'WebSite', 'name': NAME, 'url': ROOT}, 'mainEntity': item_list},
                  {'@type': 'BreadcrumbList', 'itemListElement': [
                      {'@type': 'ListItem', 'position': 1, 'name': NAME, 'item': ROOT},

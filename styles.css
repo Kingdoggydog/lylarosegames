@@ -316,6 +316,6 @@
   .about-text p{margin:0 0 10px;font-size:15.5px;line-height:1.55;color:var(--muted)}
   .about-text p:last-child{margin-bottom:0}
   .about-text a{color:#4B3DB8;font-weight:700}
-  .faq h3{margin:14px 0 4px;font-size:17px;line-height:1.35;color:var(--ink)}
-  .faq h2 + h3{margin-top:4px}
+  .about-text h3{margin:14px 0 4px;font-size:17px;line-height:1.35;color:var(--ink)}
+  .about-text h2 + h3{margin-top:4px}
   @media (max-width:640px){ .about-text{padding:16px 18px;border-radius:18px} .about-text p{font-size:15px} }
