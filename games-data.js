@@ -52,6 +52,7 @@ const ageGroups = [
 // Keep the list oldest-to-newest - the site shows it the other way round, so the newest game appears top left.
 // "categories" can list as many category ids as you like - the game shows under each one.
 // "ages" = the youngest age the game suits, one of the ageGroups ids above: "2+", "3+" or "4+".
+// "heroFrom" (optional) = a date like "2026-12-01": the game stays out of the "New game!" banner until then (it still shows in the lists).
 // "thumbAnim" (optional) = a gently moving version of the card picture, e.g. "thumb-anim.svg". It is a copy of
 // thumb.jpg with moving extras on top - if thumb.jpg ever changes, remove the thumbAnim line (or ask the hub to remake it).
 const games = [
