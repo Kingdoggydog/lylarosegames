@@ -377,6 +377,17 @@ const games = [
     categories: ["animals", "action", "toddlers"],
     controls: "Tap (or Space / Enter)"
   },
+  {
+    title: "Blossom's Christmas Tree",
+    folder: "blossoms-christmas-tree",
+    ages: "2+",             // age group - see ageGroups above
+    emoji: "🎄",
+    colour: "#DDF3E4",
+    thumb: "thumb.jpg",
+    blurb: "A Christmas tree decorating game for toddlers! Pick a tree with Blossom the Bunnycorn, decorate it with baubles, tinsel, fairy lights and candy canes, pop a star on top, then switch on the twinkly lights and open the presents underneath.",
+    categories: ["christmas", "unicorns", "animals", "toddlers"],
+    controls: "Tap (drag if you like), or Tab and Enter"
+  },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];
 

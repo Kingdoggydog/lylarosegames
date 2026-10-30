@@ -253,4 +253,10 @@
     <image:image><image:loc>https://lylarosegames.com/games/biscuits-fetch/share.jpg</image:loc></image:image>
     <image:image><image:loc>https://lylarosegames.com/games/biscuits-fetch/thumb.jpg</image:loc></image:image>
   </url>
+  <url>
+    <loc>https://lylarosegames.com/games/blossoms-christmas-tree/</loc>
+    <lastmod>2026-10-30</lastmod>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-christmas-tree/share.jpg</image:loc></image:image>
+    <image:image><image:loc>https://lylarosegames.com/games/blossoms-christmas-tree/thumb.jpg</image:loc></image:image>
+  </url>
 </urlset>
