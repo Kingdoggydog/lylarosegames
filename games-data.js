@@ -52,6 +52,7 @@ const ageGroups = [
 // Keep the list oldest-to-newest - the site shows it the other way round, so the newest game appears top left.
 // "categories" can list as many category ids as you like - the game shows under each one.
 // "ages" = the youngest age the game suits, one of the ageGroups ids above: "2+", "3+" or "4+".
+// "heroFrom" (optional) = a date like "2026-12-01": the game stays out of the "New game!" banner until then (it still shows in the lists).
 // "thumbAnim" (optional) = a gently moving version of the card picture, e.g. "thumb-anim.svg". It is a copy of
 // thumb.jpg with moving extras on top - if thumb.jpg ever changes, remove the thumbAnim line (or ask the hub to remake it).
 const games = [
@@ -389,6 +390,17 @@ const games = [
     blurb: "A Christmas tree decorating game for toddlers! Pick a tree with Blossom the Bunnycorn, decorate it with baubles, tinsel, fairy lights and candy canes, pop a star on top, then switch on the twinkly lights and open the presents underneath.",
     categories: ["christmas", "unicorns", "animals", "toddlers"],
     controls: "Tap (drag if you like), or Tab and Enter"
+  },
+  {
+    title: "Rainbow's Christmas Sleigh",
+    folder: "rainbow-christmas-sleigh",
+    ages: "3+",             // age group - see ageGroups above
+    emoji: "🛷",
+    colour: "#DDE3FF",
+    thumb: "thumb.jpg",
+    blurb: "A unicorn Christmas game! Fly Santa's sleigh with Rainbow the unicorn over snowy villages, drop presents down the glowing chimneys and light up every house. Five cosy nights, from Blossom's farm to the North Pole party.",
+    categories: ["christmas", "unicorns", "flying"],
+    controls: "Drag or mouse to fly, tap Drop, click or press a key"
   },
   // { title: "Next game", folder: "next-game", ages: "3+", emoji: "🌈", colour: "#FDE2EC", thumb: "thumb.jpg", blurb: "What it's about.", categories: ["unicorns"], controls: "Touch or keyboard" },
 ];

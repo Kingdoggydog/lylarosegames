@@ -166,7 +166,9 @@
   // ----- "New game!" banner at the top of the home page: always the newest game in games-data.js
   let heroEl = document.getElementById('hero');
   function fillHero() {
-    const g = games[games.length - 1];
+    // Newest game - but skip any with a "heroFrom" date still in the future (e.g. the advent calendar waits for 1 December)
+    const today = new Date().toISOString().slice(0, 10);
+    const g = games.slice().reverse().find(x => !x.heroFrom || x.heroFrom <= today);
     if (!heroEl || !g) return;
     heroEl.replaceChildren();
     const a = el('a', 'hero-link'); a.href = gameUrl(g);
