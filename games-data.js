@@ -26,6 +26,7 @@ const categories = [
   { id: "action",   slug: "action-games",  title: "Action",          heading: "Action games",        emoji: "⚡", colour: "#FFE0DC", about: "Quick hands, fast fun - catch it, dodge it, zoom!" },
   { id: "sport",    slug: "sport-games",   title: "Sport",           heading: "Sport games",         emoji: "⚽", colour: "#D6F0C8", about: "Kick it, score it, win it." },
   { id: "unicorns", slug: "unicorn-games", title: "Unicorns",        heading: "Unicorn games for kids", emoji: "🦄", colour: "#FDE2EC", about: "Magical games with unicorns, rainbows and sparkles." },
+  { id: "christmas", slug: "christmas-games", title: "Christmas",     heading: "Christmas games for kids", emoji: "🎄", colour: "#D9F2E4", about: "Cosy Christmas fun - trees to decorate, a unicorn sleigh ride, a snowy maze and an advent calendar." },
   { id: "halloween", slug: "halloween-games", title: "Halloween",     heading: "Halloween games",     emoji: "🎃", colour: "#FFE0C2", about: "Cosy, not-scary Halloween fun - pumpkins, trick-or-treating and friendly bats." },
   // ----- Age pages (hub only). These have their own page for Google but NO button along the top (hidden: true).
   // Games are picked automatically by their "ages" line - never add these ids to a game's categories.
@@ -384,6 +385,7 @@ const games = [
     emoji: "🎄",
     colour: "#DDF3E4",
     thumb: "thumb.jpg",
+    thumbAnim: "thumb-anim.svg",   // gently moving card picture (made from thumb.jpg)
     blurb: "A Christmas tree decorating game for toddlers! Pick a tree with Blossom the Bunnycorn, decorate it with baubles, tinsel, fairy lights and candy canes, pop a star on top, then switch on the twinkly lights and open the presents underneath.",
     categories: ["christmas", "unicorns", "animals", "toddlers"],
     controls: "Tap (drag if you like), or Tab and Enter"
